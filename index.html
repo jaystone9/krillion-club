@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Krillion Club</title>
+<meta name="theme-color" content="#0B1730">
+<meta name="apple-mobile-web-app-title" content="Krillion Club">
+<meta name="robots" content="noindex">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style id="css">
+/* Layout idea: a dive-computer readout. No cards: sections sit on the water, split by letterspaced labels and dashed rules. Hard edges, pixel numerals, one hot accent. Single theme by choice. */
+:root{
+  --sea:#0B1730; --abyss:#070D1F; --line:#22335A; --rule:#3A5088;
+  --ink:#E8F1FF; --dim:#8497C2; --pink:#FF5C8A; --cyan:#4FD8F0; --gold:#FFD23F; --bad:#FF7A7A;
+  --glow:var(--cyan); --lantern:var(--gold);
+  --display:"Pixelify Sans","Courier New",monospace;
+  --body:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:linear-gradient(180deg,#35596C 0,#1D3653 200px,var(--sea) 520px,var(--abyss) 1300px) var(--abyss);background-repeat:no-repeat;color:var(--ink);font:400 14px/1.55 var(--body);min-height:100vh}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:8;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px)}
+#app{max-width:940px;margin:0 auto;padding:28px 18px 90px;display:flex;flex-direction:column;gap:36px}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font:700 clamp(44px,11vw,84px)/.9 var(--display);text-transform:uppercase;letter-spacing:.03em;text-shadow:3px 0 var(--pink),-3px 0 var(--cyan)}
+h2{font:600 12px/1.2 var(--body);text-transform:uppercase;letter-spacing:.3em;color:var(--ink);display:flex;align-items:center;gap:14px}
+h2{white-space:nowrap}
+.lab{position:absolute;left:50%;bottom:-50px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px}
+.lab b{font:600 9px/1 var(--body);white-space:nowrap;text-transform:uppercase;letter-spacing:.06em}
+.lab i{font:500 15px/1 var(--display);font-style:normal;color:var(--c);white-space:nowrap}
+h2::after{content:"";flex:1;border-top:1px dashed var(--rule);min-width:20px}
+.row.between>h2{flex:1}
+h3{font:600 11px/1.3 var(--body);text-transform:uppercase;letter-spacing:.2em;color:var(--gold)}
+p{margin:0}
+.dim{color:var(--dim)} .sm{font-size:12px} .num{font-variant-numeric:tabular-nums}
+.head{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between}
+.head p{font-size:11px;text-transform:uppercase;letter-spacing:.24em;color:var(--cyan);margin-bottom:12px}
+select,input,textarea,button{font:inherit;color:inherit}
+select,input[type=text],input[type=date],textarea{background:var(--abyss);border:2px solid var(--line);border-radius:0;padding:8px 10px;min-width:0}
+textarea{width:100%;min-height:150px;resize:vertical}
+button{cursor:pointer;border:2px solid var(--rule);background:#131F40;border-radius:0;padding:9px 16px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.16em;box-shadow:0 4px 0 #04081A}
+button:hover{border-color:var(--cyan)}
+button:active{transform:translateY(3px);box-shadow:0 1px 0 #04081A}
+button.go{background:var(--pink);color:#22040F;border-color:var(--pink);box-shadow:0 4px 0 #94284B}
+button.go:hover{filter:brightness(1.08)}
+button.danger{color:var(--bad)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+nav{display:flex;gap:22px;overflow-x:auto;border-bottom:1px solid var(--line)}
+nav a{white-space:nowrap;text-decoration:none;color:var(--dim);padding:10px 0;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.2em;border-bottom:3px solid transparent;margin-bottom:-1px}
+nav a.on{color:var(--ink);border-bottom-color:var(--pink)}
+nav a:not(.on):hover{color:var(--ink)}
+.panel{display:flex;flex-direction:column;gap:18px}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.between{justify-content:space-between}
+.scroll{overflow-x:auto}
+.av{display:inline-grid;place-items:center;width:38px;height:38px;background:var(--sea);border:2px solid var(--c);box-shadow:3px 3px 0 color-mix(in srgb,var(--c) 40%,#000);font-size:19px;flex:none;overflow:hidden}
+.av.s{width:28px;height:28px;font-size:14px;box-shadow:2px 2px 0 color-mix(in srgb,var(--c) 40%,#000)}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+/* dive chart */
+.sea{position:relative;height:460px;overflow:hidden;background:linear-gradient(180deg,#3A6076 0,#1C3654 9%,#0D1C3A 38%,var(--abyss) 100%);border:2px solid var(--line)}
+.water{position:absolute;inset:40px 12px 60px 62px}
+.tick{position:absolute;left:-62px;right:0;border-top:1px dashed rgba(132,151,194,.3)}
+.tick span{position:absolute;left:8px;top:-8px;font-size:10px;color:var(--dim);font-variant-numeric:tabular-nums;letter-spacing:.08em;text-transform:uppercase}
+.ref{position:absolute;left:0;right:0;border-top:1px solid var(--c);opacity:.5}
+.ref span{position:absolute;right:0;top:3px;font-size:10px;color:var(--c);letter-spacing:.1em;text-transform:uppercase}
+.cols{position:absolute;inset:0;display:flex}
+.col{flex:1;position:relative}
+.rope{position:absolute;left:50%;top:0;width:0;border-left:1px solid var(--c);animation:rope 1.4s cubic-bezier(.2,.7,.2,1) backwards}
+.diver{position:absolute;left:50%;transform:translate(-50%,-50%);animation:sink 1.4s cubic-bezier(.2,.7,.2,1) backwards;z-index:1}
+.diver .av{width:46px;height:46px}
+.diver b{font:600 10px/1.1 var(--body);white-space:nowrap;position:absolute;top:56px;left:50%;transform:translateX(-50%);text-transform:uppercase;letter-spacing:.1em}
+.diver i{font:500 15px/1 var(--display);font-style:normal;color:var(--c);position:absolute;top:70px;left:50%;transform:translateX(-50%);white-space:nowrap}
+@keyframes sink{from{top:0}} @keyframes rope{from{height:0}}
+@media (prefers-reduced-motion:reduce){.rope,.diver{animation:none}}
+/* leaderboard */
+.lb{display:flex;flex-direction:column}
+.lbrow{display:grid;grid-template-columns:34px 38px 1fr auto auto;gap:14px;align-items:center;padding:14px 4px;border-bottom:1px solid var(--line)}
+.rank{font:700 26px/1 var(--display);color:var(--dim)}
+.lbrow:first-child .rank{color:var(--pink)}
+.lbrow b{font-size:15px}
+.big{font:700 30px/1 var(--display);text-align:right}
+.lbrow:first-child .big{color:var(--gold)}
+.big small{font:400 11px var(--body);color:var(--dim);letter-spacing:.1em}
+.seg{display:inline-flex;border:2px solid var(--rule)}
+.seg button{border:0;background:none;padding:7px 12px;color:var(--dim);box-shadow:none;letter-spacing:.12em}
+.seg button:active{transform:none}
+.seg button.on{background:var(--cyan);color:#04202A}
+/* awards */
+.awards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.award{background:var(--sea);border:2px solid var(--line);border-top:4px solid var(--c,var(--cyan));padding:14px;display:flex;flex-direction:column;gap:8px}
+.award .who{font:700 20px/1.1 var(--display);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{display:flex;flex-direction:column;align-items:center;gap:14px}.pick .av{width:84px;height:84px;font-size:38px;border-width:3px;box-shadow:5px 5px 0 color-mix(in srgb,var(--c) 40%,#000)}.pick select{max-width:100%}
+/* tables */
+table{border-collapse:separate;border-spacing:4px;width:100%}
+th{font:600 10px var(--body);color:var(--dim);text-align:center;padding:4px;white-space:nowrap;text-transform:uppercase;letter-spacing:.14em}
+th.l,td.l{text-align:left}
+td{text-align:center;padding:0}
+td.l{padding-right:10px;white-space:nowrap}
+.grade{padding:8px 4px;min-width:56px;background:color-mix(in srgb,var(--cyan) calc(var(--v)*.55%),var(--sea));border:1px solid var(--line)}
+.grade b{display:block;font:700 20px/1 var(--display)}
+.grade span{font-size:10px;color:var(--ink);opacity:.7;font-variant-numeric:tabular-nums}
+.grade.top{outline:2px solid var(--gold);outline-offset:-1px}
+.chip{display:inline-grid;place-items:center;width:34px;height:34px;background:var(--sea);border:2px solid color-mix(in srgb,var(--c) 75%,transparent);font-size:16px;font-weight:600}
+.chip.t{font-size:10px;color:var(--c)}
+.chip.none{border-style:dashed;color:var(--dim);font-size:12px}
+.mix{display:flex;gap:2px;height:18px;flex:1;min-width:120px}
+.mix i{background:var(--c);min-width:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11px;color:var(--dim)}
+.legend i{display:inline-block;width:10px;height:10px;background:var(--c);margin-right:6px}
+.tag{font-size:10px;border:1px solid var(--rule);padding:1px 7px;color:var(--cyan);white-space:nowrap;text-transform:uppercase;letter-spacing:.1em}
+ol.prompts{margin:0;padding-left:26px;display:flex;flex-direction:column;gap:8px}
+ol.prompts li::marker{color:var(--dim)}
+.strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.strip{position:relative}
+.strip button{flex:none;min-width:52px;padding:7px 8px;text-align:center;font:700 16px var(--display);letter-spacing:0}
+.strip button.on{background:var(--pink);border-color:var(--pink);color:#22040F;box-shadow:0 4px 0 #94284B}
+.duel{display:grid;grid-template-columns:1fr auto 1fr;gap:12px 14px;align-items:center;text-align:center}
+.duel .v{font:700 24px var(--display);color:var(--dim)}
+.duel .v.w{color:var(--ink)} .duel .v.w::after{content:" ◆";color:var(--pink);font-size:12px}
+.duel>.sm{text-transform:uppercase;letter-spacing:.14em;font-size:10px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:36px}
+.erow{display:grid;grid-template-columns:22px 1fr 160px;gap:8px;align-items:center}
+.srow{display:grid;grid-template-columns:130px 1fr;gap:8px;align-items:center}
+.srow .pv{grid-column:2;display:flex;gap:4px;flex-wrap:wrap;align-items:center;min-height:18px;font-size:12px}
+.err{color:var(--bad)}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--gold);color:#1C1500;padding:10px 16px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.12em;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90vw;text-align:center;z-index:9}
+#toast.on{opacity:1}
+@media (max-width:520px){.lab b{font-size:8px;letter-spacing:0}.lab i{font-size:13px}.lbrow{grid-template-columns:26px 38px 1fr auto;gap:10px}.lbrow svg{display:none}.big{font-size:24px}.erow{grid-template-columns:18px 1fr 108px}.srow{grid-template-columns:1fr}.srow .pv{grid-column:1}.water{left:50px;right:6px}.tick{left:-50px}.chip{width:30px;height:30px;font-size:14px}.diver .av{width:36px;height:36px}.diver b{top:46px;font-size:9px;letter-spacing:0}.diver i{top:58px;font-size:13px}.pick .av{width:64px;height:64px}}
+
+/* leader + motion */
+.lbrow{animation:rowin .5s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:calc(var(--i,0)*70ms)}
+.lbrow:first-child{grid-template-columns:34px 68px 1fr auto auto;padding:18px 14px;margin-bottom:10px;border:2px solid var(--gold);background:linear-gradient(90deg,rgba(255,210,63,.16),rgba(255,210,63,0) 70%);box-shadow:6px 6px 0 rgba(255,210,63,.22)}
+.lbrow:first-child .av{width:68px;height:68px;border-width:3px}
+.lbrow:first-child b{font:700 24px/1.1 var(--display)}
+.lbrow:first-child .big{font-size:44px}
+.lbrow:first-child .rank{font-size:34px;color:var(--gold)}
+.tag.lead{color:#1C1500;background:var(--gold);border-color:var(--gold);font-weight:600;vertical-align:middle}
+.bub{position:absolute;bottom:-8px;width:var(--s);height:var(--s);background:rgba(190,225,255,.45);animation:rise var(--d) linear var(--dl) infinite}
+h1{animation:glitch 7s steps(1) infinite}
+@keyframes rowin{from{opacity:0;transform:translateX(-14px)}}
+@keyframes rise{to{transform:translateY(-480px);opacity:0}}
+@keyframes glitch{0%,91%,100%{text-shadow:3px 0 var(--pink),-3px 0 var(--cyan)}92%{text-shadow:-6px 0 var(--pink),6px 0 var(--cyan)}94%{text-shadow:8px 2px var(--pink),-2px -2px var(--cyan)}96%{text-shadow:-3px 0 var(--pink),3px 0 var(--cyan)}}
+@media (prefers-reduced-motion:reduce){.lbrow,h1{animation:none}.bub{display:none}}
+@media (max-width:520px){.lbrow:first-child{grid-template-columns:26px 56px 1fr auto;padding:14px 10px}.lbrow:first-child .av{width:56px;height:56px}.lbrow:first-child .big{font-size:32px}.lbrow:first-child b{font-size:20px}.lbrow:first-child .tag{display:none}}
+
+/* phone pass */
+.rc td.l,.rc th.l{position:sticky;left:0;z-index:1;background:#0A1329}
+td.num{white-space:nowrap}
+.swipe{display:none;font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--cyan)}
+@media (max-width:520px){
+  #app{padding:22px 14px 80px;gap:30px}
+  nav{gap:14px} nav a{font-size:10px;letter-spacing:.1em}
+  .sea{height:480px}.water{bottom:92px}
+  .lab{bottom:-44px}.col:nth-child(even) .lab{bottom:-82px}
+  .lab b{font-size:9px;letter-spacing:.04em}.lab i{font-size:15px}
+  .col:nth-child(even)::after{content:"";position:absolute;left:50%;bottom:-40px;height:36px;border-left:1px dotted var(--c);opacity:.5}
+  .lbrow:first-child{box-shadow:4px 4px 0 rgba(255,210,63,.22)}
+  .swipe{display:block}
+  .grade{min-width:46px;padding:7px 2px}.grade b{font-size:17px}
+  table{border-spacing:3px}
+  .nm{display:none}
+  td.num{font-size:12px}
+  .chip{width:29px;height:29px;font-size:14px}
+  .duel{gap:10px 6px}.duel .v{font-size:19px}
+  .erow{grid-template-columns:16px 1fr 104px}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" role="status"></div>
+<script id="state" type="application/json">{"rev":20,"emo":{},"players":[{"id":"jay","name":"Jay","short":"Jay","e":"🦈","img":"faces/jay.jpg","c":"#FF7A66"},{"id":"lj","name":"Lauren Jane","short":"Lauren J","e":"🐙","img":"faces/lj.jpg","c":"#B79CFF"},{"id":"marti","name":"Marti","short":"Marti","e":"🐢","img":"faces/marti2.jpg","c":"#B6E36A"},{"id":"carolyn","name":"Carolyn","short":"Carolyn","e":"🐡","img":"faces/carolyn.jpg","c":"#FFC24B"},{"id":"andrew","name":"Andrew","short":"Andrew","e":"🦀","img":"faces/andrew.jpg","c":"#FF8FCB"},{"id":"lacey","name":"Lacey","short":"Lacey","e":"🐬","img":"faces/lacey2.jpg","c":"#6FB6FF"},{"id":"emma","name":"Emma","short":"Emma","e":"🦭","img":"faces/emma.jpg","c":"#4FE0D0"}],"days":{"2026-11-09":{"n":117,"prompts":[{"t":"Name a podcast (1k+ ratings on Spotify)","g":"screen"},{"t":"Name a villain from Star Wars, DC, or Lord of the Rings","g":"screen"},{"t":"Name a part of the human body below the waist","g":"body"},{"t":"Name a language with more than 10 million total speakers","g":"words"},{"t":"Name an animal that eats bugs","g":"nature"},{"t":"Name a toy brand","g":"brands"},{"t":"Name a country with \"in\" in its name","g":"places"}],"scores":{"lj":{"q":[60,10,60,60,60,60,0]},"carolyn":{"q":[85,30,60,30,60,60,10]},"jay":{"q":[60,10,30,60,10,30,0]},"emma":{"q":[85,0,30,60,60,60,10]},"andrew":{"q":[60,30,60,30,30,60,60]},"lacey":{"q":[60,60,30,10,30,30,30]},"marti":{"q":[85,0,30,60,30,60,10]}}}}}</script>
+<script id="js">
+(()=>{"use strict";
+const TIERS=[{p:0,n:'Miss',e:'⬛',c:'#5A6C96'},{p:10,n:'Plankton',e:'🫧',c:'#B9C9E4'},{p:15,n:'Too Clever',e:'',t:'TC',c:'#FF9F45'},{p:30,n:'Schooler',e:'🐟',c:'#4FD8F0'},{p:60,n:'Rare',e:'🦑',c:'#FF4D5E'},{p:85,n:'Deep Cut',e:'🏮',c:'#9B8CFF'},{p:100,n:'One in a Krillion',e:'🦐',t:'K★',c:'#FFD23F'}];
+const TP=Object.fromEntries(TIERS.map(t=>[t.p,t]));
+const EMO={'🫧':10,'🐟':30,'🦑':60,'🏮':85,'⬛':0,'⬜':0,'❌':0};
+const GEN={food:['Food & drink','Food'],places:['Places & geography','Places'],nature:['Animals & nature','Nature'],sports:['Sports & games','Sports'],screen:['Movies, TV & pop culture','Pop culture'],music:['Music','Music'],brands:['Brands & stuff','Brands'],words:['Words & names','Words'],body:['Body & style','Style'],life:['Everyday life','Everyday'],history:['History & holidays','History'],science:['Science & tech','Science']};
+const GUESS=[['screen',/movie|film|tv |show|sitcom|actor|actress|pok[eé]mon|disney|pixar|character|cartoon|superhero|celebrity|video game/i],['music',/song|band|album|singer|musician|instrument|rapper|composer|music/i],['sports',/sport|team|athlete|nba|nfl|olympic|score|golf|tennis|soccer|football|baseball|board game|card game/i],['food',/food|dish|pasta|fruit|vegetable|drink|cocktail|cheese|candy|dessert|spice|cereal|beer|wine|sauce|soup|bread|chips|crisps|fast food|dough/i],['places',/country|city|capital|river|state|island|mountain|lake|desert|ocean|continent|flag/i],['nature',/animal|bird|fish|tree|flower|mammal|insect|dog|cat breed|plant|dinosaur/i],['brands',/brand|company|store|chain|app|website|car /i],['words',/word|letter|rhyme|language|first name|spell|starts with|ends with/i],['body',/body|head|hair|wear|clothing|skin|makeup|bone|organ/i],['history',/president|war|king|queen|ancient|century|holiday|histor/i],['science',/planet|element|chemical|science|invent|tech|computer|space/i],['life',/something|type of|way to|ride|household|tool|job/i]];
+const BASE_N=117, BASE_D=Date.UTC(2026,10,9);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fm=n=>Math.round(n).toLocaleString('en-US');
+const iso=ms=>new Date(ms).toISOString().slice(0,10);
+const numToDate=n=>iso(BASE_D+(n-BASE_N)*864e5);
+const dateToNum=d=>BASE_N+Math.round((Date.parse(d)-BASE_D)/864e5);
+const monthName=m=>new Date(m+'-15T12:00:00Z').toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'});
+const rangeName=m=>m==='all'?'All time':monthName(m);
+const dayName=d=>new Date(d+'T12:00:00Z').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',timeZone:'UTC'});
+
+let state=JSON.parse(document.getElementById('state').textContent);
+try{const L=JSON.parse(localStorage.getItem('krillion-league')||'null');if(L&&L.rev>state.rev)state=L}catch(e){}
+let ui={metric:'avg',range:'all'};
+try{Object.assign(ui,JSON.parse(sessionStorage.getItem('krillion-ui2')||'{}'))}catch(e){}
+const keepUi=()=>{try{sessionStorage.setItem('krillion-ui2',JSON.stringify(ui))}catch(e){}};
+let artifact=null, parsed=[], owner=false;
+(function hook(tries){if(window.claude&&window.claude.use){window.claude.use('artifact').then(a=>{artifact=a}).catch(()=>{});window.claude.use('user').then(u=>u?u.isOwner():false).then(v=>{if(v){owner=true;render()}}).catch(()=>{})}else if(tries>0)setTimeout(()=>hook(tries-1),500)})(20);
+
+const pl=id=>state.players.find(p=>p.id===id);
+const av=(p,s)=>`<span class="av ${s?'s':''}" style="--c:${p.c}" title="${esc(p.name)}">${p.img?`<img src="${esc(p.img)}" alt="">`:p.e}</span>`;
+const tot=e=>e?(e.q?e.q.reduce((a,b)=>a+b,0):e.t):null;
+const tierEmoji=p=>{const t=TP[p];if(t.e)return t.e;for(const k in state.emo)if(state.emo[k]===p)return k;return ''};
+function chip(p){if(p==null)return '<span class="chip none">–</span>';const t=TP[p],e=tierEmoji(p);return `<span class="chip ${e?'':'t'}" style="--c:${t.c}" title="${t.n} · ${p} pts">${e||t.t}</span>`}
+function months(){return [...new Set(Object.keys(state.days).map(d=>d.slice(0,7)))].sort()}
+
+function calc(m){
+  const D=state.days,dates=Object.keys(D).filter(d=>m==='all'||d.startsWith(m)).sort(),P={},prompts=[];
+  state.players.forEach(p=>P[p.id]={p,days:[],total:0,n:0,tiers:{},genre:{},wins:0,qn:0});
+  for(const d of dates){const day=D[d];let best=-1;
+    const ps=[0,1,2,3,4,5,6].map(i=>{const x=(day.prompts||[])[i]||{};return {d,i,t:x.t||'',g:x.g||'',sum:0,n:0}});
+    for(const p of state.players){const e=day.scores&&day.scores[p.id],t=tot(e);if(t==null)continue;
+      const s=P[p.id];s.days.push({d,t,q:e.q});s.total+=t;s.n++;if(t>best)best=t;
+      if(e.q)e.q.forEach((v,i)=>{s.qn++;s.tiers[v]=(s.tiers[v]||0)+1;ps[i].sum+=v;ps[i].n++;const g=ps[i].g;if(g){const G=s.genre[g]||(s.genre[g]={sum:0,n:0});G.sum+=v;G.n++}});
+    }
+    if(best>=0)for(const id in P){const s=P[id],l=s.days[s.days.length-1];if(l&&l.d===d&&l.t===best)s.wins++}
+    prompts.push(...ps.filter(x=>x.n));
+  }
+  for(const id in P){const s=P[id];if(!s.n)continue;const ts=s.days.map(x=>x.t);
+    s.avg=s.total/s.n;s.best=s.days.reduce((a,b)=>b.t>a.t?b:a);s.worst=s.days.reduce((a,b)=>b.t<a.t?b:a);
+    s.sd=Math.sqrt(ts.reduce((a,t)=>a+(t-s.avg)**2,0)/s.n);
+    let run=1;s.streak=1;for(let i=1;i<s.days.length;i++){run=(Date.parse(s.days[i].d)-Date.parse(s.days[i-1].d)===864e5)?run+1:1;if(run>s.streak)s.streak=run}
+    s.qavg=s.qn?Object.entries(s.tiers).reduce((a,[v,c])=>a+v*c,0)/s.qn:null;
+  }
+  const list=Object.values(P).filter(s=>s.n);
+  return {m,dates,P,list,prompts,genres:Object.keys(GEN).filter(g=>list.some(s=>s.genre[g]))};
+}
+const ranked=(c,k)=>[...c.list].sort((a,b)=>(k==='total'?b.total-a.total:b.avg-a.avg)||b.total-a.total);
+const bearing=t=>t<=150?'🫧 Plankton':t<=250?'🐟 Schooler':t<=350?'🦑 Rare':t<450?'🏮 Deep cut':'🦐 One in a krillion';
+function grade(v){const S=[[80,'A+'],[70,'A'],[62,'A-'],[55,'B+'],[48,'B'],[42,'B-'],[36,'C+'],[30,'C'],[25,'C-'],[15,'D']];for(const [m,g] of S)if(v>=m)return g;return 'F'}
+function top(list,fn,lowest){let best=null,who=[];for(const s of list){const v=fn(s);if(v==null||(!lowest&&v<=0))continue;if(best==null||(lowest?v<best:v>best)){best=v;who=[s]}else if(v===best)who.push(s)}return best==null?null:{v:best,who}}
+const names=w=>w.who.map(s=>s.p.name).join(' & ');
+
+function awards(c){
+  const A=[],add=(title,w,line)=>{if(w)A.push({title,who:names(w),c:w.who[0].p.c,e:w.who.map(s=>av(s.p,1)).join(''),line:line(w.v,w.who[0])})};
+  const multi=c.dates.length>1;
+  add('Deepest Diver',top(c.list,s=>s.avg),v=>`${fm(v*10)} m average dive`);
+  add('Record Dive',top(c.list,s=>s.best.t),(v,s)=>`${fm(v*10)} m on ${dayName(s.best.d)}`);
+  add('Krillion Hunter',top(c.list,s=>s.tiers[100]),v=>`${v} one-in-a-krillion answer${v>1?'s':''}`);
+  add('Lantern Keeper',top(c.list,s=>s.tiers[85]),v=>`${v} Deep Cut${v>1?'s':''} 🏮`);
+  add('Squid Squad Captain',top(c.list,s=>s.tiers[60]),v=>`${v} Rare answers 🦑`);
+  add('Too Clever By Half',top(c.list,s=>s.tiers[15]),v=>`Fell for the obvious "obscure" pick ${v}×`);
+  add('Plankton Buffet',top(c.list,s=>s.tiers[10]),v=>`${v} bubble${v>1?'s':''} 🫧 for the first thing that came to mind`);
+  add('Came Up Empty',top(c.list,s=>s.tiers[0]),v=>`${v} blank${v>1?'s':''} ⬛ on the board`);
+  if(multi){
+    add('Daily Crowns',top(c.list,s=>s.wins),v=>`Won the day ${v}×`);
+    add('Iron Lungs',top(c.list,s=>s.streak>1?s.streak:0),v=>`${v} days in a row`);
+    add('The Bends',top(c.list.filter(s=>s.n>2),s=>s.best.t-s.worst.t),v=>`${fm(v*10)} m between best and worst dive`);
+    add('Steady Current',top(c.list.filter(s=>s.n>2),s=>s.sd,true),v=>`Most consistent, ±${fm(v*10)} m`);
+  }
+  for(const g of c.genres){const w=top(c.list,s=>s.genre[g]&&s.genre[g].n>=2?s.genre[g].sum/s.genre[g].n:null);add(GEN[g][1]+' Champ',w,v=>`${grade(v)} · ${v.toFixed(0)} pts per ${GEN[g][0].toLowerCase()} prompt`)}
+  return A;
+}
+
+/* ---------- views ---------- */
+function sea(c){
+  const mx=Math.max(...c.list.map(s=>s.avg*10)),topv=Math.min(7000,Math.max(2500,Math.ceil(mx*1.25/500)*500)),step=topv>4000?1000:500;
+  let h='';for(let v=0;v<=topv;v+=step)h+=`<div class="tick" style="top:${v/topv*100}%"><span>${v?fm(v)+' m':'surface'}</span></div>`;
+  for(const [v,l,p] of [[700,'all 🫧',10],[2100,'all 🐟',30],[4200,'all 🦑',60],[5950,'all 🏮',85]])if(v<=topv)h+=`<div class="ref" style="top:${v/topv*100}%;--c:${TP[p].c}"><span>${l}</span></div>`;
+  h+='<div class="cols">'+state.players.map(p=>{const s=c.P[p.id];if(!s.n)return `<div class="col" style="--c:${p.c}"><div class="diver" style="top:0;opacity:.45">${av(p)}</div><div class="lab"><b>${esc(p.short)}</b><i>deck</i></div></div>`;
+    const y=s.avg*10/topv*100;return `<div class="col" style="--c:${p.c}"><div class="rope" style="height:${y}%"></div><div class="diver" style="top:${y}%">${av(p)}</div><div class="lab"><b>${esc(p.short)}</b><i data-count="${Math.round(s.avg*10)}">${fm(s.avg*10)}</i></div></div>`}).join('')+'</div>';
+  let bub='';for(let i=0;i<18;i++){const r=(i*7919%97)/97,r2=(i*104729%89)/89;bub+=`<span class="bub" style="left:${(4+r*92).toFixed(1)}%;--s:${2+Math.round(r2*4)}px;--d:${(7+r2*9).toFixed(1)}s;--dl:-${(r*14).toFixed(1)}s"></span>`}
+  return `<div class="sea">${bub}<div class="water">${h}</div></div>`;
+}
+function spark(s,c){const n=c.dates.length;if(n<2)return '<svg width="80" height="26"></svg>';const pts=s.days.map(x=>[c.dates.indexOf(x.d)/(n-1)*76+2,2+x.t/700*22]);
+  return `<svg width="80" height="26" viewBox="0 0 80 26" aria-hidden="true"><polyline points="${pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="${s.p.c}" stroke-width="1.8" stroke-linejoin="round"/><circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="2.6" fill="${s.p.c}"/></svg>`}
+function vStandings(c){
+  const r=ranked(c,ui.metric),aw=awards(c);
+  return `<section class="panel"><div class="row between"><h2>The dive chart</h2><span class="dim sm">${rangeName(c.m)} · average depth per dive · ${c.dates.length} day${c.dates.length>1?'s':''} logged</span></div>${sea(c)}</section>
+  <section class="panel"><div class="row between"><h2>Standings</h2><div class="seg"><button data-metric="avg" class="${ui.metric==='avg'?'on':''}">Average dive</button><button data-metric="total" class="${ui.metric==='total'?'on':''}">Total depth</button></div></div>
+  <div class="lb">${r.map((s,i)=>`<div class="lbrow" style="--i:${i}"><span class="rank">${i+1}</span>${av(s.p)}<div><b>${esc(s.p.name)}</b>${i?'':' <span class="tag lead">Deepest diver</span>'}<div class="dim sm num">${bearing(s.avg)} · ${s.n} dive${s.n>1?'s':''}${s.wins?` · ${s.wins} win${s.wins>1?'s':''}`:''}</div></div>${spark(s,c)}<div class="big"><span data-count="${Math.round((ui.metric==='total'?s.total:s.avg)*10)}">${fm((ui.metric==='total'?s.total:s.avg)*10)}</span> <small>m</small></div></div>`).join('')}</div>
+  <div class="row between"><span class="dim sm">Every point is 10 m. Bearings are the game's own: 🫧 to 150, 🐟 to 250, 🦑 to 350, 🏮 to 449, 🦐 450+.</span><button data-act="recap">Copy recap for the group chat</button></div></section>
+  <section class="panel"><h2>Trophy shelf</h2><div class="awards">${aw.map(a=>`<div class="award" style="--c:${a.c}"><h3>${a.title}</h3><div class="who">${a.e} ${esc(a.who)}</div><div class="dim sm">${a.line}</div></div>`).join('')}</div></section>`;
+}
+function vReport(c){
+  const gs=c.genres,qd=c.list.filter(s=>s.qn);
+  let rc;
+  if(!gs.length)rc=`<p class="dim">Genre grades appear once the prompts are tagged. Until then, here is everyone's overall grade.</p>`;
+  else{const best={};gs.forEach(g=>{const w=top(c.list,s=>s.genre[g]?s.genre[g].sum/s.genre[g].n:null);best[g]=w?w.who.map(s=>s.p.id):[]});
+    rc=`<div class="scroll"><table class="rc"><tr><th class="l">Diver</th>${gs.map(g=>`<th title="${GEN[g][0]}">${GEN[g][1]}</th>`).join('')}<th>Overall</th></tr>${ranked(c).filter(s=>s.qn).map(s=>`<tr><td class="l"><span class="row" style="flex-wrap:nowrap;gap:8px">${av(s.p,1)}${esc(s.p.name)}</span></td>${gs.map(g=>{const G=s.genre[g];if(!G)return '<td class="dim">–</td>';const v=G.sum/G.n;return `<td><div class="grade ${best[g].includes(s.p.id)?'top':''}" style="--v:${v}"><b>${grade(v)}</b><span>${v.toFixed(0)}</span></div></td>`}).join('')}<td><div class="grade" style="--v:${s.qavg}"><b>${grade(s.qavg)}</b><span>${s.qavg.toFixed(0)}</span></div></td></tr>`).join('')}</table></div><p class="dim sm">Number is average points per prompt in that genre. Gold outline marks the genre champ.</p>`+(gs.length>3?'<p class="swipe">Swipe the grid sideways for more genres →</p>':'')}
+  const overall=gs.length?'':`<div class="row">${ranked(c).filter(s=>s.qn).map(s=>`<div class="grade" style="--v:${s.qavg};padding:10px 12px"><span>${av(s.p,1)} ${esc(s.p.short)}</span><b style="margin-top:4px">${grade(s.qavg)}</b><span>${s.qavg.toFixed(0)} pts/prompt</span></div>`).join('')}</div>`;
+  const ps=[...c.prompts].sort((a,b)=>a.sum/a.n-b.sum/b.n),pl2=x=>`<li>${x.t?esc(x.t):`<span class="dim">${dayName(x.d)} · prompt ${x.i+1}</span>`} <span class="tag num">${fm(x.sum/x.n*10)} m avg</span></li>`;
+  return `<section class="panel"><div class="row between"><h2>Report card</h2><span class="dim sm">A+ is 80+ points per prompt, C is 30, F is under 15</span></div>${rc}${overall}</section>
+  <section class="panel"><h2>What everyone catches</h2><p class="dim sm">Share of each diver's answers by tier, shallow to deep.</p>
+  ${qd.map(s=>`<div class="row" style="flex-wrap:nowrap">${av(s.p,1)}<span style="width:92px;flex:none" class="sm">${esc(s.p.short)}</span><div class="mix">${TIERS.map(t=>s.tiers[t.p]?`<i style="--c:${t.c};flex:${s.tiers[t.p]}" title="${t.n}: ${s.tiers[t.p]} (${Math.round(s.tiers[t.p]/s.qn*100)}%)"></i>`:'').join('')}</div></div>`).join('')}
+  <div class="legend">${TIERS.map(t=>`<span><i style="--c:${t.c}"></i>${tierEmoji(t.p)||''} ${t.n} ${t.p}</span>`).join('')}</div></section>
+  <section class="grid2"><div class="panel"><h2>Toughest prompts</h2><ol class="prompts">${ps.slice(0,3).map(pl2).join('')}</ol></div><div class="panel"><h2>Friendliest prompts</h2><ol class="prompts">${ps.slice(-3).reverse().map(pl2).join('')}</ol></div></section>`;
+}
+function vLog(c){
+  if(!c.dates.includes(ui.day))ui.day=c.dates[c.dates.length-1];
+  const d=ui.day,day=state.days[d],rows=state.players.map(p=>({p,e:day.scores[p.id],t:tot(day.scores[p.id])})).sort((a,b)=>(b.t??-1)-(a.t??-1)),best=rows[0].t;
+  const pr=[0,1,2,3,4,5,6].map(i=>{const x=(day.prompts||[])[i]||{},vs=rows.filter(r=>r.e&&r.e.q).map(r=>r.e.q[i]);return {t:x.t,g:x.g,avg:vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null}});
+  return `<section class="panel"><div class="row between"><h2>Dive log</h2><span class="dim sm">Krillion #${day.n||dateToNum(d)} · ${dayName(d)}</span></div>
+  <div class="strip">${c.dates.map(x=>`<button data-day="${x}" class="${x===d?'on':''}">${+x.slice(5,7)}/${+x.slice(8)}</button>`).join('')}</div>
+  <div class="scroll"><table><tr><th class="l">Diver</th>${[1,2,3,4,5,6,7].map(i=>`<th>Q${i}</th>`).join('')}<th>Depth</th></tr>
+  ${rows.map(r=>`<tr><td class="l"><span class="row" style="flex-wrap:nowrap;gap:8px">${av(r.p,1)}<span class="nm">${esc(r.p.short)}</span>${r.t!=null&&r.t===best?' <span title="Won the day">👑</span>':''}</span></td>${r.t==null?'<td colspan="7" class="dim sm">sat this one out</td><td></td>':(r.e.q?r.e.q.map(chip).join('</td><td>').replace(/^/,'<td>')+'</td>':'<td colspan="7" class="dim sm">total only</td>')+`<td class="num" title="${bearing(r.t)}"><b>${fm(r.t*10)} m</b></td>`}</tr>`).join('')}
+  <tr><td class="l dim sm">Group avg</td>${pr.map(x=>`<td class="dim sm num">${x.avg==null?'':x.avg.toFixed(0)}</td>`).join('')}<td></td></tr></table></div>
+  ${pr.some(x=>x.t)?`<ol class="prompts">${pr.map(x=>`<li>${x.t?esc(x.t):'<span class="dim">not entered</span>'} ${x.g?`<span class="tag">${GEN[x.g][1]}</span>`:''}</li>`).join('')}</ol>`:`<p class="dim sm">Prompts for this day are not entered yet.</p>`}</section>`;
+}
+function vDuel(c){
+  const ids=c.list.map(s=>s.p.id);if(ids.length<2)return `<section class="panel"><h2>Head to head</h2><p class="dim">Needs at least two divers this month.</p></section>`;
+  if(!ids.includes(ui.a))ui.a=ids[0];if(!ids.includes(ui.b)||ui.b===ui.a)ui.b=ids.find(i=>i!==ui.a);
+  const A=c.P[ui.a],B=c.P[ui.b],bm=new Map(B.days.map(x=>[x.d,x]));let w=0,l=0,t=0,blow=null;const qa=[0,0];let qn=0;
+  for(const x of A.days){const y=bm.get(x.d);if(!y)continue;x.t>y.t?w++:x.t<y.t?l++:t++;const df=x.t-y.t;if(!blow||Math.abs(df)>Math.abs(blow.df))blow={df,d:x.d};if(x.q&&y.q)x.q.forEach((v,i)=>{qn++;if(v>y.q[i])qa[0]++;else if(v<y.q[i])qa[1]++})}
+  const sel=(k,o)=>`<select id="duel-${k}" data-duel="${k}">${c.list.map(s=>`<option value="${s.p.id}" ${s.p.id===ui[k]?'selected':''} ${s.p.id===o?'disabled':''}>${esc(s.p.name)}</option>`).join('')}</select>`;
+  const line=(label,a,b,f)=>`<div class="v ${a>b?'w':''}">${f(a)}</div><div class="dim sm">${label}</div><div class="v ${b>a?'w':''}">${f(b)}</div>`;
+  const gl=c.genres.filter(g=>A.genre[g]&&B.genre[g]).map(g=>line(GEN[g][0],A.genre[g].sum/A.genre[g].n,B.genre[g].sum/B.genre[g].n,v=>grade(v)+' · '+v.toFixed(0))).join('');
+  const lead=w===l?'Dead even':`${esc((w>l?A:B).p.name)} leads`;
+  return `<section class="panel"><h2>Head to head</h2><div class="duel"><div class="pick">${av(A.p)}${sel('a',ui.b)}</div><div class="dim">vs</div><div class="pick">${av(B.p)}${sel('b',ui.a)}</div>
+  ${line('Days won',w,l,v=>v)}${line('Average dive',A.avg*10,B.avg*10,v=>fm(v)+' m')}${line('Best dive',A.best.t*10,B.best.t*10,v=>fm(v)+' m')}${qn?line('Prompts won',qa[0],qa[1],v=>v):''}${line('Deep Cuts + Krillions',(A.tiers[85]||0)+(A.tiers[100]||0),(B.tiers[85]||0)+(B.tiers[100]||0),v=>v)}${gl}</div>
+  <p class="dim">${w+l+t?`${lead} ${Math.max(w,l)}–${Math.min(w,l)}${t?`–${t}`:''} on days both dived.${blow&&blow.df?` Biggest gap: ${esc((blow.df>0?A:B).p.name)} by ${fm(Math.abs(blow.df)*10)} m on ${dayName(blow.d)}.`:''}`:'These two have not dived on the same day yet.'}</p></section>`;
+}
+function fmtScore(e){return e?(e.q?e.q.join(' '):String(e.t)):''}
+function vEnter(){
+  const d=ui.edate||iso(Date.now()-8*36e5),day=state.days[d]||{prompts:[],scores:{}};ui.edate=d;
+  const gsel=(i,g)=>`<select id="e-g${i}" aria-label="Genre for prompt ${i+1}"><option value="">Untagged</option>${Object.entries(GEN).map(([k,v])=>`<option value="${k}" ${k===g?'selected':''}>${v[0]}</option>`).join('')}</select>`;
+  return `<section class="panel"><h2>Paste from the group chat</h2><p class="dim sm">Paste everyone's shares in one go, a name on the line above each. The Krillion number sets the date, and the emoji row gives the per-prompt scores (🫧 10 · 🐟 30 · 🦑 60 · 🏮 85 · ⬛ 0). Several days at once is fine.</p>
+  <textarea id="paste" placeholder="Jay&#10;Krillion #117 🦐&#10;200&#10;&#10;🦑🫧🐟🦑🫧🐟⬛"></textarea><div id="paste-pv" class="sm dim"></div><div class="row"><button class="go" data-act="import">Save pasted scores</button></div></section>
+  <section class="panel"><div class="row between"><h2>Edit a day</h2><input type="date" id="e-date" value="${d}" aria-label="Day to edit"></div>
+  <h3>Prompts and genres <span class="dim sm">· Krillion #${day.n||dateToNum(d)}</span></h3>
+  ${[0,1,2,3,4,5,6].map(i=>{const x=(day.prompts||[])[i]||{};return `<div class="erow"><span class="dim num">${i+1}</span><input type="text" id="e-p${i}" data-prompt="${i}" value="${esc(x.t||'')}" placeholder="Name a…" aria-label="Prompt ${i+1}">${gsel(i,x.g)}</div>`}).join('')}
+  <h3>Scores</h3><p class="dim sm">Seven scores (10 15 30 60 85 100, or 0 for a miss), or just a day total if that is all you have. Blank means they sat out.</p>
+  ${state.players.map(p=>`<div class="srow"><label for="e-s-${p.id}" class="row" style="gap:8px;flex-wrap:nowrap">${av(p,1)}${esc(p.short)}</label><input type="text" id="e-s-${p.id}" data-score="${p.id}" value="${fmtScore(day.scores[p.id])}" placeholder="60 10 30 60 10 30 0" inputmode="numeric"><div class="pv" id="pv-${p.id}"></div></div>`).join('')}
+  <div class="row"><button class="go" data-act="save-day">Save this day</button>${state.days[d]?'<button class="danger" data-act="del-day">Delete this day</button>':''}</div></section>`;
+}
+function parseScore(v){v=v.trim();if(!v)return {empty:1};const tk=v.split(/[\s,]+/);
+  if(tk.length===1&&/^\d+$/.test(tk[0])&&+tk[0]<=700)return {e:{t:+tk[0]}};
+  if(tk.length===7&&tk.every(t=>TP[t]))return {e:{q:tk.map(Number)}};
+  return {err:tk.length===7?'Scores must be 0, 10, 15, 30, 60, 85 or 100':`Need 7 scores or one total (got ${tk.length})`}}
+function pvScore(id){const el=$('#pv-'+id),r=parseScore($('#e-s-'+id).value);el.innerHTML=r.err?`<span class="err">${r.err}</span>`:r.e?(r.e.q?r.e.q.map(chip).join('')+` <b class="num">&nbsp;${fm(tot(r.e)*10)} m</b>`:`<span class="dim">total only · ${fm(r.e.t*10)} m</span>`):''}
+
+function parsePaste(text){
+  const out=[],lines=text.split(/\n/).map(l=>l.trim()).filter(Boolean);let name=null,num=null,total=null,date=null;
+  const known=Object.assign({},EMO,state.emo);
+  for(const l of lines){let m;const low=l.toLowerCase().replace(/[^a-z ]/g,'').trim();
+    const p=low&&state.players.find(p=>low===p.name.toLowerCase()||low===p.short.toLowerCase()||low.startsWith(p.name.toLowerCase()+' '));
+    if(p){name=p;total=null;continue}
+    if((m=l.match(/krillion\s*#\s*(\d+)/i))){num=+m[1];continue}
+    if((m=l.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/))){const y=m[3]?(+m[3]<100?2000+ +m[3]:+m[3]):new Date().getFullYear();date=iso(Date.UTC(y,m[1]-1,+m[2]));num=null;continue}
+    if(/^\d{1,3}$/.test(l)){total=+l;continue}
+    const ch=Array.from(l.replace(/[️‍\s]/g,''));
+    if(ch.length===7&&!/[a-z0-9]/i.test(l)){
+      const r={p:name,num,d:num?numToDate(num):date,total};let q=ch.map(c=>known[c]);const unk=[...new Set(ch.filter(c=>known[c]==null))];
+      if(unk.length&&total!=null&&unk.length<=2){const ks=q.reduce((a,v)=>a+(v||0),0);const opts=[15,100,0,10,30,60,85];
+        outer:for(const a of opts)for(const b of unk.length>1?opts:[0]){const s=ks+ch.filter(c=>c===unk[0]).length*a+(unk[1]?ch.filter(c=>c===unk[1]).length*b:0);if(s===total&&(!unk[1]||a!==b)){known[unk[0]]=a;if(unk[1])known[unk[1]]=b;r.learn=1;break outer}}
+        q=ch.map(c=>known[c])}
+      if(!name)r.err='No name above this score';else if(!r.d)r.err='No Krillion number or date';else if(q.some(v=>v==null))r.err='Unrecognized emoji '+unk.join(' ');
+      else{r.q=q;if(total!=null&&total!==q.reduce((a,b)=>a+b,0))r.warn=`emoji add to ${q.reduce((a,b)=>a+b,0)}, share says ${total}`}
+      out.push(r);name=null;total=null}
+  }
+  return {out,known};
+}
+function pvPaste(){const {out}=parsePaste($('#paste').value);parsed=out;$('#paste-pv').innerHTML=out.length?out.map(r=>`<div class="row" style="gap:6px;margin-top:6px">${r.p?av(r.p,1):''}<span style="min-width:74px">${r.p?esc(r.p.short):'?'}</span>${r.q?r.q.map(chip).join('')+` <b class="num">${fm(r.q.reduce((a,b)=>a+b,0)*10)} m</b> <span>${dayName(r.d)}</span>`:''}${r.err?`<span class="err">${esc(r.err)}</span>`:''}${r.warn?`<span class="err">${esc(r.warn)}</span>`:''}</div>`).join(''):($('#paste').value.trim()?'<span class="err">No scores found yet. Each share needs a name, then the emoji row.</span>':'')}
+
+function recap(c){
+  const r=ranked(c),md=['🥇','🥈','🥉'],aw=awards(c);
+  return `🌊 KRILLION CLUB · ${rangeName(c.m)}\n${c.dates.length} day${c.dates.length>1?'s':''} of diving\n\n`+r.map((s,i)=>`${md[i]||(i+1)+'.'} ${s.p.e} ${s.p.name} · ${fm(s.avg*10)} m avg · ${s.n} dive${s.n>1?'s':''} · overall ${s.qavg!=null?grade(s.qavg):'n/a'}`).join('\n')+`\n\n🏆 TROPHIES\n`+aw.map(a=>`${a.title}: ${a.who} (${a.line})`).join('\n');
+}
+
+/* ---------- shell ---------- */
+const TABS=[['standings','Standings',vStandings],['report-card','Report card',vReport],['dive-log','Dive log',vLog],['head-to-head','Head to head',vDuel],['log-scores','Log scores',vEnter]];
+function render(){
+  const tabs=TABS.filter(t=>owner||t[0]!=='log-scores'),ms=months(),tab=tabs.find(t=>'#'+t[0]===location.hash)||tabs[0];
+  if(ui.range!=='all'&&!ms.includes(ui.range))ui.range='all';
+  const c=ms.length?calc(ui.range):null;
+  const body=tab[0]==='log-scores'?vEnter():(c&&c.list.length?tab[2](c):`<section class="panel"><h2>No dives logged yet</h2><p class="dim">Scores will show up here once the first day is logged.</p></section>`);
+  $('#app').innerHTML=`<header class="head"><div><p>Seven divers · seven prompts a day</p><h1>Krillion Club</h1></div>
+  ${ms.length>1?`<select id="month" aria-label="Time range"><option value="all" ${ui.range==='all'?'selected':''}>All time</option>${[...ms].reverse().map(m=>`<option value="${m}" ${m===ui.range?'selected':''}>${monthName(m)}</option>`).join('')}</select>`:''}</header>
+  <nav>${tabs.map(t=>`<a href="#${t[0]}" class="${t===tab?'on':''}">${t[1]}</a>`).join('')}</nav>${body}`;
+  if(tab[0]==='log-scores')state.players.forEach(p=>pvScore(p.id));
+  if(tab[0]==='standings'&&c&&c.list.length)countUp();
+  const on=$('.strip .on');if(on)on.parentNode.scrollLeft=on.offsetLeft-on.parentNode.clientWidth/2;
+  keepUi();
+}
+const calm=()=>window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function countUp(){if(calm())return;const t0=performance.now(),els=[...document.querySelectorAll('[data-count]')];
+  (function step(t){const k=Math.min(1,(t-t0)/1100),e=1-Math.pow(1-k,3);for(const el of els)el.textContent=fm(el.dataset.count*e);if(k<1)requestAnimationFrame(step)})(t0)}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),3200)}
+function buildDoc(){
+  const json=JSON.stringify(state).replace(/</g,'\\u003c');
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>Krillion Club</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">\n<style id="css">'+document.getElementById('css').textContent+'</style>\n</head>\n<body>\n<div id="app"></div>\n<div id="toast" role="status"></div>\n<script id="state" type="application/json">'+json+'<\/script>\n<script id="js">'+document.getElementById('js').textContent+'<\/script>\n</body>\n</html>\n';
+}
+function persist(msg){
+  if(!owner)return toast('Only Jay can log scores.');
+  state.rev++;try{localStorage.setItem('krillion-league',JSON.stringify(state))}catch(e){}
+  render();
+  if(artifact)artifact.publish(buildDoc()).then(()=>toast(msg)).catch(e=>{const c=String(e&&(e.code||e.message)||e);toast(/not_writer|not_granted/.test(c)?'Saved on this device only. Only the owner can save for everyone.':/conflict/.test(c)?'Someone else just saved. Check the page and try again.':msg+' (on this device)')});
+  else toast(msg+' (on this device)');
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+  if(d.metric){ui.metric=d.metric;render()}
+  else if(d.day){ui.day=d.day;render()}
+  else if(d.act==='recap'){const txt=recap(calc(ui.range));navigator.clipboard.writeText(txt).then(()=>toast('Recap copied. Paste it in the chat.')).catch(()=>{const p=b.closest('.panel');if(!p.querySelector('#recap-txt'))p.insertAdjacentHTML('beforeend','<textarea id="recap-txt" aria-label="Recap text"></textarea>');p.querySelector('#recap-txt').value=txt;toast('Select the text below and copy it.')})}
+  else if(d.act==='import'){const ok=parsed.filter(r=>r.q);if(!ok.length)return toast('Nothing to save yet.');
+    const {known}=parsePaste($('#paste').value);for(const k in known)if(EMO[k]==null)state.emo[k]=known[k];
+    for(const r of ok){const day=state.days[r.d]||(state.days[r.d]={prompts:[],scores:{}});day.n=r.num||dateToNum(r.d);day.scores[r.p.id]={q:r.q}}
+    ui.range='all';ui.day=ok[ok.length-1].d;ui.edate=ui.day;parsed=[];persist(`Saved ${ok.length} score${ok.length>1?'s':''}`)}
+  else if(d.act==='save-day'){const dt=ui.edate,scores={};let bad=0;
+    for(const p of state.players){const r=parseScore($('#e-s-'+p.id).value);if(r.err)bad++;else if(r.e)scores[p.id]=r.e}
+    if(bad)return toast('Fix the highlighted scores first.');
+    const prompts=[0,1,2,3,4,5,6].map(i=>({t:$('#e-p'+i).value.trim(),g:$('#e-g'+i).value}));
+    if(!Object.keys(scores).length)return toast('Add at least one score.');
+    state.days[dt]={n:dateToNum(dt),prompts,scores};ui.range='all';ui.day=dt;persist('Day saved')}
+  else if(d.act==='del-day'){if(b.dataset.sure){delete state.days[ui.edate];persist('Day deleted')}else{b.dataset.sure=1;b.textContent='Tap again to delete'}}
+});
+document.addEventListener('input',e=>{const t=e.target;
+  if(t.dataset.score)pvScore(t.dataset.score);
+  else if(t.id==='paste')pvPaste();
+  else if(t.dataset.prompt){const s=$('#e-g'+t.dataset.prompt);if(!s.dataset.manual){const g=GUESS.find(x=>x[1].test(t.value+' '));s.value=g?g[0]:''}}
+});
+document.addEventListener('change',e=>{const t=e.target;
+  if(t.id==='month'){ui.range=t.value;ui.day=null;render()}
+  else if(t.id==='e-date'&&t.value){ui.edate=t.value;render()}
+  else if(t.dataset.duel){ui[t.dataset.duel]=t.value;render()}
+  else if(/^e-g\d$/.test(t.id))t.dataset.manual=1;
+});
+window.addEventListener('hashchange',render);
+render();
+})();
+</script>
+</body>
+</html>
