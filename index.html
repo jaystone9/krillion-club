@@ -21,14 +21,15 @@
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Chakra+Petch:wght@600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style id="css">
 /* Layout idea: a dive-computer readout. No cards: sections sit on the water, split by letterspaced labels and dashed rules. Hard edges, pixel numerals, one hot accent. Single theme by choice. */
 :root{
   --sea:#0B1730; --abyss:#070D1F; --line:#22335A; --rule:#3A5088;
   --ink:#E8F1FF; --dim:#8497C2; --pink:#FF5C8A; --cyan:#4FD8F0; --gold:#FFD23F; --bad:#FF7A7A;
   --glow:var(--cyan); --lantern:var(--gold);
-  --display:"Pixelify Sans","Courier New",monospace;
+  --display:"Chakra Petch","Trebuchet MS",system-ui,sans-serif;
+  --pixel:"Pixelify Sans","Courier New",monospace;
   --body:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
   color-scheme:dark;
 }
@@ -38,7 +39,7 @@ body{background:linear-gradient(180deg,#35596C 0,#1D3653 200px,var(--sea) 520px,
 body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:8;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px)}
 #app{max-width:940px;margin:0 auto;padding:28px 18px 90px;display:flex;flex-direction:column;gap:36px}
 h1,h2,h3{margin:0;text-wrap:balance}
-h1{font:700 clamp(44px,11vw,84px)/.9 var(--display);text-transform:uppercase;letter-spacing:.03em;text-shadow:3px 0 var(--pink),-3px 0 var(--cyan)}
+h1{font:700 clamp(44px,11vw,84px)/.9 var(--pixel);text-transform:uppercase;letter-spacing:.03em;text-shadow:3px 0 var(--pink),-3px 0 var(--cyan)}
 h2{font:600 12px/1.2 var(--body);text-transform:uppercase;letter-spacing:.3em;color:var(--ink);display:flex;align-items:center;gap:14px}
 h2{white-space:nowrap}
 .lab{position:absolute;left:50%;bottom:-50px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -186,12 +187,16 @@ td.num{white-space:nowrap}
 .rc .grade{min-width:0}.pcol{display:flex;flex-direction:column;align-items:center;gap:6px}.pcol .nm{font-size:9px;letter-spacing:.06em}
 .rc tr.tot td{padding-top:8px}.rc tr.tot td.l{color:var(--gold);text-transform:uppercase;letter-spacing:.14em;font-size:10px}
 @media (max-width:520px){.rc th.l{width:66px}.rc td.l{font-size:10px;padding-right:2px}.rc .grade{padding:7px 0}.rc .grade b{font-size:15px}.rc .grade span{font-size:9px}table.rc{border-spacing:2px}}
+
+/* legible numerals */
+.big,.rank,.lab i,.grade b,.duel .v,.strip button,.award .who,.lbrow:first-child b{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.big small{letter-spacing:.12em;text-transform:uppercase}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <div id="toast" role="status"></div>
-<script id="state" type="application/json">{"rev":21,"emo":{},"players":[{"id":"jay","name":"Jay","short":"Jay","e":"🦈","img":"faces/jay.jpg","c":"#FF7A66"},{"id":"lj","name":"Lauren Jane","short":"Lauren J","e":"🐙","img":"faces/lj.jpg","c":"#B79CFF"},{"id":"marti","name":"Marti","short":"Marti","e":"🐢","img":"faces/marti2.jpg","c":"#B6E36A"},{"id":"carolyn","name":"Carolyn","short":"Carolyn","e":"🐡","img":"faces/carolyn.jpg","c":"#FFC24B"},{"id":"andrew","name":"Andrew","short":"Andrew","e":"🦀","img":"faces/andrew.jpg","c":"#FF8FCB"},{"id":"lacey","name":"Lacey","short":"Lacey","e":"🐬","img":"faces/lacey2.jpg","c":"#6FB6FF"},{"id":"emma","name":"Emma","short":"Emma","e":"🦭","img":"faces/emma.jpg","c":"#4FE0D0"}],"days":{"2026-11-09":{"n":117,"prompts":[{"t":"Name a podcast (1k+ ratings on Spotify)","g":"screen"},{"t":"Name a villain from Star Wars, DC, or Lord of the Rings","g":"screen"},{"t":"Name a part of the human body below the waist","g":"body"},{"t":"Name a language with more than 10 million total speakers","g":"words"},{"t":"Name an animal that eats bugs","g":"nature"},{"t":"Name a toy brand","g":"brands"},{"t":"Name a country with \"in\" in its name","g":"places"}],"scores":{"lj":{"q":[60,10,60,60,60,60,0]},"carolyn":{"q":[85,30,60,30,60,60,10]},"jay":{"q":[60,10,30,60,10,30,0]},"emma":{"q":[85,0,30,60,60,60,10]},"andrew":{"q":[60,30,60,30,30,60,60]},"lacey":{"q":[60,60,30,10,30,30,30]},"marti":{"q":[85,0,30,60,30,60,10]}}}}}</script>
+<script id="state" type="application/json">{"rev":22,"emo":{},"players":[{"id":"jay","name":"Jay","short":"Jay","e":"🦈","img":"faces/jay.jpg","c":"#FF7A66"},{"id":"lj","name":"Lauren Jane","short":"Lauren J","e":"🐙","img":"faces/lj.jpg","c":"#B79CFF"},{"id":"marti","name":"Marti","short":"Marti","e":"🐢","img":"faces/marti2.jpg","c":"#B6E36A"},{"id":"carolyn","name":"Carolyn","short":"Carolyn","e":"🐡","img":"faces/carolyn.jpg","c":"#FFC24B"},{"id":"andrew","name":"Andrew","short":"Andrew","e":"🦀","img":"faces/andrew.jpg","c":"#FF8FCB"},{"id":"lacey","name":"Lacey","short":"Lacey","e":"🐬","img":"faces/lacey2.jpg","c":"#6FB6FF"},{"id":"emma","name":"Emma","short":"Emma","e":"🦭","img":"faces/emma.jpg","c":"#4FE0D0"}],"days":{"2026-11-09":{"n":117,"prompts":[{"t":"Name a podcast (1k+ ratings on Spotify)","g":"screen"},{"t":"Name a villain from Star Wars, DC, or Lord of the Rings","g":"screen"},{"t":"Name a part of the human body below the waist","g":"body"},{"t":"Name a language with more than 10 million total speakers","g":"words"},{"t":"Name an animal that eats bugs","g":"nature"},{"t":"Name a toy brand","g":"brands"},{"t":"Name a country with \"in\" in its name","g":"places"}],"scores":{"lj":{"q":[60,10,60,60,60,60,0]},"carolyn":{"q":[85,30,60,30,60,60,10]},"jay":{"q":[60,10,30,60,10,30,0]},"emma":{"q":[85,0,30,60,60,60,10]},"andrew":{"q":[60,30,60,30,30,60,60]},"lacey":{"q":[60,60,30,10,30,30,30]},"marti":{"q":[85,0,30,60,30,60,10]}}}}}</script>
 <script id="js">
 (()=>{"use strict";
 const TIERS=[{p:0,n:'Miss',e:'⬛',c:'#5A6C96'},{p:10,n:'Plankton',e:'🫧',c:'#B9C9E4'},{p:15,n:'Too Clever',e:'',t:'TC',c:'#FF9F45'},{p:30,n:'Schooler',e:'🐟',c:'#4FD8F0'},{p:60,n:'Rare',e:'🦑',c:'#FF4D5E'},{p:85,n:'Deep Cut',e:'🏮',c:'#9B8CFF'},{p:100,n:'One in a Krillion',e:'🦐',t:'K★',c:'#FFD23F'}];
@@ -255,8 +260,8 @@ const names=w=>w.who.map(s=>s.p.name).join(' & ');
 function awards(c){
   const A=[],add=(title,w,line)=>{if(w)A.push({title,who:names(w),c:w.who[0].p.c,e:w.who.map(s=>av(s.p,1)).join(''),line:line(w.v,w.who[0])})};
   const multi=c.dates.length>1;
-  add('Deepest Diver',top(c.list,s=>s.avg),v=>`${fm(v*10)} m average dive`);
-  add('Record Dive',top(c.list,s=>s.best.t),(v,s)=>`${fm(v*10)} m on ${dayName(s.best.d)}`);
+  add('Deepest Diver',top(c.list,s=>s.avg),v=>`${fm(v)} average score`);
+  add('Record Dive',top(c.list,s=>s.best.t),(v,s)=>`${fm(v)} on ${dayName(s.best.d)}`);
   add('Krillion Hunter',top(c.list,s=>s.tiers[100]),v=>`${v} one-in-a-krillion answer${v>1?'s':''}`);
   add('Lantern Keeper',top(c.list,s=>s.tiers[85]),v=>`${v} Deep Cut${v>1?'s':''} 🏮`);
   add('Squid Squad Captain',top(c.list,s=>s.tiers[60]),v=>`${v} Rare answers 🦑`);
@@ -266,8 +271,8 @@ function awards(c){
   if(multi){
     add('Daily Crowns',top(c.list,s=>s.wins),v=>`Won the day ${v}×`);
     add('Iron Lungs',top(c.list,s=>s.streak>1?s.streak:0),v=>`${v} days in a row`);
-    add('The Bends',top(c.list.filter(s=>s.n>2),s=>s.best.t-s.worst.t),v=>`${fm(v*10)} m between best and worst dive`);
-    add('Steady Current',top(c.list.filter(s=>s.n>2),s=>s.sd,true),v=>`Most consistent, ±${fm(v*10)} m`);
+    add('The Bends',top(c.list.filter(s=>s.n>2),s=>s.best.t-s.worst.t),v=>`${fm(v)} points between best and worst day`);
+    add('Steady Current',top(c.list.filter(s=>s.n>2),s=>s.sd,true),v=>`Most consistent, ±${fm(v)} points`);
   }
   for(const g of c.genres){const w=top(c.list,s=>s.genre[g]&&s.genre[g].n>=2?s.genre[g].sum/s.genre[g].n:null);add(GEN[g][1]+' Champ',w,v=>`${grade(v)} · ${v.toFixed(0)} pts per ${GEN[g][0].toLowerCase()} prompt`)}
   return A;
@@ -275,11 +280,11 @@ function awards(c){
 
 /* ---------- views ---------- */
 function sea(c){
-  const mx=Math.max(...c.list.map(s=>s.avg*10)),topv=Math.min(7000,Math.max(2500,Math.ceil(mx*1.25/500)*500)),step=topv>4000?1000:500;
-  let h='';for(let v=0;v<=topv;v+=step)h+=`<div class="tick" style="top:${v/topv*100}%"><span>${v?fm(v)+' m':'surface'}</span></div>`;
-  for(const [v,l,p] of [[700,'all 🫧',10],[2100,'all 🐟',30],[4200,'all 🦑',60],[5950,'all 🏮',85]])if(v<=topv)h+=`<div class="ref" style="top:${v/topv*100}%;--c:${TP[p].c}"><span>${l}</span></div>`;
+  const mx=Math.max(...c.list.map(s=>s.avg)),topv=Math.min(700,Math.max(250,Math.ceil(mx*1.25/50)*50)),step=topv>400?100:50;
+  let h='';for(let v=0;v<=topv;v+=step)h+=`<div class="tick" style="top:${v/topv*100}%"><span>${v?fm(v)+' pts':'surface'}</span></div>`;
+  for(const [v,l,p] of [[70,'all 🫧',10],[210,'all 🐟',30],[420,'all 🦑',60],[595,'all 🏮',85]])if(v<=topv)h+=`<div class="ref" style="top:${v/topv*100}%;--c:${TP[p].c}"><span>${l}</span></div>`;
   h+='<div class="cols">'+state.players.map(p=>{const s=c.P[p.id];if(!s.n)return `<div class="col" style="--c:${p.c}"><div class="diver" style="top:0;opacity:.45">${av(p)}</div><div class="lab"><b>${esc(p.short)}</b><i>deck</i></div></div>`;
-    const y=s.avg*10/topv*100;return `<div class="col" style="--c:${p.c}"><div class="rope" style="height:${y}%"></div><div class="diver" style="top:${y}%">${av(p)}</div><div class="lab"><b>${esc(p.short)}</b><i data-count="${Math.round(s.avg*10)}">${fm(s.avg*10)}</i></div></div>`}).join('')+'</div>';
+    const y=s.avg/topv*100;return `<div class="col" style="--c:${p.c}"><div class="rope" style="height:${y}%"></div><div class="diver" style="top:${y}%">${av(p)}</div><div class="lab"><b>${esc(p.short)}</b><i data-count="${Math.round(s.avg)}">${fm(s.avg)}</i></div></div>`}).join('')+'</div>';
   let bub='';for(let i=0;i<18;i++){const r=(i*7919%97)/97,r2=(i*104729%89)/89;bub+=`<span class="bub" style="left:${(4+r*92).toFixed(1)}%;--s:${2+Math.round(r2*4)}px;--d:${(7+r2*9).toFixed(1)}s;--dl:-${(r*14).toFixed(1)}s"></span>`}
   return `<div class="sea">${bub}<div class="water">${h}</div></div>`;
 }
@@ -287,10 +292,10 @@ function spark(s,c){const n=c.dates.length;if(n<2)return '<svg width="80" height
   return `<svg width="80" height="26" viewBox="0 0 80 26" aria-hidden="true"><polyline points="${pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="${s.p.c}" stroke-width="1.8" stroke-linejoin="round"/><circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="2.6" fill="${s.p.c}"/></svg>`}
 function vStandings(c){
   const r=ranked(c,ui.metric),aw=awards(c);
-  return `<section class="panel"><div class="row between"><h2>The dive chart</h2><span class="dim sm">${rangeName(c.m)} · average depth per dive · ${c.dates.length} day${c.dates.length>1?'s':''} logged</span></div>${sea(c)}</section>
-  <section class="panel"><div class="row between"><h2>Standings</h2><div class="seg"><button data-metric="avg" class="${ui.metric==='avg'?'on':''}">Average dive</button><button data-metric="total" class="${ui.metric==='total'?'on':''}">Total depth</button></div></div>
-  <div class="lb">${r.map((s,i)=>`<div class="lbrow" style="--i:${i}"><span class="rank">${i+1}</span>${av(s.p)}<div><b>${esc(s.p.name)}</b>${i?'':' <span class="tag lead">Deepest diver</span>'}<div class="dim sm num">${bearing(s.avg)} · ${s.n} dive${s.n>1?'s':''}${s.wins?` · ${s.wins} win${s.wins>1?'s':''}`:''}</div></div>${spark(s,c)}<div class="big"><span data-count="${Math.round((ui.metric==='total'?s.total:s.avg)*10)}">${fm((ui.metric==='total'?s.total:s.avg)*10)}</span> <small>m</small></div></div>`).join('')}</div>
-  <div class="row between"><span class="dim sm">Every point is 10 m. Bearings are the game's own: 🫧 to 150, 🐟 to 250, 🦑 to 350, 🏮 to 449, 🦐 450+.</span><button data-act="recap">Copy recap for the group chat</button></div></section>
+  return `<section class="panel"><div class="row between"><h2>The dive chart</h2><span class="dim sm">${rangeName(c.m)} · average score per day · ${c.dates.length} day${c.dates.length>1?'s':''} logged</span></div>${sea(c)}</section>
+  <section class="panel"><div class="row between"><h2>Standings</h2><div class="seg"><button data-metric="avg" class="${ui.metric==='avg'?'on':''}">Average score</button><button data-metric="total" class="${ui.metric==='total'?'on':''}">Total score</button></div></div>
+  <div class="lb">${r.map((s,i)=>`<div class="lbrow" style="--i:${i}"><span class="rank">${i+1}</span>${av(s.p)}<div><b>${esc(s.p.name)}</b>${i?'':' <span class="tag lead">Deepest diver</span>'}<div class="dim sm num">${bearing(s.avg)} · ${s.n} day${s.n>1?'s':''}${s.wins?` · ${s.wins} win${s.wins>1?'s':''}`:''}</div></div>${spark(s,c)}<div class="big"><span data-count="${Math.round(ui.metric==='total'?s.total:s.avg)}">${fm(ui.metric==='total'?s.total:s.avg)}</span> <small>pts</small></div></div>`).join('')}</div>
+  <div class="row between"><span class="dim sm">Scores match the app, out of 700 a day. Deeper is better. The game's bearings: 🫧 to 150, 🐟 to 250, 🦑 to 350, 🏮 to 449, 🦐 450+.</span><button data-act="recap">Copy recap for the group chat</button></div></section>
   <section class="panel"><h2>Trophy shelf</h2><div class="awards">${aw.map(a=>`<div class="award" style="--c:${a.c}"><h3>${a.title}</h3><div class="who">${a.e} ${esc(a.who)}</div><div class="dim sm">${a.line}</div></div>`).join('')}</div></section>`;
 }
 function vReport(c){
@@ -301,7 +306,7 @@ function vReport(c){
     const rk=ranked(c).filter(s=>s.qn),cell=(v,topc)=>`<td><div class="grade ${topc?'top':''}" style="--v:${v}"><b>${grade(v)}</b><span>${v.toFixed(0)}</span></div></td>`;
     rc=`<table class="rc"><tr><th class="l">Genre</th>${rk.map(s=>`<th><span class="pcol">${av(s.p,1)}<span class="nm">${esc(s.p.short)}</span></span></th>`).join('')}</tr>${gs.map(g=>`<tr><td class="l" title="${GEN[g][0]}">${GEN[g][1]}</td>${rk.map(s=>{const G=s.genre[g];return G?cell(G.sum/G.n,best[g].includes(s.p.id)):'<td class="dim">–</td>'}).join('')}</tr>`).join('')}<tr class="tot"><td class="l">Overall</td>${rk.map(s=>cell(s.qavg,false)).join('')}</tr></table><p class="dim sm">Number is average points per prompt in that genre. Gold outline marks the genre champ.</p>`}
   const overall=gs.length?'':`<div class="row">${ranked(c).filter(s=>s.qn).map(s=>`<div class="grade" style="--v:${s.qavg};padding:10px 12px"><span>${av(s.p,1)} ${esc(s.p.short)}</span><b style="margin-top:4px">${grade(s.qavg)}</b><span>${s.qavg.toFixed(0)} pts/prompt</span></div>`).join('')}</div>`;
-  const ps=[...c.prompts].sort((a,b)=>a.sum/a.n-b.sum/b.n),pl2=x=>`<li>${x.t?esc(x.t):`<span class="dim">${dayName(x.d)} · prompt ${x.i+1}</span>`} <span class="tag num">${fm(x.sum/x.n*10)} m avg</span></li>`;
+  const ps=[...c.prompts].sort((a,b)=>a.sum/a.n-b.sum/b.n),pl2=x=>`<li>${x.t?esc(x.t):`<span class="dim">${dayName(x.d)} · prompt ${x.i+1}</span>`} <span class="tag num">${fm(x.sum/x.n)} avg</span></li>`;
   return `<section class="panel"><div class="row between"><h2>Report card</h2><span class="dim sm">A+ is 80+ points per prompt, C is 30, F is under 15</span></div>${rc}${overall}</section>
   <section class="panel"><h2>What everyone catches</h2><p class="dim sm">Share of each diver's answers by tier, shallow to deep.</p>
   ${qd.map(s=>`<div class="row" style="flex-wrap:nowrap">${av(s.p,1)}<span style="width:92px;flex:none" class="sm">${esc(s.p.short)}</span><div class="mix">${TIERS.map(t=>s.tiers[t.p]?`<i style="--c:${t.c};flex:${s.tiers[t.p]}" title="${t.n}: ${s.tiers[t.p]} (${Math.round(s.tiers[t.p]/s.qn*100)}%)"></i>`:'').join('')}</div></div>`).join('')}
@@ -314,8 +319,8 @@ function vLog(c){
   const pr=[0,1,2,3,4,5,6].map(i=>{const x=(day.prompts||[])[i]||{},vs=rows.filter(r=>r.e&&r.e.q).map(r=>r.e.q[i]);return {t:x.t,g:x.g,avg:vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null}});
   return `<section class="panel"><div class="row between"><h2>Dive log</h2><span class="dim sm">Krillion #${day.n||dateToNum(d)} · ${dayName(d)}</span></div>
   <div class="strip">${c.dates.map(x=>`<button data-day="${x}" class="${x===d?'on':''}">${+x.slice(5,7)}/${+x.slice(8)}</button>`).join('')}</div>
-  <div class="scroll"><table><tr><th class="l">Diver</th>${[1,2,3,4,5,6,7].map(i=>`<th>Q${i}</th>`).join('')}<th>Depth</th></tr>
-  ${rows.map(r=>`<tr><td class="l"><span class="row" style="flex-wrap:nowrap;gap:8px">${av(r.p,1)}<span class="nm">${esc(r.p.short)}</span>${r.t!=null&&r.t===best?' <span title="Won the day">👑</span>':''}</span></td>${r.t==null?'<td colspan="7" class="dim sm">sat this one out</td><td></td>':(r.e.q?r.e.q.map(chip).join('</td><td>').replace(/^/,'<td>')+'</td>':'<td colspan="7" class="dim sm">total only</td>')+`<td class="num" title="${bearing(r.t)}"><b>${fm(r.t*10)} m</b></td>`}</tr>`).join('')}
+  <div class="scroll"><table><tr><th class="l">Diver</th>${[1,2,3,4,5,6,7].map(i=>`<th>Q${i}</th>`).join('')}<th>Score</th></tr>
+  ${rows.map(r=>`<tr><td class="l"><span class="row" style="flex-wrap:nowrap;gap:8px">${av(r.p,1)}<span class="nm">${esc(r.p.short)}</span>${r.t!=null&&r.t===best?' <span title="Won the day">👑</span>':''}</span></td>${r.t==null?'<td colspan="7" class="dim sm">sat this one out</td><td></td>':(r.e.q?r.e.q.map(chip).join('</td><td>').replace(/^/,'<td>')+'</td>':'<td colspan="7" class="dim sm">total only</td>')+`<td class="num" title="${bearing(r.t)}"><b>${fm(r.t)}</b></td>`}</tr>`).join('')}
   <tr><td class="l dim sm">Group avg</td>${pr.map(x=>`<td class="dim sm num">${x.avg==null?'':x.avg.toFixed(0)}</td>`).join('')}<td></td></tr></table></div>
   ${pr.some(x=>x.t)?`<ol class="prompts">${pr.map(x=>`<li>${x.t?esc(x.t):'<span class="dim">not entered</span>'} ${x.g?`<span class="tag">${GEN[x.g][1]}</span>`:''}</li>`).join('')}</ol>`:`<p class="dim sm">Prompts for this day are not entered yet.</p>`}</section>`;
 }
@@ -329,8 +334,8 @@ function vDuel(c){
   const gl=c.genres.filter(g=>A.genre[g]&&B.genre[g]).map(g=>line(GEN[g][0],A.genre[g].sum/A.genre[g].n,B.genre[g].sum/B.genre[g].n,v=>grade(v)+' · '+v.toFixed(0))).join('');
   const lead=w===l?'Dead even':`${esc((w>l?A:B).p.name)} leads`;
   return `<section class="panel"><h2>Head to head</h2><div class="duel"><div class="pick">${av(A.p)}${sel('a',ui.b)}</div><div class="dim">vs</div><div class="pick">${av(B.p)}${sel('b',ui.a)}</div>
-  ${line('Days won',w,l,v=>v)}${line('Average dive',A.avg*10,B.avg*10,v=>fm(v)+' m')}${line('Best dive',A.best.t*10,B.best.t*10,v=>fm(v)+' m')}${qn?line('Prompts won',qa[0],qa[1],v=>v):''}${line('Deep Cuts + Krillions',(A.tiers[85]||0)+(A.tiers[100]||0),(B.tiers[85]||0)+(B.tiers[100]||0),v=>v)}${gl}</div>
-  <p class="dim">${w+l+t?`${lead} ${Math.max(w,l)}–${Math.min(w,l)}${t?`–${t}`:''} on days both dived.${blow&&blow.df?` Biggest gap: ${esc((blow.df>0?A:B).p.name)} by ${fm(Math.abs(blow.df)*10)} m on ${dayName(blow.d)}.`:''}`:'These two have not dived on the same day yet.'}</p></section>`;
+  ${line('Days won',w,l,v=>v)}${line('Average score',A.avg,B.avg,v=>fm(v))}${line('Best day',A.best.t,B.best.t,v=>fm(v))}${qn?line('Prompts won',qa[0],qa[1],v=>v):''}${line('Deep Cuts + Krillions',(A.tiers[85]||0)+(A.tiers[100]||0),(B.tiers[85]||0)+(B.tiers[100]||0),v=>v)}${gl}</div>
+  <p class="dim">${w+l+t?`${lead} ${Math.max(w,l)}–${Math.min(w,l)}${t?`–${t}`:''} on days both played.${blow&&blow.df?` Biggest gap: ${esc((blow.df>0?A:B).p.name)} by ${fm(Math.abs(blow.df))} points on ${dayName(blow.d)}.`:''}`:'These two have not played the same day yet.'}</p></section>`;
 }
 function fmtScore(e){return e?(e.q?e.q.join(' '):String(e.t)):''}
 function vEnter(){
@@ -349,7 +354,7 @@ function parseScore(v){v=v.trim();if(!v)return {empty:1};const tk=v.split(/[\s,]
   if(tk.length===1&&/^\d+$/.test(tk[0])&&+tk[0]<=700)return {e:{t:+tk[0]}};
   if(tk.length===7&&tk.every(t=>TP[t]))return {e:{q:tk.map(Number)}};
   return {err:tk.length===7?'Scores must be 0, 10, 15, 30, 60, 85 or 100':`Need 7 scores or one total (got ${tk.length})`}}
-function pvScore(id){const el=$('#pv-'+id),r=parseScore($('#e-s-'+id).value);el.innerHTML=r.err?`<span class="err">${r.err}</span>`:r.e?(r.e.q?r.e.q.map(chip).join('')+` <b class="num">&nbsp;${fm(tot(r.e)*10)} m</b>`:`<span class="dim">total only · ${fm(r.e.t*10)} m</span>`):''}
+function pvScore(id){const el=$('#pv-'+id),r=parseScore($('#e-s-'+id).value);el.innerHTML=r.err?`<span class="err">${r.err}</span>`:r.e?(r.e.q?r.e.q.map(chip).join('')+` <b class="num">&nbsp;${fm(tot(r.e))}</b>`:`<span class="dim">total only · ${fm(r.e.t)}</span>`):''}
 
 function parsePaste(text){
   const out=[],lines=text.split(/\n/).map(l=>l.trim()).filter(Boolean);let name=null,num=null,total=null,date=null;
@@ -372,11 +377,11 @@ function parsePaste(text){
   }
   return {out,known};
 }
-function pvPaste(){const {out}=parsePaste($('#paste').value);parsed=out;$('#paste-pv').innerHTML=out.length?out.map(r=>`<div class="row" style="gap:6px;margin-top:6px">${r.p?av(r.p,1):''}<span style="min-width:74px">${r.p?esc(r.p.short):'?'}</span>${r.q?r.q.map(chip).join('')+` <b class="num">${fm(r.q.reduce((a,b)=>a+b,0)*10)} m</b> <span>${dayName(r.d)}</span>`:''}${r.err?`<span class="err">${esc(r.err)}</span>`:''}${r.warn?`<span class="err">${esc(r.warn)}</span>`:''}</div>`).join(''):($('#paste').value.trim()?'<span class="err">No scores found yet. Each share needs a name, then the emoji row.</span>':'')}
+function pvPaste(){const {out}=parsePaste($('#paste').value);parsed=out;$('#paste-pv').innerHTML=out.length?out.map(r=>`<div class="row" style="gap:6px;margin-top:6px">${r.p?av(r.p,1):''}<span style="min-width:74px">${r.p?esc(r.p.short):'?'}</span>${r.q?r.q.map(chip).join('')+` <b class="num">${fm(r.q.reduce((a,b)=>a+b,0))}</b> <span>${dayName(r.d)}</span>`:''}${r.err?`<span class="err">${esc(r.err)}</span>`:''}${r.warn?`<span class="err">${esc(r.warn)}</span>`:''}</div>`).join(''):($('#paste').value.trim()?'<span class="err">No scores found yet. Each share needs a name, then the emoji row.</span>':'')}
 
 function recap(c){
   const r=ranked(c),md=['🥇','🥈','🥉'],aw=awards(c);
-  return `🌊 KRILLION CLUB · ${rangeName(c.m)}\n${c.dates.length} day${c.dates.length>1?'s':''} of diving\n\n`+r.map((s,i)=>`${md[i]||(i+1)+'.'} ${s.p.e} ${s.p.name} · ${fm(s.avg*10)} m avg · ${s.n} dive${s.n>1?'s':''} · overall ${s.qavg!=null?grade(s.qavg):'n/a'}`).join('\n')+`\n\n🏆 TROPHIES\n`+aw.map(a=>`${a.title}: ${a.who} (${a.line})`).join('\n');
+  return `🌊 KRILLION CLUB · ${rangeName(c.m)}\n${c.dates.length} day${c.dates.length>1?'s':''} played\n\n`+r.map((s,i)=>`${md[i]||(i+1)+'.'} ${s.p.e} ${s.p.name} · ${fm(s.avg)} avg · ${s.n} day${s.n>1?'s':''} · overall ${s.qavg!=null?grade(s.qavg):'n/a'}`).join('\n')+`\n\n🏆 TROPHIES\n`+aw.map(a=>`${a.title}: ${a.who} (${a.line})`).join('\n');
 }
 
 /* ---------- shell ---------- */
@@ -400,7 +405,7 @@ function countUp(){if(calm())return;const t0=performance.now(),els=[...document.
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),3200)}
 function buildDoc(){
   const json=JSON.stringify(state).replace(/</g,'\\u003c');
-  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>Krillion Club</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">\n<style id="css">'+document.getElementById('css').textContent+'</style>\n</head>\n<body>\n<div id="app"></div>\n<div id="toast" role="status"></div>\n<script id="state" type="application/json">'+json+'<\/script>\n<script id="js">'+document.getElementById('js').textContent+'<\/script>\n</body>\n</html>\n';
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>Krillion Club</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Chakra+Petch:wght@600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">\n<style id="css">'+document.getElementById('css').textContent+'</style>\n</head>\n<body>\n<div id="app"></div>\n<div id="toast" role="status"></div>\n<script id="state" type="application/json">'+json+'<\/script>\n<script id="js">'+document.getElementById('js').textContent+'<\/script>\n</body>\n</html>\n';
 }
 function persist(msg){
   if(!owner)return toast('Only Jay can log scores.');
