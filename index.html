@@ -93,10 +93,10 @@ nav a:not(.on):hover{color:var(--ink)}
 .lb{display:flex;flex-direction:column}
 .lbrow{display:grid;grid-template-columns:34px 38px 1fr auto auto;gap:14px;align-items:center;padding:14px 4px;border-bottom:1px solid var(--line)}
 .rank{font:700 26px/1 var(--display);color:var(--dim)}
-.lbrow:first-child .rank{color:var(--pink)}
+.lbrow.top .rank{color:var(--pink)}
 .lbrow b{font-size:15px}
 .big{font:700 30px/1 var(--display);text-align:right}
-.lbrow:first-child .big{color:var(--gold)}
+.lbrow.top .big{color:var(--gold)}
 .big small{font:400 11px var(--body);color:var(--dim);letter-spacing:.1em}
 .seg{display:inline-flex;border:2px solid var(--rule)}
 .seg button{border:0;background:none;padding:7px 12px;color:var(--dim);box-shadow:none;letter-spacing:.12em}
@@ -146,11 +146,11 @@ ol.prompts li::marker{color:var(--dim)}
 
 /* leader + motion */
 .lbrow{animation:rowin .5s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:calc(var(--i,0)*70ms)}
-.lbrow:first-child{grid-template-columns:34px 68px 1fr auto auto;padding:18px 14px;margin-bottom:10px;border:2px solid var(--gold);background:linear-gradient(90deg,rgba(255,210,63,.16),rgba(255,210,63,0) 70%);box-shadow:6px 6px 0 rgba(255,210,63,.22)}
-.lbrow:first-child .av{width:68px;height:68px;border-width:3px}
-.lbrow:first-child b{font:700 24px/1.1 var(--display)}
-.lbrow:first-child .big{font-size:44px}
-.lbrow:first-child .rank{font-size:34px;color:var(--gold)}
+.lbrow.top{grid-template-columns:34px 68px 1fr auto auto;padding:18px 14px;margin-bottom:10px;border:2px solid var(--gold);background:linear-gradient(90deg,rgba(255,210,63,.16),rgba(255,210,63,0) 70%);box-shadow:6px 6px 0 rgba(255,210,63,.22)}
+.lbrow.top .av{width:68px;height:68px;border-width:3px}
+.lbrow.top b{font:700 24px/1.1 var(--display)}
+.lbrow.top .big{font-size:44px}
+.lbrow.top .rank{font-size:34px;color:var(--gold)}
 .tag.lead{color:#1C1500;background:var(--gold);border-color:var(--gold);font-weight:600;vertical-align:middle}
 .bub{position:absolute;bottom:-8px;width:var(--s);height:var(--s);background:rgba(190,225,255,.45);animation:rise var(--d) linear var(--dl) infinite}
 h1{animation:glitch 7s steps(1) infinite}
@@ -158,7 +158,7 @@ h1{animation:glitch 7s steps(1) infinite}
 @keyframes rise{to{transform:translateY(-480px);opacity:0}}
 @keyframes glitch{0%,91%,100%{text-shadow:3px 0 var(--pink),-3px 0 var(--cyan)}92%{text-shadow:-6px 0 var(--pink),6px 0 var(--cyan)}94%{text-shadow:8px 2px var(--pink),-2px -2px var(--cyan)}96%{text-shadow:-3px 0 var(--pink),3px 0 var(--cyan)}}
 @media (prefers-reduced-motion:reduce){.lbrow,h1{animation:none}.bub{display:none}}
-@media (max-width:520px){.lbrow:first-child{grid-template-columns:26px 56px 1fr auto;padding:14px 10px}.lbrow:first-child .av{width:56px;height:56px}.lbrow:first-child .big{font-size:32px}.lbrow:first-child b{font-size:20px}.lbrow:first-child .tag{display:none}}
+@media (max-width:520px){.lbrow.top{grid-template-columns:26px 56px 1fr auto;padding:14px 10px}.lbrow.top .av{width:56px;height:56px}.lbrow.top .big{font-size:32px}.lbrow.top b{font-size:20px}.lbrow.top .tag{display:none}}
 
 /* phone pass */
 .rc td.l,.rc th.l{position:sticky;left:0;z-index:1;background:#0A1329}
@@ -171,7 +171,7 @@ td.num{white-space:nowrap}
   .lab{bottom:-44px}.col:nth-child(even) .lab{bottom:-82px}
   .lab b{font-size:9px;letter-spacing:.04em}.lab i{font-size:15px}
   .col:nth-child(even)::after{content:"";position:absolute;left:50%;bottom:-40px;height:36px;border-left:1px dotted var(--c);opacity:.5}
-  .lbrow:first-child{box-shadow:4px 4px 0 rgba(255,210,63,.22)}
+  .lbrow.top{box-shadow:4px 4px 0 rgba(255,210,63,.22)}
   .swipe{display:block}
   .grade{min-width:46px;padding:7px 2px}.grade b{font-size:17px}
   table{border-spacing:3px}
@@ -189,14 +189,14 @@ td.num{white-space:nowrap}
 @media (max-width:520px){.rc th.l{width:66px}.rc td.l{font-size:10px;padding-right:2px}.rc .grade{padding:7px 0}.rc .grade b{font-size:15px}.rc .grade span{font-size:9px}table.rc{border-spacing:2px}}
 
 /* legible numerals */
-.big,.rank,.lab i,.grade b,.duel .v,.strip button,.award .who,.lbrow:first-child b{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.big,.rank,.lab i,.grade b,.duel .v,.strip button,.award .who,.lbrow.top b{font-variant-numeric:tabular-nums;letter-spacing:.01em}
 .big small{letter-spacing:.12em;text-transform:uppercase}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <div id="toast" role="status"></div>
-<script id="state" type="application/json">{"rev":27,"emo":{},"players":[{"id":"jay","name":"Jay","short":"Jay","e":"🦈","img":"faces/jay.jpg","c":"#FF7A66"},{"id":"lj","name":"Lauren Jane","short":"Lauren J","e":"🐙","img":"faces/lj.jpg","c":"#B79CFF"},{"id":"marti","name":"Marti","short":"Marti","e":"🐢","img":"faces/marti2.jpg","c":"#B6E36A"},{"id":"carolyn","name":"Carolyn","short":"Carolyn","e":"🐡","img":"faces/carolyn.jpg","c":"#FFC24B"},{"id":"andrew","name":"Andrew","short":"Andrew","e":"🦀","img":"faces/andrew.jpg","c":"#FF8FCB"},{"id":"lacey","name":"Lacey","short":"Lacey","e":"🐬","img":"faces/lacey2.jpg","c":"#6FB6FF"},{"id":"emma","name":"Emma","short":"Emma","e":"🦭","img":"faces/emma.jpg","c":"#4FE0D0"}],"days":{"2026-11-09":{"n":117,"prompts":[{"t":"Name a podcast (1k+ ratings on Spotify)","g":"screen"},{"t":"Name a villain from Star Wars, DC, or Lord of the Rings","g":"screen"},{"t":"Name a part of the human body below the waist","g":"body"},{"t":"Name a language with more than 10 million total speakers","g":"words"},{"t":"Name an animal that eats bugs","g":"nature"},{"t":"Name a toy brand","g":"brands"},{"t":"Name a country with \"in\" in its name","g":"places"}],"scores":{"lj":{"q":[60,10,60,60,60,60,0]},"carolyn":{"q":[85,30,60,30,60,60,10]},"jay":{"q":[60,10,30,60,10,30,0]},"emma":{"q":[85,0,30,60,60,60,10]},"andrew":{"q":[60,30,60,30,30,60,60]},"lacey":{"q":[60,60,30,10,30,30,30]},"marti":{"q":[85,0,30,60,30,60,10]}}},"2026-11-10":{"n":118,"prompts":[{"t":"Name a Disney Channel, Nickelodeon or Cartoon Network show","g":"screen"},{"t":"Name a branch or denomination of Christianity, Judaism, Buddhism, etc.","g":"history"},{"t":"Name a sports team whose logo contains red (NFL, NBA, MLB, etc.)","g":"sports"},{"t":"Name any anime (listed on MAL)","g":"screen"},{"t":"Name a song by Taylor Swift, Ariana Grande, Olivia Rodrigo, etc.","g":"music"},{"t":"Name a flower that naturally blooms blue, purple or red","g":"nature"},{"t":"Name a country whose second letter is O","g":"places"}],"scores":{"lj":{"q":[85,60,60,85,10,60,30]},"jay":{"q":[85,60,60,30,60,10,60]},"marti":{"q":[60,85,10,85,10,60,30]},"andrew":{"q":[60,30,60,60,10,30,60]},"carolyn":{"q":[30,85,30,10,60,30,30]},"emma":{"q":[30,30,30,30,30,60,60]},"lacey":{"q":[60,60,30,60,60,60,10]}}},"2026-11-11":{"n":119,"scores":{"lacey":{"q":[30,85,30,60,85,30,60]},"lj":{"q":[10,85,30,60,0,60,85]},"jay":{"q":[30,60,30,30,60,10,30]},"carolyn":{"q":[60,60,30,30,30,10,10]},"andrew":{"q":[10,30,30,60,30,10,30]},"emma":{"q":[60,30,30,30,60,10,30]},"marti":{"q":[30,60,10,0,60,10,85]}},"prompts":[{"t":"Name a country where at least 50% of people speak English","g":"places"},{"t":"Name a bodily function or biological process","g":"science"},{"t":"Name a one-word animal that starts with T","g":"nature"},{"t":"Name something that has a needle","g":"life"},{"t":"Name an original movie or show from Netflix, Prime Video, etc.","g":"screen"},{"t":"Name a named object in space that's bigger than Earth","g":"science"},{"t":"Name a character from Mario, Zelda, Donkey Kong, etc.","g":"screen"}]}}}</script>
+<script id="state" type="application/json">{"rev":28,"emo":{},"players":[{"id":"jay","name":"Jay","short":"Jay","e":"🦈","img":"faces/jay.jpg","c":"#FF7A66"},{"id":"lj","name":"Lauren Jane","short":"Lauren J","e":"🐙","img":"faces/lj.jpg","c":"#B79CFF"},{"id":"marti","name":"Marti","short":"Marti","e":"🐢","img":"faces/marti2.jpg","c":"#B6E36A"},{"id":"carolyn","name":"Carolyn","short":"Carolyn","e":"🐡","img":"faces/carolyn.jpg","c":"#FFC24B"},{"id":"andrew","name":"Andrew","short":"Andrew","e":"🦀","img":"faces/andrew.jpg","c":"#FF8FCB"},{"id":"lacey","name":"Lacey","short":"Lacey","e":"🐬","img":"faces/lacey2.jpg","c":"#6FB6FF"},{"id":"emma","name":"Emma","short":"Emma","e":"🦭","img":"faces/emma.jpg","c":"#4FE0D0"}],"days":{"2026-11-09":{"n":117,"prompts":[{"t":"Name a podcast (1k+ ratings on Spotify)","g":"screen"},{"t":"Name a villain from Star Wars, DC, or Lord of the Rings","g":"screen"},{"t":"Name a part of the human body below the waist","g":"body"},{"t":"Name a language with more than 10 million total speakers","g":"words"},{"t":"Name an animal that eats bugs","g":"nature"},{"t":"Name a toy brand","g":"brands"},{"t":"Name a country with \"in\" in its name","g":"places"}],"scores":{"lj":{"q":[60,10,60,60,60,60,0]},"carolyn":{"q":[85,30,60,30,60,60,10]},"jay":{"q":[60,10,30,60,10,30,0]},"emma":{"q":[85,0,30,60,60,60,10]},"andrew":{"q":[60,30,60,30,30,60,60]},"lacey":{"q":[60,60,30,10,30,30,30]},"marti":{"q":[85,0,30,60,30,60,10]}}},"2026-11-10":{"n":118,"prompts":[{"t":"Name a Disney Channel, Nickelodeon or Cartoon Network show","g":"screen"},{"t":"Name a branch or denomination of Christianity, Judaism, Buddhism, etc.","g":"history"},{"t":"Name a sports team whose logo contains red (NFL, NBA, MLB, etc.)","g":"sports"},{"t":"Name any anime (listed on MAL)","g":"screen"},{"t":"Name a song by Taylor Swift, Ariana Grande, Olivia Rodrigo, etc.","g":"music"},{"t":"Name a flower that naturally blooms blue, purple or red","g":"nature"},{"t":"Name a country whose second letter is O","g":"places"}],"scores":{"lj":{"q":[85,60,60,85,10,60,30]},"jay":{"q":[85,60,60,30,60,10,60]},"marti":{"q":[60,85,10,85,10,60,30]},"andrew":{"q":[60,30,60,60,10,30,60]},"carolyn":{"q":[30,85,30,10,60,30,30]},"emma":{"q":[30,30,30,30,30,60,60]},"lacey":{"q":[60,60,30,60,60,60,10]}}},"2026-11-11":{"n":119,"scores":{"lacey":{"q":[30,85,30,60,85,30,60]},"lj":{"q":[10,85,30,60,0,60,85]},"jay":{"q":[30,60,30,30,60,10,30]},"carolyn":{"q":[60,60,30,30,30,10,10]},"andrew":{"q":[10,30,30,60,30,10,30]},"emma":{"q":[60,30,30,30,60,10,30]},"marti":{"q":[30,60,10,0,60,10,85]}},"prompts":[{"t":"Name a country where at least 50% of people speak English","g":"places"},{"t":"Name a bodily function or biological process","g":"science"},{"t":"Name a one-word animal that starts with T","g":"nature"},{"t":"Name something that has a needle","g":"life"},{"t":"Name an original movie or show from Netflix, Prime Video, etc.","g":"screen"},{"t":"Name a named object in space that's bigger than Earth","g":"science"},{"t":"Name a character from Mario, Zelda, Donkey Kong, etc.","g":"screen"}]}}}</script>
 <script id="js">
 (()=>{"use strict";
 const TIERS=[{p:0,n:'Miss',e:'⬛',c:'#5A6C96'},{p:10,n:'Plankton',e:'🫧',c:'#B9C9E4'},{p:15,n:'Too Clever',e:'',t:'TC',c:'#FF9F45'},{p:30,n:'Schooler',e:'🐟',c:'#4FD8F0'},{p:60,n:'Rare',e:'🦑',c:'#FF4D5E'},{p:85,n:'Deep Cut',e:'🏮',c:'#9B8CFF'},{p:100,n:'One in a Krillion',e:'🦐',t:'K★',c:'#FFD23F'}];
@@ -251,7 +251,13 @@ function calc(m){
   const list=Object.values(P).filter(s=>s.n);
   return {m,dates,P,list,prompts,genres:Object.keys(GEN).filter(g=>list.some(s=>s.genre[g]))};
 }
-const ranked=(c,k)=>[...c.list].sort((a,b)=>(k==='total'?b.total-a.total:b.avg-a.avg)||b.total-a.total);
+const TB=[[s=>s.total,'more total points'],[s=>s.wins,'more daily wins'],[s=>s.tiers[100]||0,'more One in a Krillion answers'],[s=>s.tiers[85]||0,'more Deep Cuts'],[s=>s.tiers[60]||0,'more Rare answers'],[s=>s.tiers[30]||0,'more Schoolers']];
+const prim=(s,k)=>k==='total'?s.total:s.avg;
+function cmpRank(a,b,k){const d=prim(b,k)-prim(a,k);if(d)return d;for(const [f] of TB){const x=f(b)-f(a);if(x)return x}return 0}
+function ranked(c,k){const r=[...c.list].sort((a,b)=>cmpRank(a,b,k));
+  r.forEach((s,i)=>{const q=r[i-1];s.rank=i&&cmpRank(q,s,k)===0?q.rank:i+1;s.tied=false;s.why=''});
+  r.forEach((s,i)=>{const n=r[i+1];if(!n)return;if(n.rank===s.rank){s.tied=n.tied=true}else if(prim(n,k)===prim(s,k)){const w=TB.find(([f])=>f(s)>f(n));s.why=`Tiebreak over ${n.p.short}: ${w[1]}`}});
+  return r}
 const bearing=t=>t<=150?'🫧 Plankton':t<=250?'🐟 Schooler':t<=350?'🦑 Rare':t<450?'🏮 Deep cut':'🦐 One in a krillion';
 function grade(v){const S=[[80,'A+'],[70,'A'],[62,'A-'],[55,'B+'],[48,'B'],[42,'B-'],[36,'C+'],[30,'C'],[25,'C-'],[15,'D']];for(const [m,g] of S)if(v>=m)return g;return 'F'}
 function top(list,fn,lowest){let best=null,who=[];for(const s of list){const v=fn(s);if(v==null||(!lowest&&v<=0))continue;if(best==null||(lowest?v<best:v>best)){best=v;who=[s]}else if(v===best)who.push(s)}return best==null?null:{v:best,who}}
@@ -294,8 +300,8 @@ function vStandings(c){
   const r=ranked(c,ui.metric),aw=awards(c);
   return `<section class="panel"><div class="row between"><h2>The dive chart</h2><span class="dim sm">${rangeName(c.m)} · average score per day · ${c.dates.length} day${c.dates.length>1?'s':''} logged</span></div>${sea(c)}</section>
   <section class="panel"><div class="row between"><h2>Standings</h2><div class="seg"><button data-metric="avg" class="${ui.metric==='avg'?'on':''}">Average score</button><button data-metric="total" class="${ui.metric==='total'?'on':''}">Total score</button></div></div>
-  <div class="lb">${r.map((s,i)=>`<div class="lbrow" style="--i:${i}"><span class="rank">${i+1}</span>${av(s.p)}<div><b>${esc(s.p.name)}</b>${i?'':' <span class="tag lead">Deepest diver</span>'}<div class="dim sm num">${bearing(s.avg)} · ${s.n} day${s.n>1?'s':''}${s.wins?` · ${s.wins} win${s.wins>1?'s':''}`:''}</div></div>${spark(s,c)}<div class="big"><span data-count="${Math.round(ui.metric==='total'?s.total:s.avg)}">${fm(ui.metric==='total'?s.total:s.avg)}</span> <small>pts</small></div></div>`).join('')}</div>
-  <div class="row between"><span class="dim sm">Scores match the app, out of 700 a day. Deeper is better. The game's bearings: 🫧 to 150, 🐟 to 250, 🦑 to 350, 🏮 to 449, 🦐 450+.</span><button data-act="recap">Copy recap for the group chat</button></div></section>
+  <div class="lb">${r.map((s,i)=>`<div class="lbrow${s.rank===1?' top':''}" style="--i:${i}"><span class="rank">${s.rank}</span>${av(s.p)}<div><b>${esc(s.p.name)}</b>${s.rank>1?'':' <span class="tag lead">Deepest diver</span>'}<div class="dim sm num">${s.tied?'Tied · ':''}${bearing(s.avg)} · ${s.n} day${s.n>1?'s':''}${s.wins?` · ${s.wins} win${s.wins>1?'s':''}`:''}</div>${s.why?`<div class="dim sm">${esc(s.why)}</div>`:''}</div>${spark(s,c)}<div class="big"><span data-count="${Math.round(ui.metric==='total'?s.total:s.avg)}">${fm(ui.metric==='total'?s.total:s.avg)}</span> <small>pts</small></div></div>`).join('')}</div>
+  <div class="row between"><span class="dim sm">Scores match the app, out of 700 a day. Deeper is better. The game's bearings: 🫧 to 150, 🐟 to 250, 🦑 to 350, 🏮 to 449, 🦐 450+. Level scores are split by total points, then daily wins, then who went deeper: most One in a Krillion answers, then Deep Cuts, Rares and Schoolers. Still level is a tie.</span><button data-act="recap">Copy recap for the group chat</button></div></section>
   <section class="panel"><h2>Trophy shelf</h2><div class="awards">${aw.map(a=>`<div class="award" style="--c:${a.c}"><h3>${a.title}</h3><div class="who">${a.e} ${esc(a.who)}</div><div class="dim sm">${a.line}</div></div>`).join('')}</div></section>`;
 }
 function vReport(c){
@@ -381,7 +387,7 @@ function pvPaste(){const {out}=parsePaste($('#paste').value);parsed=out;$('#past
 
 function recap(c){
   const r=ranked(c),md=['🥇','🥈','🥉'],aw=awards(c);
-  return `🌊 KRILLION CLUB · ${rangeName(c.m)}\n${c.dates.length} day${c.dates.length>1?'s':''} played\n\n`+r.map((s,i)=>`${md[i]||(i+1)+'.'} ${s.p.e} ${s.p.name} · ${fm(s.avg)} avg · ${s.n} day${s.n>1?'s':''} · overall ${s.qavg!=null?grade(s.qavg):'n/a'}`).join('\n')+`\n\n🏆 TROPHIES\n`+aw.map(a=>`${a.title}: ${a.who} (${a.line})`).join('\n');
+  return `🌊 KRILLION CLUB · ${rangeName(c.m)}\n${c.dates.length} day${c.dates.length>1?'s':''} played\n\n`+r.map(s=>`${md[s.rank-1]||s.rank+'.'} ${s.p.e} ${s.p.name}${s.tied?' (tied)':''} · ${fm(s.avg)} avg · ${s.n} day${s.n>1?'s':''} · overall ${s.qavg!=null?grade(s.qavg):'n/a'}`).join('\n')+`\n\n🏆 TROPHIES\n`+aw.map(a=>`${a.title}: ${a.who} (${a.line})`).join('\n');
 }
 
 /* ---------- shell ---------- */
