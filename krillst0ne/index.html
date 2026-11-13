@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>krillst0ne</title>
+<meta property="og:title" content="krillst0ne">
+<meta property="og:description" content="Seven prompts a day. The rarer your answer, the deeper you sink.">
+<link rel="apple-touch-icon" href="../icon.png">
+<meta name="theme-color" content="#061016">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* layout: one full-height stage. canvas sea behind everything; HUD strip on top;
+     prompt card + answer bar in the upper half (clear of phone keyboards); results as a scroll sheet. */
+  --ink:#061016; --panel:#0b1c24; --line:#1f4450;
+  --foam:#e9f5f2; --drift:#86a9ad;
+  --glow:#7df9c8; --amber:#ffb454; --coral:#ff6b5e;
+  --display:"Silkscreen","IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --body:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--ink);color:var(--foam);font-family:var(--body);overflow:hidden;-webkit-text-size-adjust:100%}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+#stage{position:relative;height:100%;max-width:520px;margin:0 auto;overflow:hidden;background:var(--ink)}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hide{opacity:0!important;pointer-events:none!important;visibility:hidden}
+.layer{position:absolute;left:0;right:0;transition:opacity .35s}
+
+/* HUD */
+#hud{top:0;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:10px 12px}
+.box{background:rgba(6,16,22,.78);border:2px solid var(--line);padding:5px 10px;min-width:84px}
+.box small{display:block;font-family:var(--display);font-size:9px;letter-spacing:.18em;color:var(--drift)}
+.box b{font-weight:600;font-size:19px;font-variant-numeric:tabular-nums}
+#hudScore{text-align:right}#hudScore b{color:var(--amber)}#hudDepth b{color:var(--glow)}
+#mid{text-align:center;padding-top:4px}
+#pips{display:flex;gap:4px;justify-content:center}
+#pips i{width:13px;height:13px;border:2px solid var(--line);background:rgba(6,16,22,.7)}
+#pips i.now{border-color:var(--foam)}
+#mid small{font-family:var(--display);font-size:9px;letter-spacing:.18em;color:var(--drift);display:block;margin-top:5px}
+#snd{position:absolute;right:12px;top:66px;width:38px;height:34px;background:rgba(6,16,22,.78);border:2px solid var(--line);font-size:15px;padding:0}
+
+/* title */
+#title{top:0;bottom:0;display:flex;flex-direction:column;align-items:center;padding:13% 20px 22px;text-align:center}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(34px,11.5vw,56px);margin:0;letter-spacing:.02em;color:var(--foam);text-shadow:3px 3px 0 #0a2a33}
+h1 em{font-style:normal;color:var(--amber)}
+.tag{font-family:var(--display);font-size:11px;letter-spacing:.3em;color:var(--foam);margin:10px 0 0}
+.how{margin:14px 0 0;font-size:13px;line-height:1.55;color:var(--foam);max-width:30ch;font-weight:500;text-shadow:0 1px 0 rgba(20,10,40,.6)}
+#title .sp{flex:1}
+.big{width:100%;max-width:420px;padding:20px 12px;font-family:var(--display);font-size:20px;letter-spacing:.2em;background:rgba(6,16,22,.9);border:3px solid var(--glow);color:var(--foam);box-shadow:0 0 0 3px rgba(6,16,22,.9),0 0 22px rgba(125,249,200,.25)}
+.big:active{transform:translateY(2px)}
+.who{font-family:var(--display);font-size:10px;letter-spacing:.2em;color:var(--foam);display:flex;flex-direction:column;gap:6px;width:100%;max-width:420px;margin-bottom:12px;text-align:left}
+.who select{font-family:var(--body);font-size:16px;letter-spacing:0;padding:10px;background:rgba(6,16,22,.9);border:2px solid var(--line);color:var(--foam);border-radius:0}
+.links{display:flex;gap:18px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.links a{font-family:var(--display);font-size:10px;letter-spacing:.14em;color:var(--glow)}
+a.btn{text-align:center;text-decoration:none}
+#rAns small{display:block;font-size:12px;font-weight:400;color:var(--drift);margin-top:3px}
+.sub{font-family:var(--display);font-size:10px;letter-spacing:.2em;color:var(--drift);margin-top:12px}
+
+/* prompt card + answer bar */
+#play{top:66px;padding:0 12px}
+#card{background:rgba(9,24,31,.93);border:2px solid var(--line);padding:14px 16px 12px;margin-right:46px}
+#card small{font-family:var(--display);font-size:10px;letter-spacing:.2em;color:var(--amber)}
+#q{font-size:clamp(19px,5.6vw,24px);line-height:1.3;font-weight:600;margin:8px 0 10px;text-wrap:balance}
+#card em{font-style:normal;font-size:11px;letter-spacing:.12em;color:var(--drift)}
+#bar{display:flex;gap:8px;align-items:stretch;margin-top:10px}
+#ring{position:relative;width:52px;height:52px;flex:none}
+#ring svg{width:52px;height:52px;transform:rotate(-90deg)}
+#ring circle{fill:rgba(6,16,22,.85);stroke:var(--line);stroke-width:4}
+#ring circle+circle{fill:none;stroke:var(--glow);stroke-dasharray:138.2;transition:stroke .2s}
+#ring span{position:absolute;inset:0;display:grid;place-items:center;font-weight:600;font-size:17px;font-variant-numeric:tabular-nums}
+#ring.hot circle+circle{stroke:var(--coral)}#ring.hot span{color:var(--coral)}
+#ans{flex:1;min-width:0;background:rgba(6,16,22,.92);border:2px solid var(--glow);padding:0 12px;font-size:17px;border-radius:0}
+#ans::placeholder{color:#5d7f84}
+#go{flex:none;padding:0 14px;font-family:var(--display);font-size:14px;letter-spacing:.15em;background:var(--amber);color:#1b1206;border:2px solid #7a4d0c}
+#go:disabled{opacity:.45}
+#msg{min-height:20px;margin:8px 2px 0;font-size:13px;color:var(--amber)}
+.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* result of one round */
+#res{top:27%;text-align:center;padding:26px 22px;background:radial-gradient(closest-side,rgba(6,16,22,.9),rgba(6,16,22,.75) 60%,rgba(6,16,22,0))}
+#rIcon{font-size:44px;line-height:1}
+#rTier{font-family:var(--display);font-size:26px;letter-spacing:.14em;margin:10px 0 6px}
+#rAns{font-size:18px;font-weight:600}
+#rPts{margin:8px 0 6px;font-size:15px}#rPts b{color:var(--amber)}
+#rFlav{font-size:13px;color:var(--drift);max-width:32ch;margin:0 auto}
+#rNote{font-size:12.5px;color:var(--foam);max-width:34ch;margin:10px auto 0;border-left:2px solid var(--amber);padding-left:10px;text-align:left}
+#next{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);width:min(300px,76%);padding:17px 8px;font-family:var(--display);font-size:17px;letter-spacing:.2em;background:rgba(6,16,22,.9);border:3px solid var(--amber);color:var(--foam)}
+
+/* end sheet */
+#end{top:0;bottom:0;overflow-y:auto;background:linear-gradient(rgba(6,16,22,.55),rgba(6,16,22,.93) 300px);padding:18px 18px 60px}
+#end h2{font-family:var(--display);font-size:11px;letter-spacing:.2em;color:var(--drift);font-weight:400;margin:26px 0 10px;border-bottom:1px dashed var(--line);padding-bottom:6px}
+.top{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--display);font-size:11px;letter-spacing:.16em;color:var(--drift)}
+.top strong{color:var(--foam);font-size:15px;letter-spacing:.04em}.top strong em{font-style:normal;color:var(--amber)}
+#eScore{font-family:var(--display);font-size:64px;line-height:1;margin-top:18px}
+#eScore span{font-family:var(--body);font-size:14px;color:var(--glow);margin-left:8px}
+#eBear{margin-top:8px;font-size:14px;color:var(--amber)}
+#log{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;height:150px;border-top:2px solid var(--line)}
+#log div{position:relative;display:flex;flex-direction:column;align-items:center}
+#log u{display:block;width:3px;background:var(--amber);opacity:.75}
+#log s{text-decoration:none;font-size:17px;margin-top:2px}
+#log b{position:absolute;bottom:-20px;font-size:11px;color:var(--drift);font-weight:400}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+td{padding:6px 4px;border-bottom:1px solid #12303a;color:var(--drift)}
+td:first-child{font-variant-numeric:tabular-nums;white-space:nowrap;width:76px}
+tr.on td{color:var(--foam);font-weight:600}tr.on td:first-child{color:var(--amber)}
+.btn{display:block;width:100%;padding:15px 8px;margin-top:10px;font-family:var(--display);font-size:15px;letter-spacing:.18em;border:2px solid #7a4d0c;background:var(--amber);color:#1b1206}
+.btn.alt{background:transparent;border-color:var(--glow);color:var(--foam)}
+#shareOut{width:100%;margin-top:8px;background:#0b1c24;border:1px solid var(--line);padding:8px;font-size:14px;display:none}
+details{border-bottom:1px solid #12303a;padding:9px 0}
+summary{list-style:none;display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;cursor:pointer}
+summary::-webkit-details-marker{display:none}
+summary small{display:block;font-size:11px;color:var(--drift);text-transform:uppercase;letter-spacing:.04em}
+summary span span{font-size:16px}
+summary b{font-variant-numeric:tabular-nums;color:var(--amber)}
+.al{margin:8px 0 2px 30px;font-size:13px;line-height:1.5}
+.al h3{font-family:var(--display);font-size:10px;letter-spacing:.16em;font-weight:400;margin:10px 0 3px}
+.al p{margin:0;color:var(--drift)}.al mark{background:var(--amber);color:#1b1206;padding:0 3px}
+.al i{display:block;font-style:normal;font-size:12px;color:var(--foam);border-left:2px solid var(--amber);padding-left:8px;margin:4px 0}
+#fb{width:100%;min-height:84px;background:#0b1c24;border:2px solid var(--line);padding:10px;font-size:15px;border-radius:0}
+.fine{font-size:12px;color:var(--drift);line-height:1.5;margin:8px 0 0}
+@media (prefers-reduced-motion:reduce){.shake{animation:none}.layer{transition:none}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="sea" aria-hidden="true"></canvas>
+
+  <div id="hud" class="layer hide">
+    <div class="box" id="hudDepth"><small>DEPTH</small><b id="hd">0m</b></div>
+    <div id="mid"><div id="pips"></div><small id="pl">PROMPT 1 OF 7</small></div>
+    <div class="box" id="hudScore"><small>SCORE</small><b id="hs">0</b></div>
+  </div>
+  <button id="snd" class="hide" type="button" aria-label="Turn sound off">♪</button>
+
+  <div id="title" class="layer">
+    <h1>krillst<em>0</em>ne</h1>
+    <p class="tag">KRILLION CLUB EDITION</p>
+    <p class="how">7 prompts. 25 seconds each.<br>Name one thing.<br>The rarer your answer, the deeper you sink. Every point is 10 metres. 700 points hits the sea floor.</p>
+    <div class="sp"></div>
+    <label class="who" for="who">WHO'S DIVING?
+      <select id="who"><option value="">pick your name</option><option>Jay</option><option>Lauren Jane</option><option>Marti</option><option>Carolyn</option><option>Andrew</option><option>Lacey</option><option>Emma</option></select></label>
+    <button class="big" id="begin" type="button">▼ DROP IN ▼</button>
+    <div class="sub" id="sub">ONE DIVE PER DAY</div>
+    <div class="links"><a href="https://jaystone9.github.io/krillion-club/" target="_blank" rel="noopener">CLUB STANDINGS ↗</a><a href="https://krillion.io" target="_blank" rel="noopener">THE REAL KRILLION ↗</a></div>
+  </div>
+
+  <div id="play" class="layer hide">
+    <div id="card"><small id="qn">PROMPT 1 OF 7</small><div id="q"></div><em>▼ rarer answers sink deeper ▼</em></div>
+    <form id="bar" autocomplete="off">
+      <div id="ring"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="22"/><circle id="arc" cx="26" cy="26" r="22"/></svg><span id="secs">25</span></div>
+      <input id="ans" type="text" placeholder="type one answer…" aria-label="Your answer" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" maxlength="60">
+      <button id="go" type="submit" disabled>DIVE</button>
+    </form>
+    <div id="msg" aria-live="polite"></div>
+  </div>
+
+  <div id="res" class="layer hide">
+    <div id="rIcon"></div><div id="rTier"></div><div id="rAns"></div><div id="rPts"></div><div id="rFlav"></div><div id="rNote"></div>
+  </div>
+  <button id="next" class="hide" type="button">DESCEND ▼</button>
+
+  <div id="end" class="layer hide">
+    <div class="top"><strong>krillst<em>0</em>ne</strong><span id="eNum">DIVE COMPLETE</span></div>
+    <div id="eScore"></div>
+    <div id="eBear"></div>
+    <h2>DIVE LOG · DEEPER = RARER</h2>
+    <div id="log"></div>
+    <h2 style="margin-top:40px">THE BEARING</h2>
+    <table id="bear"></table>
+    <button class="btn" id="copy" type="button">COPY RESULT</button>
+    <textarea id="shareOut" rows="4" readonly aria-label="Your result, ready to copy"></textarea>
+    <p class="fine" id="nextIn">One dive per day. The next one opens at midnight Pacific.</p>
+    <a class="btn alt" href="https://jaystone9.github.io/krillion-club/" target="_blank" rel="noopener">KRILLION CLUB STANDINGS ↗</a>
+    <a class="btn alt" href="https://krillion.io" target="_blank" rel="noopener">PLAY THE REAL KRILLION ↗</a>
+    <h2>THE CATCH · TAP A ROUND FOR EVERY ANSWER</h2>
+    <div id="catch"></div>
+    <h2>NOTES FOR THE QUESTION DESK</h2>
+    <textarea id="fb" placeholder="An answer that should have counted? A topic you want more of?"></textarea>
+    <button class="btn alt" id="fbCopy" type="button">COPY NOTE TO SEND TO JAY</button>
+    <p class="fine">Prototype: answer lists are hand-built and short, so a fair answer may be missing. That is exactly what the notes box is for.</p>
+  </div>
+</div>
+
+<script>
+/*DATA-START*/
+const TIERS={
+  0:{n:"NOTHING LANDED",e:"⬛",c:"#6b8085",f:"Never made it off the surface."},
+  10:{n:"FOAM",e:"🫧",c:"#9fd8e0",f:"The first thing everyone says."},
+  15:{n:"FOOL'S GOLD",e:"✨",c:"#e8c15a",f:"Felt clever. A lot of people felt clever."},
+  30:{n:"PEBBLE",e:"🪨",c:"#c3cecb",f:"Solid. The school knows it too."},
+  60:{n:"SHELL",e:"🐚",c:"#ff9e8a",f:"An uncommon find. Nice pull."},
+  85:{n:"PEARL",e:"🦪",c:"#efe4ff",f:"Deep water. Very few get here."},
+  100:{n:"KRILLST0NE",e:"💎",c:"#7df9c8",f:"The one. Frame it."}
+};
+const ORDER=[10,15,30,60,85,100];
+const BEAR=[[0,150,"Shallows. Plenty of ocean left."],[151,250,"Reef. Swimming with the school."],[251,350,"Drop-off. Past the easy answers."],[351,449,"Midnight. A seriously deep dive."],[450,700,"Trench. Absurd."]];
+const DIVE1=[
+{q:"Name a spice or dried herb on a spice rack.",t:{
+10:"Black pepper|pepper|peppercorn|peppercorns;Cinnamon;Paprika",
+15:"Saffron;Cardamom|cardamon",
+30:"Oregano;Basil;Cumin;Garlic powder|garlic;Nutmeg;Thyme;Chili powder|chilli powder|chili;Ginger|ground ginger;Rosemary;Parsley;Cayenne|cayenne pepper;Turmeric",
+60:"Coriander|coriander seed;Cloves|clove;Bay leaf|bay leaves|bay;Sage;Dill|dill weed;Allspice;Onion powder;Red pepper flakes|chili flakes|crushed red pepper;Curry powder|curry;Mustard seed|mustard powder|dry mustard|mustard;Fennel|fennel seed;Star anise;Vanilla|vanilla bean;Smoked paprika;Tarragon;Marjoram;Italian seasoning;White pepper;Sesame seeds|sesame;Mint|dried mint",
+85:"Sumac;Za'atar|zaatar|zatar;Fenugreek;Caraway|caraway seed;Celery seed|celery salt;Mace;Juniper|juniper berries;Anise|aniseed;Garam masala;Herbes de Provence;Five spice|chinese five spice;Savory|summer savory;Lavender;Poppy seeds|poppy seed;Nigella|nigella seed|kalonji;Chervil;Lemongrass;Annatto|achiote;Ras el hanout;Old Bay;Sichuan peppercorn|szechuan peppercorn|sichuan pepper|szechuan pepper;Pink peppercorn;Berbere;Aleppo pepper;Chipotle|chipotle powder;Ancho|ancho chili;Asafoetida|hing;Epazote;Dukkah;Baharat",
+100:"Grains of paradise"},
+notes:{"Grains of paradise":"A West African seed in the ginger family, once used as a cheaper stand-in for black pepper.","Mace":"The lacy red coating around a nutmeg seed."}},
+{q:"Name a capital city in Europe.",t:{
+10:"Paris;London",
+15:"Reykjavik;Ljubljana",
+30:"Rome;Berlin;Madrid;Amsterdam;Dublin;Vienna;Lisbon;Athens;Brussels;Prague;Stockholm;Copenhagen;Oslo;Budapest",
+60:"Warsaw;Helsinki;Bern|berne;Kyiv|kiev;Moscow;Bucharest;Sofia;Zagreb;Belgrade;Bratislava;Luxembourg|luxembourg city;Monaco;Vatican City|vatican;Riga;Tallinn;Vilnius;Valletta;Minsk;Edinburgh",
+85:"Sarajevo;Skopje;Tirana;Podgorica;Chisinau;Andorra la Vella;San Marino;Nicosia;Pristina;Tbilisi;Yerevan;Baku;Cardiff;Belfast",
+100:"Vaduz"},
+notes:{"Vaduz":"Capital of Liechtenstein, home to about 6,000 people.","Edinburgh":"Capital of Scotland, a country within the UK.","Cardiff":"Capital of Wales, a country within the UK."}},
+{q:"Name a Beatles song.",t:{
+10:"Hey Jude;Let It Be;Yesterday",
+15:"Blackbird;Norwegian Wood",
+30:"Here Comes the Sun;Come Together;Yellow Submarine;Help;Twist and Shout;I Want to Hold Your Hand;All You Need Is Love;Eleanor Rigby;Penny Lane;Strawberry Fields Forever|strawberry fields;She Loves You;A Hard Day's Night|hard days night;Love Me Do;Something;Lucy in the Sky with Diamonds|lucy in the sky",
+60:"While My Guitar Gently Weeps;In My Life;Ob-La-Di Ob-La-Da|obladi oblada|ob la di;Can't Buy Me Love;Get Back;Michelle;Day Tripper;Ticket to Ride;Paperback Writer;Revolution;A Day in the Life|day in the life;With a Little Help from My Friends|little help from my friends;Octopus's Garden|octopus garden;The Long and Winding Road|long and winding road;Eight Days a Week;Back in the USSR;Across the Universe;When I'm Sixty-Four|when im 64|when i'm 64;Drive My Car;Helter Skelter;All My Loving;I Am the Walrus;Hello Goodbye;Lady Madonna;Nowhere Man;We Can Work It Out;Sgt. Pepper's Lonely Hearts Club Band|sgt pepper|sgt peppers|sergeant pepper;Golden Slumbers;I Saw Her Standing There;Please Please Me;Rocky Raccoon;Dear Prudence;Magical Mystery Tour;Maxwell's Silver Hammer;Taxman",
+85:"Here There and Everywhere;The Fool on the Hill|fool on the hill;Got to Get You into My Life;Girl;And I Love Her;Two of Us;Don't Let Me Down;I've Just Seen a Face;You've Got to Hide Your Love Away;Julia;Happiness Is a Warm Gun;Tomorrow Never Knows;She's Leaving Home;Oh Darling;I Will;Mother Nature's Son;Because;For No One;If I Fell;I Feel Fine;Fixing a Hole;Getting Better;Lovely Rita;Good Day Sunshine;And Your Bird Can Sing;She Said She Said;Rain;I'm Only Sleeping;Martha My Dear;Sexy Sadie;Glass Onion;Hey Bulldog;I Me Mine;Things We Said Today;I'll Follow the Sun;This Boy;Piggies;Savoy Truffle;Cry Baby Cry;Blue Jay Way;Within You Without You;Doctor Robert|dr robert;Old Brown Shoe;Her Majesty;Mean Mr. Mustard|mean mr mustard;Polythene Pam;Sun King;Free as a Bird;Real Love;Now and Then;From Me to You",
+100:"You Know My Name (Look Up the Number)|you know my name"},
+notes:{"You Know My Name (Look Up the Number)":"The B-side of Let It Be, with Brian Jones of the Rolling Stones on saxophone.","Her Majesty":"23 seconds long, tucked at the end of Abbey Road."}},
+{q:"Name a US national park.",t:{
+10:"Yellowstone;Yosemite;Grand Canyon",
+15:"Zion;Joshua Tree",
+30:"Glacier;Great Smoky Mountains|smoky mountains|smokies|great smokies;Rocky Mountain|rocky mountains;Olympic;Mount Rainier|rainier|mt rainier;Arches;Everglades;Denali;Acadia;Bryce Canyon|bryce;Grand Teton|tetons|teton|grand tetons;Death Valley;Sequoia;Redwood|redwoods",
+60:"Crater Lake;Badlands;Shenandoah;Big Bend;Canyonlands;Capitol Reef;Haleakala;Hawaii Volcanoes|volcanoes;Glacier Bay;Saguaro;Mesa Verde;Kings Canyon;Carlsbad Caverns|carlsbad;North Cascades;Petrified Forest;Mammoth Cave;Hot Springs;White Sands;Great Sand Dunes|sand dunes;Lassen Volcanic|lassen;Channel Islands;Theodore Roosevelt;Indiana Dunes;Cuyahoga Valley|cuyahoga;Gateway Arch",
+85:"Biscayne;Dry Tortugas;New River Gorge;Kenai Fjords;Katmai;Voyageurs;Isle Royale;Wind Cave;Great Basin;Guadalupe Mountains;Black Canyon of the Gunnison|black canyon;Pinnacles;Congaree;Virgin Islands;Wrangell-St. Elias|wrangell st elias|wrangell;Lake Clark;Kobuk Valley;American Samoa|national park of american samoa",
+100:"Gates of the Arctic"},
+notes:{"Gates of the Arctic":"No roads and no trails, all of it north of the Arctic Circle. The least visited park in the system.","Wrangell-St. Elias":"The largest national park, bigger than Switzerland."}},
+{q:"Name a dog breed.",t:{
+10:"Labrador|labrador retriever|lab;Golden Retriever|golden;German Shepherd;Poodle",
+15:"Shiba Inu|shiba;Corgi|pembroke welsh corgi|welsh corgi",
+30:"Bulldog|english bulldog;Beagle;Chihuahua;Dachshund|wiener dog;Pug;Husky|siberian husky;French Bulldog|frenchie;Boxer;Rottweiler;Great Dane;Dalmatian;Border Collie;Yorkshire Terrier|yorkie;Pit Bull|pitbull|american pit bull terrier;Doberman|doberman pinscher;Shih Tzu;Greyhound;Cocker Spaniel;Pomeranian;Australian Shepherd|aussie",
+60:"Bernese Mountain Dog|bernese;Saint Bernard|st bernard;Maltese;Basset Hound;Boston Terrier;Collie|rough collie;Jack Russell|jack russell terrier;Newfoundland;Akita;Whippet;Samoyed;Bloodhound;Mastiff|english mastiff;Cavalier King Charles Spaniel|cavalier|king charles spaniel;Schnauzer|miniature schnauzer;Weimaraner;Vizsla;Bichon Frise|bichon;Chow Chow|chow;Shar Pei;Irish Setter;Great Pyrenees;Havanese;Malamute|alaskan malamute;Rhodesian Ridgeback;Papillon;Pointer|german shorthaired pointer;Westie|west highland terrier|west highland white terrier;Scottish Terrier|scottie;Bull Terrier;Airedale|airedale terrier;Springer Spaniel|english springer spaniel;Sheltie|shetland sheepdog;Old English Sheepdog;Irish Wolfhound;Afghan Hound;Basenji;Cane Corso;Belgian Malinois|malinois;Australian Cattle Dog|blue heeler|heeler;Pekingese;Lhasa Apso",
+85:"Borzoi;Saluki;Keeshond;Leonberger;Komondor;Puli;Xoloitzcuintli|xolo;Schipperke;Brittany|brittany spaniel;Wheaten Terrier|soft coated wheaten terrier;Portuguese Water Dog;Lagotto Romagnolo|lagotto;Bedlington Terrier|bedlington;Tibetan Mastiff;Norwegian Elkhound|elkhound;Kuvasz;Affenpinscher;Brussels Griffon;Dandie Dinmont|dandie dinmont terrier;Otterhound;Catahoula|catahoula leopard dog;Pharaoh Hound;Clumber Spaniel;Bouvier des Flandres|bouvier",
+100:"Norwegian Lundehund|lundehund"},
+notes:{"Norwegian Lundehund":"Bred to hunt puffins on Norwegian cliffs. It has six toes on each foot.","Lagotto Romagnolo":"The Italian truffle-hunting dog."}},
+{q:"Name a famous painter.",t:{
+10:"Picasso|pablo picasso;Van Gogh|vincent van gogh;Leonardo da Vinci|da vinci|leonardo",
+15:"Frida Kahlo|kahlo|frida;Salvador Dalí|dali|salvador dali",
+30:"Monet|claude monet;Michelangelo;Rembrandt;Andy Warhol|warhol;Matisse|henri matisse;Georgia O'Keeffe|okeeffe|o'keeffe|georgia okeefe|okeefe;Jackson Pollock|pollock;Renoir;Raphael;Vermeer;Bob Ross",
+60:"Cézanne|cezanne|paul cezanne;Klimt|gustav klimt;Degas|edgar degas;Manet;Edvard Munch|munch;Kandinsky;Mondrian;Basquiat|jean-michel basquiat;Rothko|mark rothko;Botticelli;Caravaggio;Goya;El Greco;Gauguin;Magritte;Edward Hopper|hopper;Norman Rockwell|rockwell;Chagall;Toulouse-Lautrec|lautrec;Seurat;Titian;Diego Rivera|rivera;Mary Cassatt|cassatt;Roy Lichtenstein|lichtenstein;Keith Haring|haring;Turner|jmw turner;Bosch|hieronymus bosch;Velázquez|velazquez;Rubens;Banksy;Grant Wood;Andrew Wyeth|wyeth;Whistler;Winslow Homer;Joan Miró|miro;Paul Klee|klee;Modigliani;Egon Schiele|schiele",
+85:"Artemisia Gentileschi|gentileschi;Bruegel|brueghel|pieter bruegel;Dürer|durer|albrecht durer;Jan van Eyck|van eyck;Hokusai;Berthe Morisot|morisot;Helen Frankenthaler|frankenthaler;Lee Krasner|krasner;Hilma af Klint|af klint;Alice Neel|neel;Kehinde Wiley|wiley;Jacob Lawrence;Agnes Martin;Cy Twombly|twombly;Francis Bacon;Lucian Freud|freud;David Hockney|hockney;Gerhard Richter|richter;Willem de Kooning|de kooning;Tamara de Lempicka|lempicka;Giotto;Tintoretto;Delacroix;Courbet;Pissarro;John Singer Sargent|sargent;Constable;Fragonard;Vigée Le Brun|vigee le brun|elisabeth vigee le brun;Remedios Varo|varo;Leonora Carrington|carrington;Yayoi Kusama|kusama;Jasper Johns;Henri Rousseau|rousseau;Caspar David Friedrich|friedrich;Amy Sherald|sherald;Faith Ringgold|ringgold",
+100:"Sofonisba Anguissola|anguissola"},
+notes:{"Sofonisba Anguissola":"A Renaissance portraitist who became court painter to Philip II of Spain. Michelangelo praised her drawings.","Hilma af Klint":"Painting abstract works years before Kandinsky."}},
+{q:"Name a cheese.",t:{
+10:"Cheddar;Mozzarella;Swiss;American",
+15:"Brie;Gouda",
+30:"Parmesan|parmigiano|parmigiano reggiano;Feta;Blue cheese|blue|bleu|bleu cheese;Provolone;Pepper Jack;Cream cheese;Goat cheese|chevre;Monterey Jack|jack;Colby|colby jack;Ricotta;Cottage cheese;Gruyère|gruyere;Havarti;Muenster",
+60:"Manchego;Camembert;Gorgonzola;Halloumi;Burrata;Mascarpone;Asiago;Pecorino|pecorino romano|romano;Roquefort;Emmental|emmentaler;Stilton;Fontina;Paneer;Cotija;Queso fresco;Edam;Jarlsberg;Oaxaca|queso oaxaca;Limburger;Boursin;Raclette;Comté|comte;Neufchâtel|neufchatel;Velveeta;Taleggio;Grana Padano",
+85:"Époisses|epoisses;Humboldt Fog;Mimolette;Reblochon;Morbier;Wensleydale;Red Leicester;Double Gloucester;Caerphilly;Cambozola;Idiazabal;Mahón|mahon;Robiola;Scamorza;Stracchino;Caciocavallo;Tête de Moine|tete de moine;Brillat-Savarin;Saint-André|saint andre|st andre;Pont-l'Évêque|pont l'eveque|pont leveque;Beemster;Gjetost|brunost;Juustoleipä|juustoleipa|bread cheese;Kasseri;Kefalotyri;Chaource;Cabrales;Valdeón|valdeon;Tomme|tomme de savoie;Ossau-Iraty;Cougar Gold;Beecher's Flagship|beechers|beecher's;Port Salut;Lancashire;Cheshire;Provel",
+100:"Casu martzu|casu marzu"},
+notes:{"Casu martzu":"A Sardinian sheep's milk cheese ripened with live larvae. Its sale is banned in the EU.","Cougar Gold":"A cheddar made at Washington State University and sold in a can.","Beecher's Flagship":"Made in the window at Pike Place Market."}}
+];
+/* one dive a day, rolling over at midnight Pacific. DIVES[0] is dive #1 on LAUNCH. */
+const DIVES=[DIVE1],LAUNCH="2026-11-13";
+const TODAY=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Los_Angeles"}).format(new Date());
+const DIVE_N=Math.round((Date.parse(TODAY)-Date.parse(LAUNCH))/864e5)+1;
+const DAY=DIVES[DIVE_N-1]||null,NUM="#"+String(DIVE_N).padStart(3,"0");
+function norm(s){return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/&/g," and ").replace(/['’.]/g,"").replace(/[^a-z0-9]+/g," ").trim().replace(/^(the|a|an) /,"")}
+function lev(a,b){if(Math.abs(a.length-b.length)>2)return 9;const p=[];for(let j=0;j<=b.length;j++)p[j]=j;for(let i=1;i<=a.length;i++){let d=p[0];p[0]=i;for(let j=1;j<=b.length;j++){const t=p[j];p[j]=Math.min(p[j]+1,p[j-1]+1,d+(a[i-1]===b[j-1]?0:1));d=t}}return p[b.length]}
+const INDEX=(DAY||[]).map(r=>{const list=[];for(const pts of ORDER){for(const ent of r.t[pts].split(";")){const al=ent.split("|");const name=al[0];for(const a of al)list.push({k:norm(a),name,pts})}}return list});
+function findAnswer(round,raw){const k=norm(raw);if(!k)return null;const L=INDEX[round];const sing=x=>x.replace(/s$/,"");
+  let m=L.find(e=>e.k===k)||L.find(e=>sing(e.k)===sing(k));if(m)return m;
+  const max=k.length>=13?3:k.length>=8?2:k.length>=4?1:0;if(!max)return null;
+  let best=null,bd=9,tie=false;for(const e of L){const d=lev(k,e.k);if(d<bd){bd=d;best=e;tie=false}else if(d===bd&&best&&e.name!==best.name)tie=true}
+  return bd<=max&&!tie?Object.assign({fuzzy:true},best):null}
+/*DATA-END*/
+
+const $=id=>document.getElementById(id);
+const cv=$("sea"),cx=cv.getContext("2d");
+let W=0,H=0,DPR=1;
+function size(){const r=cv.getBoundingClientRect();DPR=Math.min(2,window.devicePixelRatio||1);W=r.width;H=r.height;cv.width=W*DPR;cv.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0)}
+addEventListener("resize",size);size();
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const PPM=1.15;
+const S={phase:"title",i:0,score:0,depth:0,cy:0,ay:.56,ayT:.56,res:[],anim:null,tEnd:0,last:"",readyAt:0,surf:null,seen:-1,gold:false,goldAt:0};
+const fmt=n=>Math.round(n).toLocaleString("en-US");
+
+/* ---------- sound ---------- */
+let AC=null,sndOn=true;
+function blip(f,d,type,v){if(!AC||!sndOn)return;try{const o=AC.createOscillator(),g=AC.createGain();o.type=type||"square";o.frequency.value=f;g.gain.value=v||.05;g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+$("snd").onclick=()=>{sndOn=!sndOn;$("snd").textContent=sndOn?"♪":"×";$("snd").setAttribute("aria-label",sndOn?"Turn sound off":"Turn sound on")};
+
+/* ---------- world dressing ---------- */
+const STOPS=[[0,[34,128,146]],[200,[20,88,106]],[600,[12,52,66]],[1200,[8,32,44]],[3000,[5,16,24]],[7000,[3,8,12]]];
+function col(d){d=Math.max(0,Math.min(7000,d));for(let i=1;i<STOPS.length;i++){if(d<=STOPS[i][0]){const a=STOPS[i-1],b=STOPS[i],t=(d-a[0])/(b[0]-a[0]);return"rgb("+a[1].map((v,j)=>Math.round(v+(b[1][j]-v)*t)).join(",")+")"}}return"rgb(3,8,12)"}
+const FACTS=[[60,"kelp forest"],[200,"TWILIGHT ZONE",1],[332,"deepest scuba dive on record: 332 m"],[535,"emperor penguins hunt this deep"],[700,"pressure: 70 times the surface"],[1000,"MIDNIGHT ZONE",1],[1250,"anglerfish carry their own lamp"],[1600,"no sunlight has ever reached here"],[2000,"sperm whales dive this far for squid"],[2400,"vents here pour out 400°C water"],[3000,"the water is about 2°C"],[3700,"average depth of the whole ocean"],[3800,"the Titanic rests at this depth"],[4000,"THE ABYSS",1],[4700,"sea cucumbers walk the plain"],[5300,"deeper than most submarines can go"],[6000,"HADAL ZONE",1],[6500,"snailfish still live below this"],[6960,"the stone bed. a perfect dive lands here"]];
+const snow=[];for(let i=0;i<70;i++)snow.push({x:Math.random(),y:Math.random(),z:.3+Math.random()*.7});
+const fish=[];for(let i=0;i<6;i++)fish.push({d:60+Math.random()*500,x:Math.random(),v:(Math.random()<.5?-1:1)*(.02+Math.random()*.04),s:.7+Math.random()*.8});
+let bubbles=[],sparks=[],goldSprite=null;
+function goldShrimp(){if(goldSprite)return goldSprite;const c=document.createElement("canvas");c.width=c.height=96;const g=c.getContext("2d");const put=()=>{g.font="60px serif";g.textAlign="center";g.textBaseline="middle";g.fillText("🦐",48,52)};put();g.globalCompositeOperation="color";g.fillStyle="#ffb800";g.fillRect(0,0,96,96);g.globalCompositeOperation="lighter";g.fillStyle="rgba(255,170,20,.12)";g.fillRect(0,0,96,96);g.globalCompositeOperation="destination-in";put();goldSprite=c;return c}
+function goGold(){S.gold=true;S.goldAt=performance.now();for(let i=0;i<60;i++){const a=Math.random()*6.28,v=60+Math.random()*220;sparks.push({x:W*.5,y:H*.3,vx:Math.cos(a)*v,vy:Math.sin(a)*v-60,l:1+Math.random()})}[660,880,1100,1320,1760].forEach((f,i)=>setTimeout(()=>blip(f,.25,"triangle",.07),i*90));if(navigator.vibrate)try{navigator.vibrate([30,40,30,40,90])}catch(_){}}
+function rnd(i){const x=Math.sin(i*127.1)*43758.5453;return x-Math.floor(x)}
+
+/* ---------- drawing ---------- */
+let prev=performance.now(),lastCy=0;
+function frame(now){
+  const dt=Math.min(.05,(now-prev)/1000);prev=now;const t=now/1000;
+  // creature depth
+  if(S.anim){const a=S.anim,p=Math.min(1,(now-a.t0)/a.T),e=1-Math.pow(1-p,3);S.cy=a.d0+(a.d1-a.d0)*e;
+    for(const g of a.gates){if(!g.hit&&S.cy>=g.d-.5&&a.d1>=g.d){g.hit=now;blip(260+ORDER.indexOf(g.pts)*90,.12,"square",.05);if(navigator.vibrate)try{navigator.vibrate(8)}catch(_){}}}
+    if(Math.random()<.5)bubbles.push({x:W*.5+(Math.random()-.5)*26,d:S.cy-8,r:2+Math.random()*4,v:30+Math.random()*50,l:1.6});
+    if(p>=1){S.anim=null;a.done()}
+  }else if(S.surf){const a=S.surf,p=Math.min(1,(now-a.t0)/a.T),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;S.cy=a.d0*(1-e);if(p>=1){S.surf=null}}
+  else S.cy=S.depth;
+  S.ay+=(S.ayT-S.ay)*Math.min(1,dt*4);
+  const cam=S.cy,ay=H*S.ay,Y=d=>ay+(d-cam)*PPM,speed=(S.cy-lastCy)/Math.max(dt,.001);lastCy=S.cy;
+  const y0=Y(0);
+  cx.clearRect(0,0,W,H);
+  // sky at dusk
+  if(y0>0){const g=cx.createLinearGradient(0,y0-H*.8,0,y0);g.addColorStop(0,"#2b2a52");g.addColorStop(.55,"#b65a7c");g.addColorStop(1,"#ffb37a");cx.fillStyle=g;cx.fillRect(0,0,W,y0);
+    cx.fillStyle="rgba(255,255,255,.7)";for(let i=0;i<24;i++){const sy=y0-H*.8+rnd(i)*H*.4;if(sy<y0-150)cx.fillRect(rnd(i+50)*W,sy,2,2)}
+    cx.fillStyle="#ffe2a8";cx.beginPath();cx.arc(W*.74,y0+4,30,Math.PI,0);cx.fill();
+    cx.fillStyle="rgba(255,236,214,.85)";for(let i=0;i<3;i++){const bx=((rnd(i+9)*W+t*(4+i*2))%(W+140))-70,by=y0-190-i*52;cx.fillRect(bx,by,64,8);cx.fillRect(bx+12,by-8,36,8);cx.fillRect(bx+22,by-16,16,8)}
+  }
+  // water
+  const top=Math.max(0,y0);if(top<H){const g=cx.createLinearGradient(0,top,0,H);g.addColorStop(0,col(cam+(top-ay)/PPM));g.addColorStop(1,col(cam+(H-ay)/PPM));cx.fillStyle=g;cx.fillRect(0,top,W,H-top)}
+  // light shafts
+  if(cam<420&&y0>-600){cx.fillStyle="rgba(255,225,170,"+(.07*(1-cam/420)).toFixed(3)+")";for(let i=0;i<4;i++){const sx=W*(.12+i*.26)+Math.sin(t*.3+i)*10;cx.beginPath();cx.moveTo(sx,Math.max(y0,-10));cx.lineTo(sx+30,Math.max(y0,-10));cx.lineTo(sx-40,y0+520);cx.lineTo(sx-110,y0+520);cx.fill()}}
+  // kelp
+  if(cam<760){cx.lineCap="round";for(let k=0;k<6;k++){const bx=k<3?10+k*22:W-12-(k-3)*22,d0=70+k*26,d1=470+rnd(k)*90;cx.strokeStyle="rgba(5,34,38,"+(.5+rnd(k+3)*.25)+")";cx.lineWidth=5+rnd(k)*3;cx.beginPath();for(let d=d1;d>=d0;d-=18){const x=bx+Math.sin(d*.03+t*.9+k)*7*(1-(d-d0)/(d1-d0)*.6);d===d1?cx.moveTo(x,Y(d)):cx.lineTo(x,Y(d))}cx.stroke()}}
+  // sea floor of stones
+  const yf=Y(7030);if(yf<H){cx.fillStyle="#0b1114";cx.fillRect(0,yf,W,H-yf);for(let i=0;i<46;i++){const sx=rnd(i)*W,sy=yf+6+rnd(i+70)*Math.min(240,H),r=7+rnd(i+20)*18;cx.fillStyle=i%9===0?"rgba(125,249,200,.5)":"rgba("+(40+rnd(i)*40|0)+","+(52+rnd(i)*40|0)+","+(58+rnd(i)*40|0)+",1)";cx.beginPath();cx.ellipse(sx,sy,r,r*.62,0,0,7);cx.fill()}}
+  // surface line + buoy
+  if(y0>-20&&y0<H+20){cx.strokeStyle="rgba(255,240,220,.75)";cx.lineWidth=2;cx.beginPath();for(let x=0;x<=W;x+=8){const y=y0+Math.sin(x*.05+t*1.6)*2.2;x?cx.lineTo(x,y):cx.moveTo(x,y)}cx.stroke();
+    const bx=W*.2,by=y0+Math.sin(t*1.6+bx*.05)*2.2;cx.fillStyle="#12222a";cx.fillRect(bx-7,by-6,14,9);cx.fillRect(bx-1,by-24,2,18);cx.fillStyle=Math.sin(t*3)>0?"#ff6b5e":"#7a2a25";cx.fillRect(bx-3,by-28,6,5)}
+  // facts and zones
+  cx.textBaseline="middle";
+  FACTS.forEach((f,i)=>{const y=Y(f[0]);if(y<-20||y>H+20)return;if(f[2]){cx.font="700 13px Silkscreen, monospace";cx.fillStyle="rgba(125,249,200,.55)";cx.textAlign="left";cx.fillText("── "+f[1],14,y)}else{cx.font="11px 'IBM Plex Mono', monospace";cx.fillStyle="rgba(233,245,242,.42)";const left=i%2===0;cx.textAlign=left?"left":"right";cx.fillText(left?"── "+f[1]:f[1]+" ──",left?14:W-58,y)}});
+  // marine snow
+  for(const s of snow){s.y-=(speed*PPM*s.z*dt)/H;s.y+=dt*.004*s.z;s.x+=Math.sin(t+s.z*9)*.0002;s.y=((s.y%1)+1)%1;const sy=s.y*H;if(sy<y0)continue;const len=Math.min(26,Math.abs(speed)*PPM*s.z*.03);cx.fillStyle="rgba(210,240,236,"+(.12+s.z*.3).toFixed(2)+")";cx.fillRect(s.x*W,sy-len,1.6*s.z+.6,1.6*s.z+.6+len)}
+  // fish
+  const span=H/PPM;for(const f of fish){f.x+=f.v*dt;if(f.x<-.15||f.x>1.15||f.d<cam-span||f.d>cam+span){f.d=Math.max(30,cam+(Math.random()*1.3-.3)*span*.8);f.x=f.v>0?-.1:1.1}const fy=Y(f.d);if(fy<y0+12||fy>H+20)continue;const fx=f.x*W,dir=f.v>0?1:-1,L=16*f.s;
+    if(f.d>1100){cx.fillStyle="rgba(125,249,200,"+(.35+.3*Math.sin(t*2+f.d)).toFixed(2)+")";cx.fillRect(fx,fy,3,3);cx.fillRect(fx-dir*9,fy+2,2,2)}
+    else{cx.fillStyle="rgba(4,24,30,.55)";cx.beginPath();cx.ellipse(fx,fy,L,L*.4,0,0,7);cx.fill();cx.beginPath();cx.moveTo(fx-dir*L*.8,fy);cx.lineTo(fx-dir*L*1.6,fy-L*.45);cx.lineTo(fx-dir*L*1.6,fy+L*.45);cx.fill()}}
+  // tier gates while sinking
+  if(S.anim||S.gatesHold){const gs=(S.anim||S.gatesHold).gates;for(const g of gs){const y=Y(g.d);if(y<-10||y>H+10)continue;const T=TIERS[g.pts],lit=g.hit?Math.max(0,1-(now-g.hit)/600):0;cx.setLineDash([5,5]);cx.strokeStyle=g.hit?T.c:"rgba(233,245,242,.35)";cx.globalAlpha=g.hit?.55+lit*.45:.7;cx.lineWidth=g.hit?2+lit*3:1.5;cx.beginPath();cx.moveTo(10,y);cx.lineTo(W-52,y);cx.stroke();cx.setLineDash([]);cx.font="700 11px Silkscreen, monospace";cx.textAlign="right";cx.fillStyle=g.hit?T.c:"rgba(233,245,242,.6)";cx.fillText(T.n+" · "+g.pts,W-58,y-10);cx.globalAlpha=1}}
+  // bubbles
+  bubbles=bubbles.filter(b=>(b.l-=dt)>0);cx.lineWidth=1.5;for(const b of bubbles){b.d-=b.v*dt;b.x+=Math.sin(t*4+b.r)*.4;cx.strokeStyle="rgba(233,245,242,"+Math.min(.7,b.l).toFixed(2)+")";cx.beginPath();cx.arc(b.x,Y(b.d),b.r,0,7);cx.stroke()}
+  if(S.phase!=="title"&&S.phase!=="end"&&Math.random()<.02)bubbles.push({x:W*.5+12,d:S.cy-6,r:2+Math.random()*2,v:22,l:1.4});
+  // the shrimp
+  const bob=S.anim?0:Math.sin(t*2)*5,sx=W*.5+(S.anim?Math.sin(t*9)*3:Math.sin(t*.9)*10),sy=Y(S.cy)+bob+(S.phase==="title"?16:0);
+  const exc=S.gold&&S.phase==="result"&&S.res.length&&S.res[S.res.length-1].pts===100,k=(now-S.goldAt)/1000;
+  let rot=Math.max(-1.1,Math.min(1.1,-speed*.0022))+(S.wob?Math.sin(t*40)*.3:0),sc=1,hop=0;
+  if(exc&&!RM){hop=-Math.abs(Math.sin(k*7))*18;rot=k<.9?k/.9*6.283:Math.sin(k*9)*.45;sc=1.55+Math.sin(k*12)*.1;if(Math.random()<.6){const a=Math.random()*6.28;sparks.push({x:sx,y:sy+hop,vx:Math.cos(a)*90,vy:Math.sin(a)*90-40,l:.9})}}
+  const gr=S.gold?(exc?80+Math.sin(k*8)*12:58):46,gc=S.gold?"255,205,60":"255,180,84";
+  const gl=cx.createRadialGradient(sx,sy+hop,2,sx,sy+hop,gr);gl.addColorStop(0,"rgba("+gc+","+(S.gold?.28:.45)+")");gl.addColorStop(1,"rgba("+gc+",0)");cx.fillStyle=gl;cx.fillRect(sx-gr,sy+hop-gr,gr*2,gr*2);
+  cx.save();cx.translate(sx,sy+hop);cx.rotate(rot);cx.scale(sc,sc);if(S.gold)cx.drawImage(goldShrimp(),-24,-24,48,48);else{cx.font="30px serif";cx.textAlign="center";cx.fillText("🦐",0,2)}cx.restore();
+  sparks=sparks.filter(p=>(p.l-=dt)>0);for(const p of sparks){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=120*dt;cx.fillStyle="rgba(255,"+(200+Math.random()*55|0)+",80,"+Math.min(1,p.l).toFixed(2)+")";const z=2+p.l*2;cx.fillRect(p.x,p.y,z,z)}
+  // answer plaque riding down
+  if(S.anim&&S.anim.label){cx.font="600 13px 'IBM Plex Mono', monospace";let tx="“"+S.anim.label.toUpperCase()+"”";while(cx.measureText(tx).width>W-90&&tx.length>6)tx=tx.slice(0,-3)+"…”";const tw=cx.measureText(tx).width+24,px=W*.5-tw/2,py=sy+30;cx.fillStyle="rgba(9,24,31,.92)";cx.fillRect(px,py,tw,28);cx.strokeStyle=S.anim.pts?"#ffb454":"#6b8085";cx.lineWidth=2;cx.strokeRect(px,py,tw,28);cx.fillStyle=S.anim.pts?"#ffb454":"#9db3b6";cx.textAlign="center";cx.fillText(tx,W*.5,py+15)}
+  // depth ruler
+  if(S.phase!=="title"){const rx=W-16;cx.strokeStyle="rgba(134,169,173,.5)";cx.lineWidth=1;cx.beginPath();cx.moveTo(rx,Math.max(0,y0));cx.lineTo(rx,H);cx.stroke();cx.font="10px 'IBM Plex Mono', monospace";cx.textAlign="right";const dA=Math.max(0,Math.floor((cam-ay/PPM)/50)*50),dB=cam+(H-ay)/PPM;for(let d=dA;d<=dB;d+=50){const y=Y(d),big=d%100===0;cx.beginPath();cx.moveTo(rx,y);cx.lineTo(rx-(big?8:4),y);cx.stroke();if(big&&d>0){cx.fillStyle="rgba(134,169,173,.75)";cx.fillText("-"+fmt(d)+"m",rx-11,y)}}
+    cx.fillStyle="#ffb454";cx.beginPath();cx.moveTo(rx-1,sy);cx.lineTo(rx+9,sy-6);cx.lineTo(rx+9,sy+6);cx.fill()}
+  // HUD numbers follow the dive
+  if(S.phase!=="title"){$("hd").textContent=fmt(Math.max(0,S.cy))+"m"}
+  // clock
+  if(S.phase==="ready"){const left=Math.ceil((S.readyAt-now)/1000);if(left<=0){S.phase="input";S.tEnd=now+25000;$("go").disabled=false;$("msg").textContent=""}else if(!S.msgLock)$("msg").textContent="read it… the clock starts in "+left}
+  if(S.phase==="input"){const left=Math.max(0,(S.tEnd-now)/1000),sec=Math.ceil(left);if($("secs").textContent!=sec){$("secs").textContent=sec;if(sec<=5&&sec>0)blip(880,.05,"square",.04)}$("arc").style.strokeDashoffset=138.2*(1-left/25);$("ring").classList.toggle("hot",left<=5);if(left<=0)resolve(null)}
+  requestAnimationFrame(frame);
+}
+
+/* ---------- game flow ---------- */
+function show(id,on){$(id).classList.toggle("hide",!on)}
+function pips(){const p=$("pips");p.innerHTML="";for(let i=0;i<7;i++){const el=document.createElement("i");const r=S.res[i];if(r)el.style.background=TIERS[r.pts].c,el.style.borderColor=TIERS[r.pts].c;else if(i===S.i&&S.phase!=="end")el.className="now";p.appendChild(el)}$("pl").textContent=S.phase==="end"||S.res.length===7?"DIVE COMPLETE":"PROMPT "+(S.i+1)+" OF 7"}
+function startRound(i){S.seen=Math.max(S.seen,i);save();S.i=i;S.phase="ready";S.last="";S.msgLock=false;S.gatesHold=null;S.readyAt=performance.now()+3000;S.ayT=.72;
+  $("qn").textContent="PROMPT "+(i+1)+" OF 7";$("q").textContent=DAY[i].q;$("ans").value="";$("go").disabled=true;$("secs").textContent="25";$("arc").style.strokeDashoffset=0;$("ring").classList.remove("hot");
+  show("res",false);show("next",false);show("play",true);pips();try{$("ans").focus({preventScroll:true})}catch(e){}}
+$("bar").addEventListener("submit",ev=>{ev.preventDefault();if(S.phase!=="input")return;const v=$("ans").value.trim();if(!v)return;S.last=v;const m=findAnswer(S.i,v);
+  if(!m){$("msg").textContent="“"+v+"” isn't on the list. Try another.";S.msgLock=true;$("ans").classList.remove("shake");void $("ans").offsetWidth;$("ans").classList.add("shake");$("ans").select();blip(140,.15,"sawtooth",.04);return}
+  resolve(m)});
+function resolve(m){if(S.phase!=="input")return;S.phase="reveal";$("ans").blur();show("play",false);S.ayT=.4;
+  const pts=m?m.pts:0,name=m?m.name:(S.last||"no answer"),d0=S.depth,d1=d0+pts*10;
+  const gates=ORDER.map(p=>({pts:p,d:d0+p*10,hit:0}));
+  const rec={q:DAY[S.i].q,name,pts,round:S.i};
+  S.wob=!m;
+  S.anim={d0,d1,t0:performance.now(),T:RM?500:(m?1500+pts*34:1100),gates,label:name,pts,done(){S.wob=false;S.depth=d1;S.score+=pts;S.res.push(rec);save();if(pts===100)goGold();$("hs").textContent=fmt(S.score);
+    const T=TIERS[pts];$("rIcon").textContent=T.e;$("rTier").textContent=T.n;$("rTier").style.color=T.c;$("rAns").innerHTML="“"+esc(name)+"”"+(m&&m.fuzzy?"<small>autocorrected from “"+esc(S.last)+"”</small>":"");$("rPts").innerHTML="<b>+"+pts+" PTS</b>"+(pts?" · sink "+fmt(pts*10)+"m":"");$("rFlav").textContent=T.f;
+    const note=m&&DAY[S.i].notes[name];$("rNote").textContent=note||"";$("rNote").style.display=note?"block":"none";
+    $("next").textContent=S.i<6?"DESCEND ▼":"SURFACE ▲";S.phase="result";S.ayT=.2;show("res",true);show("next",true);pips();
+    blip(pts>=85?990:pts>=60?740:pts?520:110,.3,pts?"triangle":"sawtooth",.07);if(pts===100)setTimeout(()=>blip(1320,.4,"triangle",.07),160);try{$("next").focus({preventScroll:true})}catch(e){}}};
+}
+$("next").onclick=()=>{if(S.phase!=="result")return;if(S.i<6)startRound(S.i+1);else finish()};
+$("begin").onclick=()=>{if(S.res.length>=7||!DAY)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume()}catch(e){}show("title",false);show("hud",true);show("snd",true);startRound(S.res.length)};
+function finish(){S.phase="end";S.gatesHold=null;show("res",false);show("next",false);S.ayT=.5;S.surf={d0:S.depth,t0:performance.now(),T:RM?400:2400};pips();setTimeout(buildEnd,RM?300:1700)}
+function shareText(){const w=$("who").value;return(w?w+"\n":"")+"krillst0ne "+NUM.replace(/#0*/,"#")+" 🦐\n"+S.score+"\n\n"+S.res.map(r=>TIERS[r.pts].e).join("")}
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function buildEnd(){
+  $("eScore").innerHTML=fmt(S.score)+"<span>-"+fmt(S.score*10)+"m</span>";
+  const b=BEAR.find(x=>S.score>=x[0]&&S.score<=x[1])||BEAR[0];$("eBear").textContent=b[2];
+  $("log").innerHTML=S.res.map((r,i)=>"<div><u style=\"height:"+Math.max(2,r.pts*1.15)+"px\"></u><s>"+TIERS[r.pts].e+"</s><b>"+(i+1)+"</b></div>").join("");
+  $("bear").innerHTML=BEAR.map(x=>"<tr"+(x===b?" class=\"on\"":"")+"><td>"+x[0]+(x[1]===700?"+":"–"+x[1])+"</td><td>"+x[2]+"</td></tr>").join("");
+  $("catch").innerHTML=S.res.map((r,i)=>{const d=DAY[r.round];let h="";for(const p of ORDER.slice().reverse()){const T=TIERS[p];h+="<h3 style=\"color:"+T.c+"\">"+T.e+" "+T.n+" · +"+p+"</h3><p>"+d.t[p].split(";").map(e=>{const n=e.split("|")[0];return n===r.name&&r.pts?"<mark>"+esc(n)+" · YOU</mark>":esc(n)}).join(", ")+"</p>";for(const e of d.t[p].split(";")){const n=e.split("|")[0];if(d.notes[n])h+="<i>"+esc(n)+": "+esc(d.notes[n])+"</i>"}}
+    return"<details><summary><span>"+TIERS[r.pts].e+"</span><span><small>"+esc(r.q)+"</small><span>"+esc(r.name)+"</span></span><b>"+r.pts+"</b></summary><div class=\"al\">"+h+"</div></details>"}).join("");
+  $("shareOut").style.display="none";$("copy").textContent="COPY RESULT";$("end").scrollTop=0;show("end",true);show("hud",false);show("snd",false)}
+function copyText(txt,btn,done,box){const fall=()=>{if(box){box.value=txt;box.style.display="block";box.focus();box.select()}btn.textContent="SELECT AND COPY BELOW"};try{navigator.clipboard.writeText(txt).then(()=>{btn.textContent=done},fall)}catch(e){fall()}}
+$("copy").onclick=()=>copyText(shareText(),$("copy"),"COPIED ✓",$("shareOut"));
+$("fbCopy").onclick=()=>{const v=$("fb").value.trim();if(!v){$("fb").focus();return}copyText("krillst0ne "+NUM+" note:\n"+v,$("fbCopy"),"COPIED ✓ PASTE IT TO JAY",null)};
+/* ---------- one dive per day, kept on this device ---------- */
+const KEY="krillst0ne-dive-"+DIVE_N,NKEY="krillst0ne-name";
+function save(){try{localStorage.setItem(KEY,JSON.stringify({seen:S.seen,res:S.res}))}catch(e){}}
+try{if(location.hash==="#testreset")localStorage.removeItem(KEY)}catch(e){}
+try{$("who").value=localStorage.getItem(NKEY)||""}catch(e){}
+$("who").onchange=()=>{try{localStorage.setItem(NKEY,$("who").value)}catch(e){}};
+$("sub").textContent="DIVE "+NUM+" · ONE DIVE PER DAY";$("eNum").textContent="DIVE "+NUM+" COMPLETE";
+if(!DAY){$("begin").disabled=true;$("begin").textContent="NO DIVE TODAY";$("begin").style.opacity=.6;$("sub").textContent="DIVE "+NUM+" HAS NOT BEEN WRITTEN YET"}
+setInterval(()=>{const p=new Intl.DateTimeFormat("en-GB",{timeZone:"America/Los_Angeles",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=+x.value,a),{});const left=86400-((p.hour%24)*3600+p.minute*60+p.second),f=n=>String(n).padStart(2,"0");$("nextIn").textContent="One dive per day. Next dive in "+f(left/3600|0)+":"+f(left%3600/60|0)+":"+f(left%60)+" (midnight Pacific)."},1000);
+(function restore(){if(!DAY)return;let st=null;try{st=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){}if(!st||!Array.isArray(st.res))return;
+  S.res=st.res;S.seen=st.seen;
+  while(S.res.length<=S.seen&&S.res.length<7){const r=S.res.length;S.res.push({q:DAY[r].q,name:"left mid-round",pts:0,round:r})}
+  S.score=S.res.reduce((a,r)=>a+r.pts,0);S.depth=S.score*10;S.gold=S.res.some(r=>r.pts===100);$("hs").textContent=fmt(S.score);save();
+  if(S.res.length>=7){S.phase="end";S.depth=0;S.ayT=S.ay=.5;show("title",false);buildEnd()}else if(S.res.length)$("begin").textContent="▼ CONTINUE DIVE ▼"})();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
