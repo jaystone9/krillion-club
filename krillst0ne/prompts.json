@@ -1,0 +1,32 @@
+{
+"1": [
+{
+"t": "Name a spice or dried herb on a spice rack.",
+"g": "food"
+},
+{
+"t": "Name a capital city in Europe.",
+"g": "places"
+},
+{
+"t": "Name a Beatles song.",
+"g": "music"
+},
+{
+"t": "Name a US national park.",
+"g": "places"
+},
+{
+"t": "Name a dog breed.",
+"g": "nature"
+},
+{
+"t": "Name a famous painter.",
+"g": "history"
+},
+{
+"t": "Name a cheese.",
+"g": "food"
+}
+]
+}

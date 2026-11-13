@@ -332,7 +332,7 @@ function vLog(c){
   if(!c.dates.includes(ui.day))ui.day=c.dates[c.dates.length-1];
   const d=ui.day,day=state.days[d],rows=state.players.map(p=>({p,e:day.scores[p.id],t:tot(day.scores[p.id])})).sort((a,b)=>(b.t??-1)-(a.t??-1)),best=rows[0].t;
   const pr=[0,1,2,3,4,5,6].map(i=>{const x=(day.prompts||[])[i]||{},vs=rows.filter(r=>r.e&&r.e.q).map(r=>r.e.q[i]);return {t:x.t,g:x.g,avg:vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null}});
-  return `<section class="panel"><div class="row between"><h2>Dive log</h2><span class="dim sm">Krillion #${day.n||dateToNum(d)} · ${dayName(d)}${d===c.open?' · still open, no winner yet':''}</span></div>
+  return `<section class="panel"><div class="row between"><h2>Dive log</h2><span class="dim sm">${day.k?'krillst0ne #'+day.k:'Krillion #'+(day.n||dateToNum(d))} · ${dayName(d)}${d===c.open?' · still open, no winner yet':''}</span></div>
   <div class="strip">${c.dates.map(x=>`<button data-day="${x}" class="${x===d?'on':''}">${+x.slice(5,7)}/${+x.slice(8)}</button>`).join('')}</div>
   <div class="scroll"><table><tr><th class="l">Diver</th>${[1,2,3,4,5,6,7].map(i=>`<th>Q${i}</th>`).join('')}<th>Score</th></tr>
   ${rows.map(r=>`<tr><td class="l"><span class="row" style="flex-wrap:nowrap;gap:8px">${av(r.p,1)}<span class="nm">${esc(r.p.short)}</span>${r.t!=null&&r.t===best&&d!==c.open?' <span title="Won the day">👑</span>':''}</span></td>${r.t==null?'<td colspan="7" class="dim sm">sat this one out</td><td></td>':(r.e.q?r.e.q.map(chip).join('</td><td>').replace(/^/,'<td>')+'</td>':'<td colspan="7" class="dim sm">total only</td>')+`<td class="num" title="${bearing(r.t)}"><b>${fm(r.t)}</b></td>`}</tr>`).join('')}
@@ -359,7 +359,7 @@ function vEnter(){
   return `<section class="panel"><h2>Paste from the group chat</h2><p class="dim sm">Paste everyone's shares in one go, a name on the line above each. The Krillion number sets the date, and the emoji row gives the per-prompt scores (🫧 10 · 🐟 30 · 🦑 60 · 🏮 85 · ⬛ 0). Several days at once is fine.</p>
   <textarea id="paste" placeholder="Jay&#10;Krillion #117 🦐&#10;200&#10;&#10;🦑🫧🐟🦑🫧🐟⬛"></textarea><div id="paste-pv" class="sm dim"></div><div class="row"><button class="go" data-act="import">Save pasted scores</button></div></section>
   <section class="panel"><div class="row between"><h2>Edit a day</h2><input type="date" id="e-date" value="${d}" aria-label="Day to edit"></div>
-  <h3>Prompts and genres <span class="dim sm">· Krillion #${day.n||dateToNum(d)}</span></h3>
+  <h3>Prompts and genres <span class="dim sm">· ${day.k?'krillst0ne #'+day.k:'Krillion #'+(day.n||dateToNum(d))}</span></h3>
   ${[0,1,2,3,4,5,6].map(i=>{const x=(day.prompts||[])[i]||{};return `<div class="erow"><span class="dim num">${i+1}</span><input type="text" id="e-p${i}" data-prompt="${i}" value="${esc(x.t||'')}" placeholder="Name a…" aria-label="Prompt ${i+1}">${gsel(i,x.g)}</div>`}).join('')}
   <h3>Scores</h3><p class="dim sm">Seven scores (10 15 30 60 85 100, or 0 for a miss), or just a day total if that is all you have. Blank means they sat out.</p>
   ${state.players.map(p=>`<div class="srow"><label for="e-s-${p.id}" class="row" style="gap:8px;flex-wrap:nowrap">${av(p,1)}${esc(p.short)}</label><input type="text" id="e-s-${p.id}" data-score="${p.id}" value="${fmtScore(day.scores[p.id])}" placeholder="60 10 30 60 10 30 0" inputmode="numeric"><div class="pv" id="pv-${p.id}"></div></div>`).join('')}
@@ -459,6 +459,19 @@ document.addEventListener('change',e=>{const t=e.target;
 });
 window.addEventListener('hashchange',render);
 render();
+/* krillst0ne: scores the game posts to the shared store show up here as days, no manual logging.
+   Dive #1 = Nov 13, 2026. Prompts stay hidden until the day is over or all seven are in, so the log can't spoil a dive. */
+(async()=>{try{
+  const K='sb_publishable_YM9K9YqwnTvz77h7Y-K_cQ_I8HQuWKT',U='https://apjlbzyiszkgwyhpvyiq.supabase.co/rest/v1/krillst0ne_scores?select=dive,player,tiers&order=dive';
+  const [rows,pr]=await Promise.all([fetch(U,{headers:{apikey:K}}).then(r=>r.json()),fetch('krillst0ne/prompts.json',{cache:'no-store'}).then(r=>r.json()).catch(()=>({}))]);
+  if(!Array.isArray(rows)||!rows.length)return;
+  const ID={};state.players.forEach(p=>ID[p.name]=p.id);
+  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles'}).format(new Date()),L=Date.UTC(2026,10,13);
+  for(const r of rows){const d=iso(L+(r.dive-1)*864e5),id=ID[r.player];if(!id||!Array.isArray(r.tiers))continue;
+    const day=state.days[d]||(state.days[d]={prompts:[],scores:{}});day.k=r.dive;day.scores[id]={q:r.tiers}}
+  for(const d in state.days){const day=state.days[d];if(day.k&&pr[day.k]&&(d<today||state.players.every(p=>day.scores[p.id])))day.prompts=pr[day.k]}
+  render();
+}catch(e){}})();
 })();
 </script>
 </body>

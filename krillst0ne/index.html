@@ -131,6 +131,8 @@ summary b{font-variant-numeric:tabular-nums;color:var(--amber)}
 .al h3{font-family:var(--display);font-size:10px;letter-spacing:.16em;font-weight:400;margin:10px 0 3px}
 .al p{margin:0;color:var(--drift)}.al mark{background:var(--amber);color:#1b1206;padding:0 3px}
 .al i{display:block;font-style:normal;font-size:12px;color:var(--foam);border-left:2px solid var(--amber);padding-left:8px;margin:4px 0}
+#board .r{display:grid;grid-template-columns:20px 1fr auto 44px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #12303a;font-size:14px}
+#board .r.me{color:var(--amber);font-weight:600}#board .r span:nth-child(3){font-size:13px;letter-spacing:1px}#board .r b{text-align:right;font-variant-numeric:tabular-nums}
 #fb{width:100%;min-height:84px;background:#0b1c24;border:2px solid var(--line);padding:10px;font-size:15px;border-radius:0}
 .fine{font-size:12px;color:var(--drift);line-height:1.5;margin:8px 0 0}
 @media (prefers-reduced-motion:reduce){.shake{animation:none}.layer{transition:none}}
@@ -154,6 +156,7 @@ summary b{font-variant-numeric:tabular-nums;color:var(--amber)}
     <div class="sp"></div>
     <label class="who" for="who">WHO'S DIVING?
       <select id="who"><option value="">pick your name</option><option>Jay</option><option>Lauren Jane</option><option>Marti</option><option>Carolyn</option><option>Andrew</option><option>Lacey</option><option>Emma</option></select></label>
+    <div class="sub hide" id="whoSet" style="margin:0 0 12px;color:var(--foam)">DIVING AS <b id="whoName" style="color:var(--amber)"></b> · <button id="whoChange" type="button" style="background:none;border:0;padding:0;color:var(--glow);font:inherit;letter-spacing:inherit;text-decoration:underline">NOT YOU?</button></div>
     <button class="big" id="begin" type="button">▼ DROP IN ▼</button>
     <div class="sub" id="sub">ONE DIVE PER DAY</div>
     <div class="links"><a href="https://jaystone9.github.io/krillion-club/" target="_blank" rel="noopener">CLUB STANDINGS ↗</a><a href="https://krillion.io" target="_blank" rel="noopener">THE REAL KRILLION ↗</a></div>
@@ -187,6 +190,9 @@ summary b{font-variant-numeric:tabular-nums;color:var(--amber)}
     <p class="fine" id="nextIn">One dive per day. The next one opens at midnight Pacific.</p>
     <a class="btn alt" href="https://jaystone9.github.io/krillion-club/" target="_blank" rel="noopener">KRILLION CLUB STANDINGS ↗</a>
     <a class="btn alt" href="https://krillion.io" target="_blank" rel="noopener">PLAY THE REAL KRILLION ↗</a>
+    <h2>TODAY'S CLUB BOARD</h2>
+    <p class="fine" id="saveMsg" style="margin:0 0 8px;color:var(--amber)"></p>
+    <div id="board"><p class="fine">Loading the board…</p></div>
     <h2>THE CATCH · TAP A ROUND FOR EVERY ANSWER</h2>
     <div id="catch"></div>
     <h2>NOTES FOR THE QUESTION DESK</h2>
@@ -401,7 +407,7 @@ function resolve(m){if(S.phase!=="input")return;S.phase="reveal";$("ans").blur()
 }
 $("next").onclick=()=>{if(S.phase!=="result")return;audio();if(S.i<6)startRound(S.i+1);else finish()};
 function audio(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume()}catch(e){}}
-$("begin").onclick=()=>{if(S.res.length>=7||!DAY)return;audio();show("title",false);show("hud",true);show("snd",true);startRound(S.res.length)};
+$("begin").onclick=()=>{if(S.res.length>=7||!DAY)return;if(!$("who").value){showWho(true);$("sub").textContent="PICK YOUR NAME FIRST";$("who").focus();return}audio();show("title",false);show("hud",true);show("snd",true);startRound(S.res.length)};
 function finish(){S.phase="end";S.gatesHold=null;show("res",false);show("next",false);S.surf={d0:S.depth,t0:performance.now(),T:RM?400:2400};pips();setTimeout(buildEnd,RM?300:1700)}
 function shareText(){const w=$("who").value;return(w?w+"\n":"")+"krillst0ne "+NUM.replace(/#0*/,"#")+" 🦐\n"+S.score+"\n\n"+S.res.map(r=>TIERS[r.pts].e).join("")}
 function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
@@ -412,25 +418,45 @@ function buildEnd(){
   $("bear").innerHTML=BEAR.map(x=>"<tr"+(x===b?" class=\"on\"":"")+"><td>"+x[0]+(x[1]===700?"+":"–"+x[1])+"</td><td>"+x[2]+"</td></tr>").join("");
   $("catch").innerHTML=S.res.map((r,i)=>{const d=DAY[r.round];let h="";for(const p of ORDER.slice().reverse()){const T=TIERS[p];h+="<h3 style=\"color:"+T.c+"\">"+T.e+" "+T.n+" · +"+p+"</h3><p>"+d.t[p].split(";").map(e=>{const n=e.split("|")[0];return n===r.name&&r.pts?"<mark>"+esc(n)+" · YOU</mark>":esc(n)}).join(", ")+"</p>";for(const e of d.t[p].split(";")){const n=e.split("|")[0];if(d.notes[n])h+="<i>"+esc(n)+": "+esc(d.notes[n])+"</i>"}}
     return"<details><summary><span>"+TIERS[r.pts].e+"</span><span><small>"+esc(r.q)+"</small><span>"+esc(r.name)+"</span></span><b>"+r.pts+"</b></summary><div class=\"al\">"+h+"</div></details>"}).join("");
-  $("shareOut").style.display="none";$("copy").textContent="COPY RESULT";$("end").scrollTop=0;show("end",true);show("hud",false);show("snd",false)}
+  $("shareOut").style.display="none";$("copy").textContent="COPY RESULT";if(S.posted){$("saveMsg").textContent="Score saved to the Club ✓";loadBoard()}else postScore();$("end").scrollTop=0;show("end",true);show("hud",false);show("snd",false)}
 function copyText(txt,btn,done,box){const fall=()=>{if(box){box.value=txt;box.style.display="block";box.focus();box.select()}btn.textContent="SELECT AND COPY BELOW"};try{navigator.clipboard.writeText(txt).then(()=>{btn.textContent=done},fall)}catch(e){fall()}}
 $("copy").onclick=()=>copyText(shareText(),$("copy"),"COPIED ✓",$("shareOut"));
 $("fbCopy").onclick=()=>{const v=$("fb").value.trim();if(!v){$("fb").focus();return}copyText("krillst0ne "+NUM+" note:\n"+v,$("fbCopy"),"COPIED ✓ PASTE IT TO JAY",null)};
 /* ---------- one dive per day, kept on this device ---------- */
 const KEY="krillst0ne-dive-"+DIVE_N,NKEY="krillst0ne-name";
-function save(){try{localStorage.setItem(KEY,JSON.stringify({seen:S.seen,res:S.res}))}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({seen:S.seen,res:S.res,posted:!!S.posted}))}catch(e){}}
 try{if(location.hash==="#testreset")localStorage.removeItem(KEY)}catch(e){}
 try{$("who").value=localStorage.getItem(NKEY)||""}catch(e){}
-$("who").onchange=()=>{try{localStorage.setItem(NKEY,$("who").value)}catch(e){}};
+function showWho(pick){const w=$("who").value;const set=!!w&&!pick;document.querySelector(".who").classList.toggle("hide",set);document.querySelector(".who").style.display=set?"none":"";$("whoSet").classList.toggle("hide",!set);$("whoSet").style.display=set?"":"none";$("whoName").textContent=w.toUpperCase()}
+$("who").onchange=()=>{try{localStorage.setItem(NKEY,$("who").value)}catch(e){}showWho(false);if(DAY)$("sub").textContent="DIVE "+NUM+" · ONE DIVE PER DAY";checkRemote()};
+$("whoChange").onclick=()=>showWho(true);
+/* ---------- shared score store ---------- */
+const SB="https://apjlbzyiszkgwyhpvyiq.supabase.co/rest/v1/krillst0ne_scores",SBK="sb_publishable_YM9K9YqwnTvz77h7Y-K_cQ_I8HQuWKT";
+function sb(q,opt){return fetch(SB+q,Object.assign({headers:{apikey:SBK,"Content-Type":"application/json",Prefer:"return=minimal"}},opt||{}))}
+async function postScore(){const w=$("who").value;if(!w||S.res.length<7){$("saveMsg").textContent=w?"":"No name was picked, so this score was not saved. Copy your result and send it to Jay.";loadBoard();return}
+  $("saveMsg").textContent="Saving your score…";
+  try{const r=await sb("",{method:"POST",body:JSON.stringify({dive:DIVE_N,player:w,score:S.score,tiers:S.res.map(r=>r.pts),answers:S.res.map(r=>String(r.name).slice(0,60))})});
+    if(r.ok||r.status===409){S.posted=true;save();$("saveMsg").textContent=r.ok?"Score saved to the Club ✓":"The Club already has a dive from "+w+" today, so that one stands."}else throw 0}
+  catch(e){$("saveMsg").textContent="Could not save your score. Copy your result and send it to Jay."}
+  loadBoard()}
+async function loadBoard(){try{const rows=await (await sb("?dive=eq."+DIVE_N+"&select=player,score,tiers&order=score.desc")).json();if(!Array.isArray(rows))throw 0;const w=$("who").value;
+    $("board").innerHTML=(rows.length?rows.map((r,i)=>"<div class=\"r"+(r.player===w?" me":"")+"\"><span>"+(i+1)+"</span><span>"+esc(r.player)+"</span><span>"+r.tiers.map(t=>(TIERS[t]||TIERS[0]).e).join("")+"</span><b>"+r.score+"</b></div>").join(""):"")+"<p class=\"fine\">"+rows.length+" of 7 have dived today.</p>"}
+  catch(e){$("board").innerHTML="<p class=\"fine\">The board could not be loaded right now.</p>"}}
+/* a dive already made under this name on another device locks this one too */
+async function checkRemote(){const w=$("who").value;if(!w||!DAY||S.res.length>=7||S.phase!=="title")return;
+  try{const rows=await (await sb("?dive=eq."+DIVE_N+"&player=eq."+encodeURIComponent(w)+"&select=tiers,answers")).json();if(!Array.isArray(rows)||!rows[0]||S.phase!=="title")return;
+    const r=rows[0];S.res=r.tiers.map((p,i)=>({q:DAY[i].q,name:(r.answers&&r.answers[i])||"",pts:p,round:i}));S.seen=6;S.posted=true;S.score=S.res.reduce((a,x)=>a+x.pts,0);S.depth=0;S.gold=false;save();S.phase="end";show("title",false);buildEnd()}catch(e){}}
 $("sub").textContent="DIVE "+NUM+" · ONE DIVE PER DAY";$("eNum").textContent="DIVE "+NUM+" COMPLETE";
 if(!DAY){$("begin").disabled=true;$("begin").textContent="NO DIVE TODAY";$("begin").style.opacity=.6;$("sub").textContent="DIVE "+NUM+" HAS NOT BEEN WRITTEN YET"}
 setInterval(()=>{const p=new Intl.DateTimeFormat("en-GB",{timeZone:"America/Los_Angeles",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=+x.value,a),{});const left=86400-((p.hour%24)*3600+p.minute*60+p.second),f=n=>String(n).padStart(2,"0");$("nextIn").textContent="One dive per day. Next dive in "+f(left/3600|0)+":"+f(left%3600/60|0)+":"+f(left%60)+" (midnight Pacific)."},1000);
+showWho(false);
 (function restore(){if(!DAY)return;let st=null;try{st=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){}if(!st||!Array.isArray(st.res))return;
-  S.res=st.res;S.seen=st.seen;
+  S.res=st.res;S.seen=st.seen;S.posted=!!st.posted;
   while(S.res.length<=S.seen&&S.res.length<7){const r=S.res.length;S.res.push({q:DAY[r].q,name:"left mid-round",pts:0,round:r})}
   S.score=S.res.reduce((a,r)=>a+r.pts,0);S.depth=S.score*10;S.gold=S.res.some(r=>r.pts===100);$("hs").textContent=fmt(S.score);save();
   if(S.res.length>=7){S.phase="end";S.depth=0;S.cam=0;show("title",false);buildEnd()}else{S.cam=S.depth;S.i=S.res.length-1;S.phase="result";show("title",false);show("hud",true);show("snd",true);
     $("rIcon").textContent="🦐";$("rTier").textContent="DIVE IN PROGRESS";$("rTier").style.color="var(--amber)";$("rAns").textContent="Prompt "+(S.res.length+1)+" of 7 is next";$("rPts").innerHTML="<b>"+fmt(S.score)+" PTS</b> · "+fmt(S.depth)+"m down";$("rFlav").textContent="A dive has to be finished once it starts. A question you leave mid-clock scores 0.";$("rNote").style.display="none";$("next").textContent="DESCEND ▼";show("res",true);show("next",true);pips()}})();
+checkRemote();
 requestAnimationFrame(frame);
 </script>
 </body>
