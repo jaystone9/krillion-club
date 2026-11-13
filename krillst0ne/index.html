@@ -321,9 +321,11 @@ let prev=performance.now(),lastCy=0;
 function frame(now){
   const dt=Math.min(.05,(now-prev)/1000);prev=now;const t=now/1000;
   // creature depth
-  if(S.anim){const a=S.anim,p=Math.min(1,(now-a.t0)/a.T),e=1-Math.pow(1-p,3);S.cy=a.d0+(a.d1-a.d0)*e;
+  if(S.anim){const a=S.anim,p=Math.min(1,(now-a.t0)/a.T),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;S.cy=a.d0+(a.d1-a.d0)*e;
+    /* floaty dive: drift side to side like a falling leaf, facing the way it drifts */
+    const n=a.pts?Math.max(2,Math.round(a.pts/13)):0,ph=p*Math.PI*n;S.swayX=n&&!RM?Math.sin(ph)*Math.min(74,W*.19)*(1-.5*p*p):0;S.swayD=n?Math.cos(ph):0;
     for(const g of a.gates){if(!g.hit&&S.cy>=g.d-.5&&a.d1>=g.d){g.hit=now;blip(260+ORDER.indexOf(g.pts)*90,.12,"square",.05);if(navigator.vibrate)try{navigator.vibrate(8)}catch(_){}}}
-    if(Math.random()<.5)bubbles.push({x:W*.5+(Math.random()-.5)*26,d:S.cy-8,r:2+Math.random()*4,v:30+Math.random()*50,l:1.6});
+    if(Math.random()<.5)bubbles.push({x:W*.5+(S.swayX||0)+(Math.random()-.5)*22,d:S.cy-8,r:2+Math.random()*4,v:30+Math.random()*50,l:1.6});
     if(p>=1){S.anim=null;a.done()}
   }else if(S.surf){const a=S.surf,p=Math.min(1,(now-a.t0)/a.T),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;S.cy=a.d0*(1-e);if(p>=1){S.surf=null}}
   else S.cy=S.depth;
@@ -363,16 +365,17 @@ function frame(now){
   bubbles=bubbles.filter(b=>(b.l-=dt)>0);cx.lineWidth=1.5;for(const b of bubbles){b.d-=b.v*dt;b.x+=Math.sin(t*4+b.r)*.4;cx.strokeStyle="rgba(233,245,242,"+Math.min(.7,b.l).toFixed(2)+")";cx.beginPath();cx.arc(b.x,Y(b.d),b.r,0,7);cx.stroke()}
   if(S.phase!=="title"&&S.phase!=="end"&&Math.random()<.02)bubbles.push({x:W*.5+12,d:S.cy-6,r:2+Math.random()*2,v:22,l:1.4});
   // the shrimp
-  const bob=S.anim?0:Math.sin(t*2)*5,sx=W*.5+(S.anim?Math.sin(t*9)*3:Math.sin(t*.9)*10),sy=Y(S.cy)+bob+(S.phase==="title"?16:0);
+  const bob=S.anim?0:Math.sin(t*2)*5,sx=W*.5+(S.anim?(S.swayX||0)+Math.sin(t*9)*(S.wob?3:0):Math.sin(t*.9)*10),sy=Y(S.cy)+bob+(S.phase==="title"?16:0);
   const exc=S.gold&&S.phase==="result"&&S.res.length&&S.res[S.res.length-1].pts===100,k=(now-S.goldAt)/1000;
-  let rot=Math.max(-1.1,Math.min(1.1,-speed*.0022))+(S.wob?Math.sin(t*40)*.3:0),sc=1,hop=0;
+  let rot=Math.max(-1.1,Math.min(1.1,-speed*.0022))+(S.wob?Math.sin(t*40)*.3:0),sc=1,hop=0,flip=1;
+  if(S.anim&&S.anim.pts&&!RM){const d=S.swayD||0;flip=d>0?-1:1;rot=(d>0?1:-1)*(.18+.3*Math.abs(d))+Math.sin(t*7)*.08;hop=Math.sin(t*7)*2}
   if(exc&&!RM){hop=-Math.abs(Math.sin(k*7))*18;rot=k<.9?k/.9*6.283:Math.sin(k*9)*.45;sc=1.55+Math.sin(k*12)*.1;if(Math.random()<.6){const a=Math.random()*6.28;sparks.push({x:sx,y:sy+hop,vx:Math.cos(a)*90,vy:Math.sin(a)*90-40,l:.9})}}
   const gr=S.gold?(exc?80+Math.sin(k*8)*12:58):46,gc=S.gold?"255,205,60":"255,180,84";
   const gl=cx.createRadialGradient(sx,sy+hop,2,sx,sy+hop,gr);gl.addColorStop(0,"rgba("+gc+","+(S.gold?.28:.45)+")");gl.addColorStop(1,"rgba("+gc+",0)");cx.fillStyle=gl;cx.fillRect(sx-gr,sy+hop-gr,gr*2,gr*2);
-  cx.save();cx.translate(sx,sy+hop);cx.rotate(rot);cx.scale(sc,sc);cx.imageSmoothingEnabled=false;cx.drawImage(S.gold?SPR.gold:SPR.norm,-27,-21,54,42);cx.restore();
+  cx.save();cx.translate(sx,sy+hop);cx.rotate(rot);cx.scale(sc*flip,sc);cx.imageSmoothingEnabled=false;cx.drawImage(S.gold?SPR.gold:SPR.norm,-27,-21,54,42);cx.restore();
   sparks=sparks.filter(p=>(p.l-=dt)>0);for(const p of sparks){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=120*dt;cx.fillStyle="rgba(255,"+(200+Math.random()*55|0)+",80,"+Math.min(1,p.l).toFixed(2)+")";const z=2+p.l*2;cx.fillRect(p.x,p.y,z,z)}
   // answer plaque riding down
-  if(S.anim&&S.anim.label){cx.font="600 13px 'IBM Plex Mono', monospace";let tx="“"+S.anim.label.toUpperCase()+"”";while(cx.measureText(tx).width>W-90&&tx.length>6)tx=tx.slice(0,-3)+"…”";const tw=cx.measureText(tx).width+24,px=W*.5-tw/2,py=sy+34;cx.fillStyle="rgba(9,24,31,.92)";cx.fillRect(px,py,tw,28);cx.strokeStyle=S.anim.pts?"#ffb454":"#6b8085";cx.lineWidth=2;cx.strokeRect(px,py,tw,28);cx.fillStyle=S.anim.pts?"#ffb454":"#9db3b6";cx.textAlign="center";cx.fillText(tx,W*.5,py+15)}
+  if(S.anim&&S.anim.label){cx.font="600 13px 'IBM Plex Mono', monospace";let tx="“"+S.anim.label.toUpperCase()+"”";while(cx.measureText(tx).width>W-90&&tx.length>6)tx=tx.slice(0,-3)+"…”";const tw=cx.measureText(tx).width+24,px=Math.max(6,Math.min(W-58-tw,sx-tw/2)),py=sy+34;cx.fillStyle="rgba(9,24,31,.92)";cx.fillRect(px,py,tw,28);cx.strokeStyle=S.anim.pts?"#ffb454":"#6b8085";cx.lineWidth=2;cx.strokeRect(px,py,tw,28);cx.fillStyle=S.anim.pts?"#ffb454":"#9db3b6";cx.textAlign="center";cx.fillText(tx,px+tw/2,py+15)}
   // depth ruler
   if(S.phase!=="title"){const rx=W-16;cx.strokeStyle="rgba(134,169,173,.5)";cx.lineWidth=1;cx.beginPath();cx.moveTo(rx,Math.max(0,y0));cx.lineTo(rx,H);cx.stroke();cx.font="10px 'IBM Plex Mono', monospace";cx.textAlign="right";const dA=Math.max(0,Math.floor((cam-ay/PPM)/50)*50),dB=cam+(H-ay)/PPM;for(let d=dA;d<=dB;d+=50){const y=Y(d),big=d%100===0;cx.beginPath();cx.moveTo(rx,y);cx.lineTo(rx-(big?8:4),y);cx.stroke();if(big&&d>0){cx.fillStyle="rgba(134,169,173,.75)";cx.fillText("-"+fmt(d)+"m",rx-11,y)}}
     cx.fillStyle="#ffb454";cx.beginPath();cx.moveTo(rx-1,sy);cx.lineTo(rx+9,sy-6);cx.lineTo(rx+9,sy+6);cx.fill()}
@@ -399,7 +402,7 @@ function resolve(m){if(S.phase!=="input")return;S.phase="reveal";$("ans").blur()
   const gates=ORDER.map(p=>({pts:p,d:d0+p*10,hit:0}));
   const rec={q:DAY[S.i].q,name,pts,round:S.i};
   S.wob=!m;
-  S.anim={d0,d1,t0:performance.now(),T:RM?500:(m?1500+pts*34:1100),gates,label:name,pts,done(){S.wob=false;S.depth=d1;S.score+=pts;S.res.push(rec);save();if(pts===100)goGold();$("hs").textContent=fmt(S.score);
+  S.anim={d0,d1,t0:performance.now(),T:RM?500:(m?1800+pts*38:1100),gates,label:name,pts,done(){S.wob=false;S.depth=d1;S.score+=pts;S.res.push(rec);save();if(pts===100)goGold();$("hs").textContent=fmt(S.score);
     const T=TIERS[pts];$("rIcon").textContent=T.e;$("rTier").textContent=T.n;$("rTier").style.color=T.c;$("rAns").innerHTML="“"+esc(name)+"”"+(S.fix&&S.fix.to===name?"<small>autocorrected from “"+esc(S.fix.from)+"”</small>":m&&m.fuzzy?"<small>autocorrected from “"+esc(S.last)+"”</small>":"");$("rPts").innerHTML="<b>+"+pts+" PTS</b>"+(pts?" · sink "+fmt(pts*10)+"m":"");$("rFlav").textContent=T.f;
     const note=m&&DAY[S.i].notes[name];$("rNote").textContent=note||"";$("rNote").style.display=note?"block":"none";
     $("next").textContent=S.i<6?"DESCEND ▼":"SURFACE ▲";S.phase="result";show("res",true);show("next",true);pips();
