@@ -15,15 +15,15 @@ async function ent(name){
   const hits=j.search||[];const h=(hint&&hits.find(x=>(x.description||'').toLowerCase().includes(hint)))||hits[0];
   if(!h)throw new Error('no entity for '+name);
   seen[name]=h.id+' ('+(h.label||'')+': '+(h.description||'').slice(0,50)+')';return h.id}
-async function fill(where){const names=[...new Set((where.match(/\{[^}]+\}/g)||[]))];for(const n of names){const id=await ent(n.slice(1,-1));where=where.split(n).join('wd:'+id)}return where}
+async function fill(where){const names=[...new Set((where.match(/\[\[[^\]]+\]\]/g)||[]))];for(const n of names){const id=await ent(n.slice(2,-2));where=where.split(n).join('wd:'+id)}return where}
 function cap(s){return s?s[0].toUpperCase()+s.slice(1):s}
 async function build(spec){
   const [q,g,where,o={}]=spec;const out={q,g,t:{},notes:o.note||{}};const info={q,n:0};
   let ents=[];// {name,al:[],links}
-  if(where){
-    const w=await fill(where);const min=o.min||1;
+  for(const w0 of (where?[].concat(where):[])){
+    const w=await fill(w0);const min=o.min||1;
     const query=`SELECT ?item ?itemLabel ?links (GROUP_CONCAT(DISTINCT ?alt;separator='|') AS ?alts) WHERE { ${w} ?item wikibase:sitelinks ?links. FILTER(?links>=${min}) OPTIONAL{?item skos:altLabel ?alt FILTER(lang(?alt)='en')} SERVICE wikibase:label{bd:serviceParam wikibase:language 'en'} } GROUP BY ?item ?itemLabel ?links ORDER BY DESC(?links) LIMIT ${o.limit||4000}`;
-    const rows=await sparql(query);info.raw=rows.length;
+    const rows=await sparql(query);info.raw=(info.raw||0)+rows.length;await sleep(400);
     for(const b of rows){let name=b.itemLabel.value;if(/^Q\d+$/.test(name))continue;
       if(o.clean!==false)name=name.replace(/\s*\((?!.*\b(part|vol)\b)[^)]*\)\s*$/i,'');
       name=cap(name.trim());if(!name||name.length>70)continue;
@@ -31,6 +31,7 @@ async function build(spec){
       if(/[;|]/.test(name))continue;
       ents.push({name,al,links:+b.links.value})}
   }
+  ents.sort((a,b)=>b.links-a.links);
   const drops=(o.drop||[]).map(d=>d[0]==='/'?new RegExp(d.slice(1),'i'):norm(d));
   ents=ents.filter(e=>!drops.some(d=>d instanceof RegExp?d.test(e.name):d===norm(e.name)));
   // claim spellings in popularity order
