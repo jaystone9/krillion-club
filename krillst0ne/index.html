@@ -6,7 +6,15 @@
 <title>krillst0ne</title>
 <meta property="og:title" content="krillst0ne">
 <meta property="og:description" content="Seven prompts a day. The rarer your answer, the deeper you sink.">
-<link rel="apple-touch-icon" href="../icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jaystone9.github.io/krillion-club/krillst0ne/">
+<meta property="og:image" content="https://jaystone9.github.io/krillion-club/krillst0ne/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="krillst0ne">
 <meta name="theme-color" content="#061016">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
@@ -78,14 +86,15 @@ a.btn{text-align:center;text-decoration:none}
 #ans::placeholder{color:#5d7f84}
 #go{flex:none;padding:0 14px;font-family:var(--display);font-size:14px;letter-spacing:.15em;background:var(--amber);color:#1b1206;border:2px solid #7a4d0c}
 #go:disabled{opacity:.45}
-#msg{min-height:20px;margin:8px 2px 0;font-size:13px;color:var(--amber)}
+#msg{margin:8px 0 0;font-size:13.5px;color:var(--amber);line-height:1.45}
+#msg:not(:empty){background:rgba(9,24,31,.93);border:2px solid var(--line);padding:8px 12px}
 .shake{animation:shake .3s}
 @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 
 /* result of one round */
-#res{top:27%;text-align:center;padding:26px 22px;background:radial-gradient(closest-side,rgba(6,16,22,.9),rgba(6,16,22,.75) 60%,rgba(6,16,22,0))}
-#rIcon{font-size:44px;line-height:1}
-#rTier{font-family:var(--display);font-size:26px;letter-spacing:.14em;margin:10px 0 6px}
+#res{top:60px;text-align:center;padding:14px 22px 22px;background:radial-gradient(closest-side,rgba(6,16,22,.9),rgba(6,16,22,.75) 60%,rgba(6,16,22,0))}
+#rIcon{font-size:36px;line-height:1}
+#rTier{font-family:var(--display);font-size:24px;letter-spacing:.14em;margin:6px 0 4px}
 #rAns{font-size:18px;font-weight:600}
 #rPts{margin:8px 0 6px;font-size:15px}#rPts b{color:var(--amber)}
 #rFlav{font-size:13px;color:var(--drift);max-width:32ch;margin:0 auto}
@@ -280,7 +289,7 @@ function size(){const r=cv.getBoundingClientRect();DPR=Math.min(2,window.deviceP
 addEventListener("resize",size);size();
 const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const PPM=1.15;
-const S={phase:"title",i:0,score:0,depth:0,cy:0,ay:.56,ayT:.56,res:[],anim:null,tEnd:0,last:"",readyAt:0,surf:null,seen:-1,gold:false,goldAt:0};
+const S={phase:"title",i:0,score:0,depth:0,cy:0,ay:.6,ayT:.6,cam:0,res:[],anim:null,tEnd:0,last:"",readyAt:0,surf:null,seen:-1,gold:false,goldAt:0};
 const fmt=n=>Math.round(n).toLocaleString("en-US");
 
 /* ---------- sound ---------- */
@@ -294,9 +303,11 @@ function col(d){d=Math.max(0,Math.min(7000,d));for(let i=1;i<STOPS.length;i++){i
 const FACTS=[[60,"kelp forest"],[200,"TWILIGHT ZONE",1],[332,"deepest scuba dive on record: 332 m"],[535,"emperor penguins hunt this deep"],[700,"pressure: 70 times the surface"],[1000,"MIDNIGHT ZONE",1],[1250,"anglerfish carry their own lamp"],[1600,"no sunlight has ever reached here"],[2000,"sperm whales dive this far for squid"],[2400,"vents here pour out 400°C water"],[3000,"the water is about 2°C"],[3700,"average depth of the whole ocean"],[3800,"the Titanic rests at this depth"],[4000,"THE ABYSS",1],[4700,"sea cucumbers walk the plain"],[5300,"deeper than most submarines can go"],[6000,"HADAL ZONE",1],[6500,"snailfish still live below this"],[6960,"the stone bed. a perfect dive lands here"]];
 const snow=[];for(let i=0;i<70;i++)snow.push({x:Math.random(),y:Math.random(),z:.3+Math.random()*.7});
 const fish=[];for(let i=0;i<6;i++)fish.push({d:60+Math.random()*500,x:Math.random(),v:(Math.random()<.5?-1:1)*(.02+Math.random()*.04),s:.7+Math.random()*.8});
-let bubbles=[],sparks=[],goldSprite=null;
-function goldShrimp(){if(goldSprite)return goldSprite;const c=document.createElement("canvas");c.width=c.height=96;const g=c.getContext("2d");const put=()=>{g.font="60px serif";g.textAlign="center";g.textBaseline="middle";g.fillText("🦐",48,52)};put();g.globalCompositeOperation="color";g.fillStyle="#ffb800";g.fillRect(0,0,96,96);g.globalCompositeOperation="lighter";g.fillStyle="rgba(255,170,20,.12)";g.fillRect(0,0,96,96);g.globalCompositeOperation="destination-in";put();goldSprite=c;return c}
-function goGold(){S.gold=true;S.goldAt=performance.now();for(let i=0;i<60;i++){const a=Math.random()*6.28,v=60+Math.random()*220;sparks.push({x:W*.5,y:H*.3,vx:Math.cos(a)*v,vy:Math.sin(a)*v-60,l:1+Math.random()})}[660,880,1100,1320,1760].forEach((f,i)=>setTimeout(()=>blip(f,.25,"triangle",.07),i*90));if(navigator.vibrate)try{navigator.vibrate([30,40,30,40,90])}catch(_){}}
+let bubbles=[],sparks=[];
+const SROWS=["..a.....a.........","...a...a..........","....a.a..oooo.....",".....ooooollooo...","...ooolooooolooo..","..oeooooooooodooo.",".ooooooooooooodoo.","..ooddoooooooodoo.","...d.d.d.d.ooodoo.","..d.d.d.d..oooddo.","..........ooodd...",".........ooodd....","........dooo.d....",".......ddd.dd....."];
+function sprite(pal){const c=document.createElement("canvas");c.width=18;c.height=14;const g=c.getContext("2d");SROWS.forEach((r,y)=>{for(let x=0;x<18;x++){const k=r[x];if(k!=="."){g.fillStyle=pal[k];g.fillRect(x,y,1,1)}}});return c}
+const SPR={norm:sprite({o:"#ff7a59",d:"#c94a3a",l:"#ffc2a8",e:"#0b1c24",a:"#ffb08f"}),gold:sprite({o:"#ffcf3a",d:"#c98a00",l:"#fff3b0",e:"#3c2400",a:"#ffe27a"})};
+function goGold(){S.gold=true;S.goldAt=performance.now();for(let i=0;i<60;i++){const a=Math.random()*6.28,v=60+Math.random()*220;sparks.push({x:W*.5,y:H*.6,vx:Math.cos(a)*v,vy:Math.sin(a)*v-60,l:1+Math.random()})}[660,880,1100,1320,1760].forEach((f,i)=>setTimeout(()=>blip(f,.25,"triangle",.07),i*90));if(navigator.vibrate)try{navigator.vibrate([30,40,30,40,90])}catch(_){}}
 function rnd(i){const x=Math.sin(i*127.1)*43758.5453;return x-Math.floor(x)}
 
 /* ---------- drawing ---------- */
@@ -310,8 +321,8 @@ function frame(now){
     if(p>=1){S.anim=null;a.done()}
   }else if(S.surf){const a=S.surf,p=Math.min(1,(now-a.t0)/a.T),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;S.cy=a.d0*(1-e);if(p>=1){S.surf=null}}
   else S.cy=S.depth;
-  S.ay+=(S.ayT-S.ay)*Math.min(1,dt*4);
-  const cam=S.cy,ay=H*S.ay,Y=d=>ay+(d-cam)*PPM,speed=(S.cy-lastCy)/Math.max(dt,.001);lastCy=S.cy;
+  {const lag=H*.27/PPM;S.cam+=(S.cy-S.cam)*Math.min(1,dt*2.6);if(S.cy-S.cam>lag)S.cam=S.cy-lag;if(S.cam-S.cy>lag)S.cam=S.cy+lag}
+  const cam=S.cam,ay=H*.6,Y=d=>ay+(d-cam)*PPM,speed=(S.cy-lastCy)/Math.max(dt,.001);lastCy=S.cy;
   const y0=Y(0);
   cx.clearRect(0,0,W,H);
   // sky at dusk
@@ -352,10 +363,10 @@ function frame(now){
   if(exc&&!RM){hop=-Math.abs(Math.sin(k*7))*18;rot=k<.9?k/.9*6.283:Math.sin(k*9)*.45;sc=1.55+Math.sin(k*12)*.1;if(Math.random()<.6){const a=Math.random()*6.28;sparks.push({x:sx,y:sy+hop,vx:Math.cos(a)*90,vy:Math.sin(a)*90-40,l:.9})}}
   const gr=S.gold?(exc?80+Math.sin(k*8)*12:58):46,gc=S.gold?"255,205,60":"255,180,84";
   const gl=cx.createRadialGradient(sx,sy+hop,2,sx,sy+hop,gr);gl.addColorStop(0,"rgba("+gc+","+(S.gold?.28:.45)+")");gl.addColorStop(1,"rgba("+gc+",0)");cx.fillStyle=gl;cx.fillRect(sx-gr,sy+hop-gr,gr*2,gr*2);
-  cx.save();cx.translate(sx,sy+hop);cx.rotate(rot);cx.scale(sc,sc);if(S.gold)cx.drawImage(goldShrimp(),-24,-24,48,48);else{cx.font="30px serif";cx.textAlign="center";cx.fillText("🦐",0,2)}cx.restore();
+  cx.save();cx.translate(sx,sy+hop);cx.rotate(rot);cx.scale(sc,sc);cx.imageSmoothingEnabled=false;cx.drawImage(S.gold?SPR.gold:SPR.norm,-27,-21,54,42);cx.restore();
   sparks=sparks.filter(p=>(p.l-=dt)>0);for(const p of sparks){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=120*dt;cx.fillStyle="rgba(255,"+(200+Math.random()*55|0)+",80,"+Math.min(1,p.l).toFixed(2)+")";const z=2+p.l*2;cx.fillRect(p.x,p.y,z,z)}
   // answer plaque riding down
-  if(S.anim&&S.anim.label){cx.font="600 13px 'IBM Plex Mono', monospace";let tx="“"+S.anim.label.toUpperCase()+"”";while(cx.measureText(tx).width>W-90&&tx.length>6)tx=tx.slice(0,-3)+"…”";const tw=cx.measureText(tx).width+24,px=W*.5-tw/2,py=sy+30;cx.fillStyle="rgba(9,24,31,.92)";cx.fillRect(px,py,tw,28);cx.strokeStyle=S.anim.pts?"#ffb454":"#6b8085";cx.lineWidth=2;cx.strokeRect(px,py,tw,28);cx.fillStyle=S.anim.pts?"#ffb454":"#9db3b6";cx.textAlign="center";cx.fillText(tx,W*.5,py+15)}
+  if(S.anim&&S.anim.label){cx.font="600 13px 'IBM Plex Mono', monospace";let tx="“"+S.anim.label.toUpperCase()+"”";while(cx.measureText(tx).width>W-90&&tx.length>6)tx=tx.slice(0,-3)+"…”";const tw=cx.measureText(tx).width+24,px=W*.5-tw/2,py=sy+34;cx.fillStyle="rgba(9,24,31,.92)";cx.fillRect(px,py,tw,28);cx.strokeStyle=S.anim.pts?"#ffb454":"#6b8085";cx.lineWidth=2;cx.strokeRect(px,py,tw,28);cx.fillStyle=S.anim.pts?"#ffb454":"#9db3b6";cx.textAlign="center";cx.fillText(tx,W*.5,py+15)}
   // depth ruler
   if(S.phase!=="title"){const rx=W-16;cx.strokeStyle="rgba(134,169,173,.5)";cx.lineWidth=1;cx.beginPath();cx.moveTo(rx,Math.max(0,y0));cx.lineTo(rx,H);cx.stroke();cx.font="10px 'IBM Plex Mono', monospace";cx.textAlign="right";const dA=Math.max(0,Math.floor((cam-ay/PPM)/50)*50),dB=cam+(H-ay)/PPM;for(let d=dA;d<=dB;d+=50){const y=Y(d),big=d%100===0;cx.beginPath();cx.moveTo(rx,y);cx.lineTo(rx-(big?8:4),y);cx.stroke();if(big&&d>0){cx.fillStyle="rgba(134,169,173,.75)";cx.fillText("-"+fmt(d)+"m",rx-11,y)}}
     cx.fillStyle="#ffb454";cx.beginPath();cx.moveTo(rx-1,sy);cx.lineTo(rx+9,sy-6);cx.lineTo(rx+9,sy+6);cx.fill()}
@@ -363,33 +374,35 @@ function frame(now){
   if(S.phase!=="title"){$("hd").textContent=fmt(Math.max(0,S.cy))+"m"}
   // clock
   if(S.phase==="ready"){const left=Math.ceil((S.readyAt-now)/1000);if(left<=0){S.phase="input";S.tEnd=now+25000;$("go").disabled=false;$("msg").textContent=""}else if(!S.msgLock)$("msg").textContent="read it… the clock starts in "+left}
-  if(S.phase==="input"){const left=Math.max(0,(S.tEnd-now)/1000),sec=Math.ceil(left);if($("secs").textContent!=sec){$("secs").textContent=sec;if(sec<=5&&sec>0)blip(880,.05,"square",.04)}$("arc").style.strokeDashoffset=138.2*(1-left/25);$("ring").classList.toggle("hot",left<=5);if(left<=0)resolve(null)}
+  if(S.phase==="input"){const left=Math.max(0,(S.tEnd-now)/1000),sec=Math.ceil(left);if($("secs").textContent!=sec){$("secs").textContent=sec;if(sec<=5&&sec>0)blip(880,.05,"square",.04)}$("arc").style.strokeDashoffset=138.2*(1-left/25);$("ring").classList.toggle("hot",left<=5);if(left<=0){const v=$("ans").value.trim();if(v)S.last=v;resolve(v?findAnswer(S.i,v):null)}}
   requestAnimationFrame(frame);
 }
 
 /* ---------- game flow ---------- */
 function show(id,on){$(id).classList.toggle("hide",!on)}
 function pips(){const p=$("pips");p.innerHTML="";for(let i=0;i<7;i++){const el=document.createElement("i");const r=S.res[i];if(r)el.style.background=TIERS[r.pts].c,el.style.borderColor=TIERS[r.pts].c;else if(i===S.i&&S.phase!=="end")el.className="now";p.appendChild(el)}$("pl").textContent=S.phase==="end"||S.res.length===7?"DIVE COMPLETE":"PROMPT "+(S.i+1)+" OF 7"}
-function startRound(i){S.seen=Math.max(S.seen,i);save();S.i=i;S.phase="ready";S.last="";S.msgLock=false;S.gatesHold=null;S.readyAt=performance.now()+3000;S.ayT=.72;
+function startRound(i){S.seen=Math.max(S.seen,i);save();S.i=i;S.phase="ready";S.last="";S.fix=null;S.msgLock=false;S.gatesHold=null;S.readyAt=performance.now()+3000;
   $("qn").textContent="PROMPT "+(i+1)+" OF 7";$("q").textContent=DAY[i].q;$("ans").value="";$("go").disabled=true;$("secs").textContent="25";$("arc").style.strokeDashoffset=0;$("ring").classList.remove("hot");
   show("res",false);show("next",false);show("play",true);pips();try{$("ans").focus({preventScroll:true})}catch(e){}}
 $("bar").addEventListener("submit",ev=>{ev.preventDefault();if(S.phase!=="input")return;const v=$("ans").value.trim();if(!v)return;S.last=v;const m=findAnswer(S.i,v);
   if(!m){$("msg").textContent="“"+v+"” isn't on the list. Try another.";S.msgLock=true;$("ans").classList.remove("shake");void $("ans").offsetWidth;$("ans").classList.add("shake");$("ans").select();blip(140,.15,"sawtooth",.04);return}
+  if(m.fuzzy){S.fix={from:v,to:m.name};$("ans").value=m.name;S.msgLock=true;$("msg").innerHTML="“"+esc(v)+"” → <b style=\"color:var(--glow)\">“"+esc(m.name)+"”</b><br>tap DIVE again to confirm, or edit";blip(620,.08,"square",.04);return}
   resolve(m)});
-function resolve(m){if(S.phase!=="input")return;S.phase="reveal";$("ans").blur();show("play",false);S.ayT=.4;
+function resolve(m){if(S.phase!=="input")return;S.phase="reveal";$("ans").blur();show("play",false);
   const pts=m?m.pts:0,name=m?m.name:(S.last||"no answer"),d0=S.depth,d1=d0+pts*10;
   const gates=ORDER.map(p=>({pts:p,d:d0+p*10,hit:0}));
   const rec={q:DAY[S.i].q,name,pts,round:S.i};
   S.wob=!m;
   S.anim={d0,d1,t0:performance.now(),T:RM?500:(m?1500+pts*34:1100),gates,label:name,pts,done(){S.wob=false;S.depth=d1;S.score+=pts;S.res.push(rec);save();if(pts===100)goGold();$("hs").textContent=fmt(S.score);
-    const T=TIERS[pts];$("rIcon").textContent=T.e;$("rTier").textContent=T.n;$("rTier").style.color=T.c;$("rAns").innerHTML="“"+esc(name)+"”"+(m&&m.fuzzy?"<small>autocorrected from “"+esc(S.last)+"”</small>":"");$("rPts").innerHTML="<b>+"+pts+" PTS</b>"+(pts?" · sink "+fmt(pts*10)+"m":"");$("rFlav").textContent=T.f;
+    const T=TIERS[pts];$("rIcon").textContent=T.e;$("rTier").textContent=T.n;$("rTier").style.color=T.c;$("rAns").innerHTML="“"+esc(name)+"”"+(S.fix&&S.fix.to===name?"<small>autocorrected from “"+esc(S.fix.from)+"”</small>":m&&m.fuzzy?"<small>autocorrected from “"+esc(S.last)+"”</small>":"");$("rPts").innerHTML="<b>+"+pts+" PTS</b>"+(pts?" · sink "+fmt(pts*10)+"m":"");$("rFlav").textContent=T.f;
     const note=m&&DAY[S.i].notes[name];$("rNote").textContent=note||"";$("rNote").style.display=note?"block":"none";
-    $("next").textContent=S.i<6?"DESCEND ▼":"SURFACE ▲";S.phase="result";S.ayT=.2;show("res",true);show("next",true);pips();
+    $("next").textContent=S.i<6?"DESCEND ▼":"SURFACE ▲";S.phase="result";show("res",true);show("next",true);pips();
     blip(pts>=85?990:pts>=60?740:pts?520:110,.3,pts?"triangle":"sawtooth",.07);if(pts===100)setTimeout(()=>blip(1320,.4,"triangle",.07),160);try{$("next").focus({preventScroll:true})}catch(e){}}};
 }
-$("next").onclick=()=>{if(S.phase!=="result")return;if(S.i<6)startRound(S.i+1);else finish()};
-$("begin").onclick=()=>{if(S.res.length>=7||!DAY)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume()}catch(e){}show("title",false);show("hud",true);show("snd",true);startRound(S.res.length)};
-function finish(){S.phase="end";S.gatesHold=null;show("res",false);show("next",false);S.ayT=.5;S.surf={d0:S.depth,t0:performance.now(),T:RM?400:2400};pips();setTimeout(buildEnd,RM?300:1700)}
+$("next").onclick=()=>{if(S.phase!=="result")return;audio();if(S.i<6)startRound(S.i+1);else finish()};
+function audio(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume()}catch(e){}}
+$("begin").onclick=()=>{if(S.res.length>=7||!DAY)return;audio();show("title",false);show("hud",true);show("snd",true);startRound(S.res.length)};
+function finish(){S.phase="end";S.gatesHold=null;show("res",false);show("next",false);S.surf={d0:S.depth,t0:performance.now(),T:RM?400:2400};pips();setTimeout(buildEnd,RM?300:1700)}
 function shareText(){const w=$("who").value;return(w?w+"\n":"")+"krillst0ne "+NUM.replace(/#0*/,"#")+" 🦐\n"+S.score+"\n\n"+S.res.map(r=>TIERS[r.pts].e).join("")}
 function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function buildEnd(){
@@ -416,7 +429,8 @@ setInterval(()=>{const p=new Intl.DateTimeFormat("en-GB",{timeZone:"America/Los_
   S.res=st.res;S.seen=st.seen;
   while(S.res.length<=S.seen&&S.res.length<7){const r=S.res.length;S.res.push({q:DAY[r].q,name:"left mid-round",pts:0,round:r})}
   S.score=S.res.reduce((a,r)=>a+r.pts,0);S.depth=S.score*10;S.gold=S.res.some(r=>r.pts===100);$("hs").textContent=fmt(S.score);save();
-  if(S.res.length>=7){S.phase="end";S.depth=0;S.ayT=S.ay=.5;show("title",false);buildEnd()}else if(S.res.length)$("begin").textContent="▼ CONTINUE DIVE ▼"})();
+  if(S.res.length>=7){S.phase="end";S.depth=0;S.cam=0;show("title",false);buildEnd()}else{S.cam=S.depth;S.i=S.res.length-1;S.phase="result";show("title",false);show("hud",true);show("snd",true);
+    $("rIcon").textContent="🦐";$("rTier").textContent="DIVE IN PROGRESS";$("rTier").style.color="var(--amber)";$("rAns").textContent="Prompt "+(S.res.length+1)+" of 7 is next";$("rPts").innerHTML="<b>"+fmt(S.score)+" PTS</b> · "+fmt(S.depth)+"m down";$("rFlav").textContent="A dive has to be finished once it starts. A question you leave mid-clock scores 0.";$("rNote").style.display="none";$("next").textContent="DESCEND ▼";show("res",true);show("next",true);pips()}})();
 requestAnimationFrame(frame);
 </script>
 </body>
