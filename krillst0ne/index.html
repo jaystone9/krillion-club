@@ -91,6 +91,13 @@ a.btn{text-align:center;text-decoration:none}
 .shake{animation:shake .3s}
 @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 
+/* the pow: tier and points burst the moment an answer lands */
+#pow{position:absolute;left:0;right:0;top:25%;text-align:center;pointer-events:none;opacity:0}
+#pow.go{animation:pow 1.5s ease-out forwards}
+@keyframes pow{0%{opacity:0;transform:scale(.15) rotate(-10deg)}12%{opacity:1;transform:scale(1.3) rotate(4deg)}22%{transform:scale(1) rotate(0)}78%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.06) translateY(-16px)}}
+#pow i{display:block;font-style:normal;font-size:60px;line-height:1.1}
+#pow b{display:block;font-family:var(--display);font-size:64px;line-height:1;text-shadow:4px 4px 0 #061016,0 0 26px rgba(6,16,22,.9)}
+#pow span{font-family:var(--display);font-size:22px;letter-spacing:.14em;text-shadow:3px 3px 0 #061016,0 0 18px rgba(6,16,22,.9)}
 /* result of one round */
 #res{top:60px;text-align:center;padding:14px 22px 22px;background:radial-gradient(closest-side,rgba(6,16,22,.9),rgba(6,16,22,.75) 60%,rgba(6,16,22,0))}
 #rIcon{font-size:36px;line-height:1}
@@ -172,6 +179,7 @@ summary b{font-variant-numeric:tabular-nums;color:var(--amber)}
     <div id="msg" aria-live="polite"></div>
   </div>
 
+  <div id="pow" aria-live="polite"><i></i><b></b><span></span></div>
   <div id="res" class="layer hide">
     <div id="rIcon"></div><div id="rTier"></div><div id="rAns"></div><div id="rPts"></div><div id="rFlav"></div><div id="rNote"></div>
   </div>
@@ -215,72 +223,14 @@ const TIERS={
 };
 const ORDER=[10,15,30,60,85,100];
 const BEAR=[[0,150,"Shallows. Plenty of ocean left."],[151,250,"Reef. Swimming with the school."],[251,350,"Drop-off. Past the easy answers."],[351,449,"Midnight. A seriously deep dive."],[450,700,"Trench. Absurd."]];
-const DIVE1=[
-{q:"Name a spice or dried herb on a spice rack.",t:{
-10:"Black pepper|pepper|peppercorn|peppercorns;Cinnamon;Paprika",
-15:"Saffron;Cardamom|cardamon",
-30:"Oregano;Basil;Cumin;Garlic powder|garlic;Nutmeg;Thyme;Chili powder|chilli powder|chili;Ginger|ground ginger;Rosemary;Parsley;Cayenne|cayenne pepper;Turmeric",
-60:"Coriander|coriander seed;Cloves|clove;Bay leaf|bay leaves|bay;Sage;Dill|dill weed;Allspice;Onion powder;Red pepper flakes|chili flakes|crushed red pepper;Curry powder|curry;Mustard seed|mustard powder|dry mustard|mustard;Fennel|fennel seed;Star anise;Vanilla|vanilla bean;Smoked paprika;Tarragon;Marjoram;Italian seasoning;White pepper;Sesame seeds|sesame;Mint|dried mint",
-85:"Sumac;Za'atar|zaatar|zatar;Fenugreek;Caraway|caraway seed;Celery seed|celery salt;Mace;Juniper|juniper berries;Anise|aniseed;Garam masala;Herbes de Provence;Five spice|chinese five spice;Savory|summer savory;Lavender;Poppy seeds|poppy seed;Nigella|nigella seed|kalonji;Chervil;Lemongrass;Annatto|achiote;Ras el hanout;Old Bay;Sichuan peppercorn|szechuan peppercorn|sichuan pepper|szechuan pepper;Pink peppercorn;Berbere;Aleppo pepper;Chipotle|chipotle powder;Ancho|ancho chili;Asafoetida|hing;Epazote;Dukkah;Baharat",
-100:"Grains of paradise"},
-notes:{"Grains of paradise":"A West African seed in the ginger family, once used as a cheaper stand-in for black pepper.","Mace":"The lacy red coating around a nutmeg seed."}},
-{q:"Name a capital city in Europe.",t:{
-10:"Paris;London",
-15:"Reykjavik;Ljubljana",
-30:"Rome;Berlin;Madrid;Amsterdam;Dublin;Vienna;Lisbon;Athens;Brussels;Prague;Stockholm;Copenhagen;Oslo;Budapest",
-60:"Warsaw;Helsinki;Bern|berne;Kyiv|kiev;Moscow;Bucharest;Sofia;Zagreb;Belgrade;Bratislava;Luxembourg|luxembourg city;Monaco;Vatican City|vatican;Riga;Tallinn;Vilnius;Valletta;Minsk;Edinburgh",
-85:"Sarajevo;Skopje;Tirana;Podgorica;Chisinau;Andorra la Vella;San Marino;Nicosia;Pristina;Tbilisi;Yerevan;Baku;Cardiff;Belfast",
-100:"Vaduz"},
-notes:{"Vaduz":"Capital of Liechtenstein, home to about 6,000 people.","Edinburgh":"Capital of Scotland, a country within the UK.","Cardiff":"Capital of Wales, a country within the UK."}},
-{q:"Name a Beatles song.",t:{
-10:"Hey Jude;Let It Be;Yesterday",
-15:"Blackbird;Norwegian Wood",
-30:"Here Comes the Sun;Come Together;Yellow Submarine;Help;Twist and Shout;I Want to Hold Your Hand;All You Need Is Love;Eleanor Rigby;Penny Lane;Strawberry Fields Forever|strawberry fields;She Loves You;A Hard Day's Night|hard days night;Love Me Do;Something;Lucy in the Sky with Diamonds|lucy in the sky",
-60:"While My Guitar Gently Weeps;In My Life;Ob-La-Di Ob-La-Da|obladi oblada|ob la di;Can't Buy Me Love;Get Back;Michelle;Day Tripper;Ticket to Ride;Paperback Writer;Revolution;A Day in the Life|day in the life;With a Little Help from My Friends|little help from my friends;Octopus's Garden|octopus garden;The Long and Winding Road|long and winding road;Eight Days a Week;Back in the USSR;Across the Universe;When I'm Sixty-Four|when im 64|when i'm 64;Drive My Car;Helter Skelter;All My Loving;I Am the Walrus;Hello Goodbye;Lady Madonna;Nowhere Man;We Can Work It Out;Sgt. Pepper's Lonely Hearts Club Band|sgt pepper|sgt peppers|sergeant pepper;Golden Slumbers;I Saw Her Standing There;Please Please Me;Rocky Raccoon;Dear Prudence;Magical Mystery Tour;Maxwell's Silver Hammer;Taxman",
-85:"Here There and Everywhere;The Fool on the Hill|fool on the hill;Got to Get You into My Life;Girl;And I Love Her;Two of Us;Don't Let Me Down;I've Just Seen a Face;You've Got to Hide Your Love Away;Julia;Happiness Is a Warm Gun;Tomorrow Never Knows;She's Leaving Home;Oh Darling;I Will;Mother Nature's Son;Because;For No One;If I Fell;I Feel Fine;Fixing a Hole;Getting Better;Lovely Rita;Good Day Sunshine;And Your Bird Can Sing;She Said She Said;Rain;I'm Only Sleeping;Martha My Dear;Sexy Sadie;Glass Onion;Hey Bulldog;I Me Mine;Things We Said Today;I'll Follow the Sun;This Boy;Piggies;Savoy Truffle;Cry Baby Cry;Blue Jay Way;Within You Without You;Doctor Robert|dr robert;Old Brown Shoe;Her Majesty;Mean Mr. Mustard|mean mr mustard;Polythene Pam;Sun King;Free as a Bird;Real Love;Now and Then;From Me to You",
-100:"You Know My Name (Look Up the Number)|you know my name"},
-notes:{"You Know My Name (Look Up the Number)":"The B-side of Let It Be, with Brian Jones of the Rolling Stones on saxophone.","Her Majesty":"23 seconds long, tucked at the end of Abbey Road."}},
-{q:"Name a US national park.",t:{
-10:"Yellowstone;Yosemite;Grand Canyon",
-15:"Zion;Joshua Tree",
-30:"Glacier;Great Smoky Mountains|smoky mountains|smokies|great smokies;Rocky Mountain|rocky mountains;Olympic;Mount Rainier|rainier|mt rainier;Arches;Everglades;Denali;Acadia;Bryce Canyon|bryce;Grand Teton|tetons|teton|grand tetons;Death Valley;Sequoia;Redwood|redwoods",
-60:"Crater Lake;Badlands;Shenandoah;Big Bend;Canyonlands;Capitol Reef;Haleakala;Hawaii Volcanoes|volcanoes;Glacier Bay;Saguaro;Mesa Verde;Kings Canyon;Carlsbad Caverns|carlsbad;North Cascades;Petrified Forest;Mammoth Cave;Hot Springs;White Sands;Great Sand Dunes|sand dunes;Lassen Volcanic|lassen;Channel Islands;Theodore Roosevelt;Indiana Dunes;Cuyahoga Valley|cuyahoga;Gateway Arch",
-85:"Biscayne;Dry Tortugas;New River Gorge;Kenai Fjords;Katmai;Voyageurs;Isle Royale;Wind Cave;Great Basin;Guadalupe Mountains;Black Canyon of the Gunnison|black canyon;Pinnacles;Congaree;Virgin Islands;Wrangell-St. Elias|wrangell st elias|wrangell;Lake Clark;Kobuk Valley;American Samoa|national park of american samoa",
-100:"Gates of the Arctic"},
-notes:{"Gates of the Arctic":"No roads and no trails, all of it north of the Arctic Circle. The least visited park in the system.","Wrangell-St. Elias":"The largest national park, bigger than Switzerland."}},
-{q:"Name a dog breed.",t:{
-10:"Labrador|labrador retriever|lab;Golden Retriever|golden;German Shepherd;Poodle",
-15:"Shiba Inu|shiba;Corgi|pembroke welsh corgi|welsh corgi",
-30:"Bulldog|english bulldog;Beagle;Chihuahua;Dachshund|wiener dog;Pug;Husky|siberian husky;French Bulldog|frenchie;Boxer;Rottweiler;Great Dane;Dalmatian;Border Collie;Yorkshire Terrier|yorkie;Pit Bull|pitbull|american pit bull terrier;Doberman|doberman pinscher;Shih Tzu;Greyhound;Cocker Spaniel;Pomeranian;Australian Shepherd|aussie",
-60:"Bernese Mountain Dog|bernese;Saint Bernard|st bernard;Maltese;Basset Hound;Boston Terrier;Collie|rough collie;Jack Russell|jack russell terrier;Newfoundland;Akita;Whippet;Samoyed;Bloodhound;Mastiff|english mastiff;Cavalier King Charles Spaniel|cavalier|king charles spaniel;Schnauzer|miniature schnauzer;Weimaraner;Vizsla;Bichon Frise|bichon;Chow Chow|chow;Shar Pei;Irish Setter;Great Pyrenees;Havanese;Malamute|alaskan malamute;Rhodesian Ridgeback;Papillon;Pointer|german shorthaired pointer;Westie|west highland terrier|west highland white terrier;Scottish Terrier|scottie;Bull Terrier;Airedale|airedale terrier;Springer Spaniel|english springer spaniel;Sheltie|shetland sheepdog;Old English Sheepdog;Irish Wolfhound;Afghan Hound;Basenji;Cane Corso;Belgian Malinois|malinois;Australian Cattle Dog|blue heeler|heeler;Pekingese;Lhasa Apso",
-85:"Borzoi;Saluki;Keeshond;Leonberger;Komondor;Puli;Xoloitzcuintli|xolo;Schipperke;Brittany|brittany spaniel;Wheaten Terrier|soft coated wheaten terrier;Portuguese Water Dog;Lagotto Romagnolo|lagotto;Bedlington Terrier|bedlington;Tibetan Mastiff;Norwegian Elkhound|elkhound;Kuvasz;Affenpinscher;Brussels Griffon;Dandie Dinmont|dandie dinmont terrier;Otterhound;Catahoula|catahoula leopard dog;Pharaoh Hound;Clumber Spaniel;Bouvier des Flandres|bouvier",
-100:"Norwegian Lundehund|lundehund"},
-notes:{"Norwegian Lundehund":"Bred to hunt puffins on Norwegian cliffs. It has six toes on each foot.","Lagotto Romagnolo":"The Italian truffle-hunting dog."}},
-{q:"Name a famous painter.",t:{
-10:"Picasso|pablo picasso;Van Gogh|vincent van gogh;Leonardo da Vinci|da vinci|leonardo",
-15:"Frida Kahlo|kahlo|frida;Salvador Dalí|dali|salvador dali",
-30:"Monet|claude monet;Michelangelo;Rembrandt;Andy Warhol|warhol;Matisse|henri matisse;Georgia O'Keeffe|okeeffe|o'keeffe|georgia okeefe|okeefe;Jackson Pollock|pollock;Renoir;Raphael;Vermeer;Bob Ross",
-60:"Cézanne|cezanne|paul cezanne;Klimt|gustav klimt;Degas|edgar degas;Manet;Edvard Munch|munch;Kandinsky;Mondrian;Basquiat|jean-michel basquiat;Rothko|mark rothko;Botticelli;Caravaggio;Goya;El Greco;Gauguin;Magritte;Edward Hopper|hopper;Norman Rockwell|rockwell;Chagall;Toulouse-Lautrec|lautrec;Seurat;Titian;Diego Rivera|rivera;Mary Cassatt|cassatt;Roy Lichtenstein|lichtenstein;Keith Haring|haring;Turner|jmw turner;Bosch|hieronymus bosch;Velázquez|velazquez;Rubens;Banksy;Grant Wood;Andrew Wyeth|wyeth;Whistler;Winslow Homer;Joan Miró|miro;Paul Klee|klee;Modigliani;Egon Schiele|schiele",
-85:"Artemisia Gentileschi|gentileschi;Bruegel|brueghel|pieter bruegel;Dürer|durer|albrecht durer;Jan van Eyck|van eyck;Hokusai;Berthe Morisot|morisot;Helen Frankenthaler|frankenthaler;Lee Krasner|krasner;Hilma af Klint|af klint;Alice Neel|neel;Kehinde Wiley|wiley;Jacob Lawrence;Agnes Martin;Cy Twombly|twombly;Francis Bacon;Lucian Freud|freud;David Hockney|hockney;Gerhard Richter|richter;Willem de Kooning|de kooning;Tamara de Lempicka|lempicka;Giotto;Tintoretto;Delacroix;Courbet;Pissarro;John Singer Sargent|sargent;Constable;Fragonard;Vigée Le Brun|vigee le brun|elisabeth vigee le brun;Remedios Varo|varo;Leonora Carrington|carrington;Yayoi Kusama|kusama;Jasper Johns;Henri Rousseau|rousseau;Caspar David Friedrich|friedrich;Amy Sherald|sherald;Faith Ringgold|ringgold",
-100:"Sofonisba Anguissola|anguissola"},
-notes:{"Sofonisba Anguissola":"A Renaissance portraitist who became court painter to Philip II of Spain. Michelangelo praised her drawings.","Hilma af Klint":"Painting abstract works years before Kandinsky."}},
-{q:"Name a cheese.",t:{
-10:"Cheddar;Mozzarella;Swiss;American",
-15:"Brie;Gouda",
-30:"Parmesan|parmigiano|parmigiano reggiano;Feta;Blue cheese|blue|bleu|bleu cheese;Provolone;Pepper Jack;Cream cheese;Goat cheese|chevre;Monterey Jack|jack;Colby|colby jack;Ricotta;Cottage cheese;Gruyère|gruyere;Havarti;Muenster",
-60:"Manchego;Camembert;Gorgonzola;Halloumi;Burrata;Mascarpone;Asiago;Pecorino|pecorino romano|romano;Roquefort;Emmental|emmentaler;Stilton;Fontina;Paneer;Cotija;Queso fresco;Edam;Jarlsberg;Oaxaca|queso oaxaca;Limburger;Boursin;Raclette;Comté|comte;Neufchâtel|neufchatel;Velveeta;Taleggio;Grana Padano",
-85:"Époisses|epoisses;Humboldt Fog;Mimolette;Reblochon;Morbier;Wensleydale;Red Leicester;Double Gloucester;Caerphilly;Cambozola;Idiazabal;Mahón|mahon;Robiola;Scamorza;Stracchino;Caciocavallo;Tête de Moine|tete de moine;Brillat-Savarin;Saint-André|saint andre|st andre;Pont-l'Évêque|pont l'eveque|pont leveque;Beemster;Gjetost|brunost;Juustoleipä|juustoleipa|bread cheese;Kasseri;Kefalotyri;Chaource;Cabrales;Valdeón|valdeon;Tomme|tomme de savoie;Ossau-Iraty;Cougar Gold;Beecher's Flagship|beechers|beecher's;Port Salut;Lancashire;Cheshire;Provel",
-100:"Casu martzu|casu marzu"},
-notes:{"Casu martzu":"A Sardinian sheep's milk cheese ripened with live larvae. Its sale is banned in the EU.","Cougar Gold":"A cheddar made at Washington State University and sold in a can.","Beecher's Flagship":"Made in the window at Pike Place Market."}}
-];
-/* one dive a day, rolling over at midnight Pacific. DIVES[0] is dive #1 on LAUNCH. */
-const DIVES=[DIVE1],LAUNCH="2026-11-13";
+/* one dive a day, rolling over at midnight Pacific. Dive #1 is LAUNCH; each day is its own file, dives/N.dat. */
+const LAUNCH="2026-11-13";
 const TODAY=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Los_Angeles"}).format(new Date());
 const DIVE_N=Math.round((Date.parse(TODAY)-Date.parse(LAUNCH))/864e5)+1;
-const DAY=DIVES[DIVE_N-1]||null,NUM="#"+String(DIVE_N).padStart(3,"0");
+let DAY=null,INDEX=[];const NUM="#"+String(DIVE_N).padStart(3,"0");
 function norm(s){return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/&/g," and ").replace(/['’.]/g,"").replace(/[^a-z0-9]+/g," ").trim().replace(/^(the|a|an) /,"")}
 function lev(a,b){if(Math.abs(a.length-b.length)>2)return 9;const p=[];for(let j=0;j<=b.length;j++)p[j]=j;for(let i=1;i<=a.length;i++){let d=p[0];p[0]=i;for(let j=1;j<=b.length;j++){const t=p[j];p[j]=Math.min(p[j]+1,p[j-1]+1,d+(a[i-1]===b[j-1]?0:1));d=t}}return p[b.length]}
-const INDEX=(DAY||[]).map(r=>{const list=[];for(const pts of ORDER){for(const ent of r.t[pts].split(";")){const al=ent.split("|");const name=al[0];for(const a of al)list.push({k:norm(a),name,pts})}}return list});
+function setDay(d){DAY=d;INDEX=d.map(r=>{const list=[];for(const pts of ORDER){for(const ent of (r.t[pts]||"").split(";").filter(Boolean)){const al=ent.split("|");const name=al[0];for(const a of al)list.push({k:norm(a),name,pts})}}return list})}
 function findAnswer(round,raw){const k=norm(raw);if(!k)return null;const L=INDEX[round];const sing=x=>x.replace(/s$/,"");
   let m=L.find(e=>e.k===k)||L.find(e=>sing(e.k)===sing(k));if(m)return m;
   const max=k.length>=13?3:k.length>=8?2:k.length>=4?1:0;if(!max)return null;
@@ -321,7 +271,7 @@ let prev=performance.now(),lastCy=0;
 function frame(now){
   const dt=Math.min(.05,(now-prev)/1000);prev=now;const t=now/1000;
   // creature depth
-  if(S.anim){const a=S.anim,p=Math.min(1,(now-a.t0)/a.T),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;S.cy=a.d0+(a.d1-a.d0)*e;
+  if(S.anim){const a=S.anim,p=Math.max(0,Math.min(1,(now-a.t0)/a.T)),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;S.cy=a.d0+(a.d1-a.d0)*e;
     /* floaty dive: drift side to side like a falling leaf, facing the way it drifts */
     const n=a.pts?Math.max(2,Math.round(a.pts/13)):0,ph=p*Math.PI*n;S.swayX=n&&!RM?Math.sin(ph)*Math.min(74,W*.19)*(1-.5*p*p):0;S.swayD=n?Math.cos(ph):0;
     for(const g of a.gates){if(!g.hit&&S.cy>=g.d-.5&&a.d1>=g.d){g.hit=now;blip(260+ORDER.indexOf(g.pts)*90,.12,"square",.05);if(navigator.vibrate)try{navigator.vibrate(8)}catch(_){}}}
@@ -373,7 +323,7 @@ function frame(now){
   const gr=S.gold?(exc?80+Math.sin(k*8)*12:58):46,gc=S.gold?"255,205,60":"255,180,84";
   const gl=cx.createRadialGradient(sx,sy+hop,2,sx,sy+hop,gr);gl.addColorStop(0,"rgba("+gc+","+(S.gold?.28:.45)+")");gl.addColorStop(1,"rgba("+gc+",0)");cx.fillStyle=gl;cx.fillRect(sx-gr,sy+hop-gr,gr*2,gr*2);
   cx.save();cx.translate(sx,sy+hop);cx.rotate(rot);cx.scale(sc*flip,sc);cx.imageSmoothingEnabled=false;cx.drawImage(S.gold?SPR.gold:SPR.norm,-27,-21,54,42);cx.restore();
-  sparks=sparks.filter(p=>(p.l-=dt)>0);for(const p of sparks){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=120*dt;cx.fillStyle="rgba(255,"+(200+Math.random()*55|0)+",80,"+Math.min(1,p.l).toFixed(2)+")";const z=2+p.l*2;cx.fillRect(p.x,p.y,z,z)}
+  sparks=sparks.filter(p=>(p.l-=dt)>0);for(const p of sparks){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=120*dt;cx.globalAlpha=Math.min(1,p.l);cx.fillStyle=p.c||"rgb(255,"+(200+Math.random()*55|0)+",80)";const z=2+p.l*3;cx.fillRect(p.x,p.y,z,z)}cx.globalAlpha=1;
   // answer plaque riding down
   if(S.anim&&S.anim.label){cx.font="600 13px 'IBM Plex Mono', monospace";let tx="“"+S.anim.label.toUpperCase()+"”";while(cx.measureText(tx).width>W-90&&tx.length>6)tx=tx.slice(0,-3)+"…”";const tw=cx.measureText(tx).width+24,px=Math.max(6,Math.min(W-58-tw,sx-tw/2)),py=sy+34;cx.fillStyle="rgba(9,24,31,.92)";cx.fillRect(px,py,tw,28);cx.strokeStyle=S.anim.pts?"#ffb454":"#6b8085";cx.lineWidth=2;cx.strokeRect(px,py,tw,28);cx.fillStyle=S.anim.pts?"#ffb454":"#9db3b6";cx.textAlign="center";cx.fillText(tx,px+tw/2,py+15)}
   // depth ruler
@@ -401,8 +351,12 @@ function resolve(m){if(S.phase!=="input")return;S.phase="reveal";$("ans").blur()
   const pts=m?m.pts:0,name=m?m.name:(S.last||"no answer"),d0=S.depth,d1=d0+pts*10;
   const gates=ORDER.map(p=>({pts:p,d:d0+p*10,hit:0}));
   const rec={q:DAY[S.i].q,name,pts,round:S.i};
+  {const T0=TIERS[pts],pw=$("pow"),k=pw.children;k[0].textContent=T0.e;k[1].textContent=pts?"+"+pts:"0";k[1].style.color=T0.c;k[2].textContent=T0.n;k[2].style.color=T0.c;pw.classList.remove("go");void pw.offsetWidth;pw.classList.add("go");
+   for(let i=0;i<(pts?30+pts/2:10);i++){const a=Math.random()*6.283,v=90+Math.random()*(160+pts*2.2);sparks.push({x:W*.5,y:H*.6,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,l:.6+Math.random()*.7,c:T0.c})}
+   blip(pts?260+pts*6:110,.2,pts?"square":"sawtooth",.08);if(pts>=60)setTimeout(()=>blip(520+pts*6,.22,"triangle",.07),90);if(navigator.vibrate)try{navigator.vibrate(pts?30:70)}catch(_){}
+   $("hs").textContent=fmt(S.score+pts)}
   S.wob=!m;
-  S.anim={d0,d1,t0:performance.now(),T:RM?500:(m?1800+pts*38:1100),gates,label:name,pts,done(){S.wob=false;S.depth=d1;S.score+=pts;S.res.push(rec);save();if(pts===100)goGold();$("hs").textContent=fmt(S.score);
+  S.anim={d0,d1,t0:performance.now()+(RM?0:520),T:RM?500:(m?1300+pts*30:800),gates,label:name,pts,done(){S.wob=false;S.depth=d1;S.score+=pts;S.res.push(rec);save();if(pts===100)goGold();$("hs").textContent=fmt(S.score);
     const T=TIERS[pts];$("rIcon").textContent=T.e;$("rTier").textContent=T.n;$("rTier").style.color=T.c;$("rAns").innerHTML="“"+esc(name)+"”"+(S.fix&&S.fix.to===name?"<small>autocorrected from “"+esc(S.fix.from)+"”</small>":m&&m.fuzzy?"<small>autocorrected from “"+esc(S.last)+"”</small>":"");$("rPts").innerHTML="<b>+"+pts+" PTS</b>"+(pts?" · sink "+fmt(pts*10)+"m":"");$("rFlav").textContent=T.f;
     const note=m&&DAY[S.i].notes[name];$("rNote").textContent=note||"";$("rNote").style.display=note?"block":"none";
     $("next").textContent=S.i<6?"DESCEND ▼":"SURFACE ▲";S.phase="result";show("res",true);show("next",true);pips();
@@ -419,7 +373,7 @@ function buildEnd(){
   const b=BEAR.find(x=>S.score>=x[0]&&S.score<=x[1])||BEAR[0];$("eBear").textContent=b[2];
   $("log").innerHTML=S.res.map((r,i)=>"<div><u style=\"height:"+Math.max(2,r.pts*1.15)+"px\"></u><s>"+TIERS[r.pts].e+"</s><b>"+(i+1)+"</b></div>").join("");
   $("bear").innerHTML=BEAR.map(x=>"<tr"+(x===b?" class=\"on\"":"")+"><td>"+x[0]+(x[1]===700?"+":"–"+x[1])+"</td><td>"+x[2]+"</td></tr>").join("");
-  $("catch").innerHTML=S.res.map((r,i)=>{const d=DAY[r.round];let h="";for(const p of ORDER.slice().reverse()){const T=TIERS[p];h+="<h3 style=\"color:"+T.c+"\">"+T.e+" "+T.n+" · +"+p+"</h3><p>"+d.t[p].split(";").map(e=>{const n=e.split("|")[0];return n===r.name&&r.pts?"<mark>"+esc(n)+" · YOU</mark>":esc(n)}).join(", ")+"</p>";for(const e of d.t[p].split(";")){const n=e.split("|")[0];if(d.notes[n])h+="<i>"+esc(n)+": "+esc(d.notes[n])+"</i>"}}
+  $("catch").innerHTML=S.res.map((r,i)=>{const d=DAY[r.round];let h="";for(const p of ORDER.slice().reverse()){const T=TIERS[p];h+="<h3 style=\"color:"+T.c+"\">"+T.e+" "+T.n+" · +"+p+"</h3><p>"+d.t[p].split(";").filter(Boolean).map(e=>{const n=e.split("|")[0];return n===r.name&&r.pts?"<mark>"+esc(n)+" · YOU</mark>":esc(n)}).join(", ")+"</p>";for(const e of d.t[p].split(";")){const n=e.split("|")[0];if(d.notes[n])h+="<i>"+esc(n)+": "+esc(d.notes[n])+"</i>"}}
     return"<details><summary><span>"+TIERS[r.pts].e+"</span><span><small>"+esc(r.q)+"</small><span>"+esc(r.name)+"</span></span><b>"+r.pts+"</b></summary><div class=\"al\">"+h+"</div></details>"}).join("");
   $("shareOut").style.display="none";$("copy").textContent="COPY RESULT";if(S.posted){$("saveMsg").textContent="Score saved to the Club ✓";loadBoard()}else postScore();$("end").scrollTop=0;show("end",true);show("hud",false);show("snd",false)}
 function copyText(txt,btn,done,box){const fall=()=>{if(box){box.value=txt;box.style.display="block";box.focus();box.select()}btn.textContent="SELECT AND COPY BELOW"};try{navigator.clipboard.writeText(txt).then(()=>{btn.textContent=done},fall)}catch(e){fall()}}
@@ -450,16 +404,19 @@ async function checkRemote(){const w=$("who").value;if(!w||!DAY||S.res.length>=7
   try{const rows=await (await sb("?dive=eq."+DIVE_N+"&player=eq."+encodeURIComponent(w)+"&select=tiers,answers")).json();if(!Array.isArray(rows)||!rows[0]||S.phase!=="title")return;
     const r=rows[0];S.res=r.tiers.map((p,i)=>({q:DAY[i].q,name:(r.answers&&r.answers[i])||"",pts:p,round:i}));S.seen=6;S.posted=true;S.score=S.res.reduce((a,x)=>a+x.pts,0);S.depth=0;S.gold=false;save();S.phase="end";show("title",false);buildEnd()}catch(e){}}
 $("sub").textContent="DIVE "+NUM+" · ONE DIVE PER DAY";$("eNum").textContent="DIVE "+NUM+" COMPLETE";
-if(!DAY){$("begin").disabled=true;$("begin").textContent="NO DIVE TODAY";$("begin").style.opacity=.6;$("sub").textContent="DIVE "+NUM+" HAS NOT BEEN WRITTEN YET"}
+function noDive(){$("begin").disabled=true;$("begin").textContent="NO DIVE TODAY";$("begin").style.opacity=.6;$("sub").textContent="DIVE "+NUM+" HAS NOT BEEN WRITTEN YET"}
 setInterval(()=>{const p=new Intl.DateTimeFormat("en-GB",{timeZone:"America/Los_Angeles",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=+x.value,a),{});const left=86400-((p.hour%24)*3600+p.minute*60+p.second),f=n=>String(n).padStart(2,"0");$("nextIn").textContent="One dive per day. Next dive in "+f(left/3600|0)+":"+f(left%3600/60|0)+":"+f(left%60)+" (midnight Pacific)."},1000);
 showWho(false);
-(function restore(){if(!DAY)return;let st=null;try{st=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){}if(!st||!Array.isArray(st.res))return;
+function restore(){let st=null;try{st=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){}if(!st||!Array.isArray(st.res))return;
   S.res=st.res;S.seen=st.seen;S.posted=!!st.posted;
   while(S.res.length<=S.seen&&S.res.length<7){const r=S.res.length;S.res.push({q:DAY[r].q,name:"left mid-round",pts:0,round:r})}
   S.score=S.res.reduce((a,r)=>a+r.pts,0);S.depth=S.score*10;S.gold=S.res.some(r=>r.pts===100);$("hs").textContent=fmt(S.score);save();
   if(S.res.length>=7){S.phase="end";S.depth=0;S.cam=0;show("title",false);buildEnd()}else{S.cam=S.depth;S.i=S.res.length-1;S.phase="result";show("title",false);show("hud",true);show("snd",true);
-    $("rIcon").textContent="🦐";$("rTier").textContent="DIVE IN PROGRESS";$("rTier").style.color="var(--amber)";$("rAns").textContent="Prompt "+(S.res.length+1)+" of 7 is next";$("rPts").innerHTML="<b>"+fmt(S.score)+" PTS</b> · "+fmt(S.depth)+"m down";$("rFlav").textContent="A dive has to be finished once it starts. A question you leave mid-clock scores 0.";$("rNote").style.display="none";$("next").textContent="DESCEND ▼";show("res",true);show("next",true);pips()}})();
-checkRemote();
+    $("rIcon").textContent="🦐";$("rTier").textContent="DIVE IN PROGRESS";$("rTier").style.color="var(--amber)";$("rAns").textContent="Prompt "+(S.res.length+1)+" of 7 is next";$("rPts").innerHTML="<b>"+fmt(S.score)+" PTS</b> · "+fmt(S.depth)+"m down";$("rFlav").textContent="A dive has to be finished once it starts. A question you leave mid-clock scores 0.";$("rNote").style.display="none";$("next").textContent="DESCEND ▼";show("res",true);show("next",true);pips()}}
+(async function boot(){$("begin").disabled=true;$("begin").textContent="LOADING THE DIVE…";
+  try{const r=await fetch("dives/"+DIVE_N+".dat",{cache:"no-store"});if(r.ok){const t=(await r.text()).trim();if(t&&t[0]!=="<"){const bin=atob(t.split("").reverse().join(""));setDay(JSON.parse(new TextDecoder().decode(Uint8Array.from(bin,c=>c.charCodeAt(0)))))}}}catch(e){}
+  if(!DAY){noDive();return}
+  $("begin").disabled=false;$("begin").textContent="▼ DROP IN ▼";restore();checkRemote()})();
 requestAnimationFrame(frame);
 </script>
 </body>

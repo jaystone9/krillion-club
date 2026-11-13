@@ -463,13 +463,14 @@ render();
    Dive #1 = Nov 13, 2026. Prompts stay hidden until the day is over or all seven are in, so the log can't spoil a dive. */
 (async()=>{try{
   const K='sb_publishable_YM9K9YqwnTvz77h7Y-K_cQ_I8HQuWKT',U='https://apjlbzyiszkgwyhpvyiq.supabase.co/rest/v1/krillst0ne_scores?select=dive,player,tiers&order=dive';
-  const [rows,pr]=await Promise.all([fetch(U,{headers:{apikey:K}}).then(r=>r.json()),fetch('krillst0ne/prompts.json',{cache:'no-store'}).then(r=>r.json()).catch(()=>({}))]);
+  const rows=await fetch(U,{headers:{apikey:K}}).then(r=>r.json());
+  const dive=async k=>{try{const t=(await (await fetch('krillst0ne/dives/'+k+'.dat',{cache:'no-store'})).text()).trim();return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(t.split('').reverse().join('')),c=>c.charCodeAt(0)))).map(p=>({t:p.q,g:p.g}))}catch(e){return null}};
   if(!Array.isArray(rows)||!rows.length)return;
   const ID={};state.players.forEach(p=>ID[p.name]=p.id);
   const today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles'}).format(new Date()),L=Date.UTC(2026,10,13);
   for(const r of rows){const d=iso(L+(r.dive-1)*864e5),id=ID[r.player];if(!id||!Array.isArray(r.tiers))continue;
     const day=state.days[d]||(state.days[d]={prompts:[],scores:{}});day.k=r.dive;day.scores[id]={q:r.tiers}}
-  for(const d in state.days){const day=state.days[d];if(day.k&&pr[day.k]&&(d<today||state.players.every(p=>day.scores[p.id])))day.prompts=pr[day.k]}
+  for(const d in state.days){const day=state.days[d];if(day.k&&(d<today||state.players.every(p=>day.scores[p.id]))){const pr=await dive(day.k);if(pr)day.prompts=pr}}
   render();
 }catch(e){}})();
 })();
