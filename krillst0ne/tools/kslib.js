@@ -29,6 +29,7 @@ async function build(spec){
       name=cap(name.trim());if(!name||name.length>70)continue;
       const al=(b.alts?b.alts.value.split('|'):[]).map(a=>a.trim()).filter(a=>a.length>1&&a.length<=45&&/^[\x20-\x7EÀ-ɏ’]+$/.test(a)&&!/[;|]/.test(a));
       if(/[;|]/.test(name))continue;
+      for(const rx of (o.alt||[])){const a=name.replace(new RegExp(rx,'i'),'').trim();if(a&&a!==name&&a.length>2)al.unshift(a)}
       ents.push({name,al,links:+b.links.value})}
   }
   ents.sort((a,b)=>b.links-a.links);
