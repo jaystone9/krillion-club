@@ -190,6 +190,8 @@ body.guest .clubonly,body.guest .who,body.guest #whoSet{display:none!important}
     <div class="top"><strong>krillst<em>0</em>ne</strong><span id="eNum">DIVE COMPLETE</span></div>
     <div id="eScore"></div>
     <div id="eBear"></div>
+    <div id="curve" aria-hidden="true"></div>
+    <p class="fine" id="curveMsg" style="color:var(--glow);margin-top:2px"></p>
     <h2>DIVE LOG · DEEPER = RARER</h2>
     <div id="log"></div>
     <h2 style="margin-top:40px">THE BEARING</h2>
@@ -379,7 +381,7 @@ function buildEnd(){
   $("bear").innerHTML=BEAR.map(x=>"<tr"+(x===b?" class=\"on\"":"")+"><td>"+x[0]+(x[1]===700?"+":"–"+x[1])+"</td><td>"+x[2]+"</td></tr>").join("");
   $("catch").innerHTML=S.res.map((r,i)=>{const d=DAY[r.round];let h="";for(const p of ORDER.slice().reverse()){const T=TIERS[p];h+="<h3 style=\"color:"+T.c+"\">"+T.e+" "+T.n+" · +"+p+" · "+(function(){const all=d.t[p].split(";").filter(Boolean).map(e=>e.split("|")[0]);let show=all.slice(0,150);if(r.pts===p&&!show.includes(r.name))show.unshift(r.name);return all.length+"</h3><p>"+show.map(n=>n===r.name&&r.pts===p?"<mark>"+esc(n)+" · YOU</mark>":esc(n)).join(", ")+(all.length>show.length?" <b>and "+(all.length-show.length).toLocaleString("en-US")+" more</b>":"")+"</p>"})();for(const n in d.notes){if(d.t[p].split(";").some(e=>e.split("|")[0]===n))h+="<i>"+esc(n)+": "+esc(d.notes[n])+"</i>"}}
     return"<details><summary><span>"+TIERS[r.pts].e+"</span><span><small>"+esc(r.q)+"</small><span>"+esc(r.name)+"</span></span><b>"+r.pts+"</b></summary><div class=\"al\">"+h+"</div></details>"}).join("");
-  $("shareOut").style.display="none";$("copy").textContent="COPY RESULT";if(S.posted&&!GUEST){$("saveMsg").textContent="Score saved to the Club ✓";loadBoard()}else postScore();$("end").scrollTop=0;show("end",true);show("hud",false);show("snd",false)}
+  $("shareOut").style.display="none";$("copy").textContent="COPY RESULT";if(S.posted&&!GUEST){$("saveMsg").textContent="Score saved to the Club ✓";loadBoard()}else postScore();showCurve();$("end").scrollTop=0;show("end",true);show("hud",false);show("snd",false)}
 function copyText(txt,btn,done,box){const fall=()=>{if(box){box.value=txt;box.style.display="block";box.focus();box.select()}btn.textContent="SELECT AND COPY BELOW"};try{navigator.clipboard.writeText(txt).then(()=>{btn.textContent=done},fall)}catch(e){fall()}}
 $("guestLink").onclick=()=>copyText("Try today's krillst0ne dive: https://jaystone9.github.io/krillion-club/krillst0ne/#guest",$("guestLink"),"LINK COPIED ✓",$("shareOut"));
 if(GUEST)$("tag").textContent="THE DAILY DIVE · GUEST";
@@ -389,7 +391,7 @@ $("fbCopy").onclick=async()=>{const v=$("fb").value.trim().slice(0,1500);if(!v){
   catch(e){b.textContent="COULD NOT SEND. TRY AGAIN"}b.disabled=false};
 /* ---------- one dive per day, kept on this device ---------- */
 const KEY="krillst0ne-"+(GUEST?"guest-":"")+"dive-"+DIVE_N,NKEY="krillst0ne-name";
-function save(){try{localStorage.setItem(KEY,JSON.stringify({seen:S.seen,res:S.res,posted:!!S.posted}))}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({seen:S.seen,res:S.res,posted:!!S.posted,played:!!S.played}))}catch(e){}}
 try{if(location.hash==="#testreset")localStorage.removeItem(KEY)}catch(e){}
 try{$("who").value=localStorage.getItem(NKEY)||""}catch(e){}
 function showWho(pick){const w=$("who").value;const set=!!w&&!pick;document.querySelector(".who").classList.toggle("hide",set);document.querySelector(".who").style.display=set?"none":"";$("whoSet").classList.toggle("hide",!set);$("whoSet").style.display=set?"":"none";$("whoName").textContent=w.toUpperCase()}
@@ -407,16 +409,28 @@ async function postScore(){if(GUEST){$("saveMsg").textContent="Guest dive. Your 
 async function loadBoard(){if(GUEST)return;try{const rows=await (await sb("?dive=eq."+DIVE_N+"&select=player,score,tiers&order=score.desc")).json();if(!Array.isArray(rows))throw 0;const w=$("who").value;
     $("board").innerHTML=(rows.length?rows.map((r,i)=>"<div class=\"r"+(r.player===w?" me":"")+"\"><span>"+(i+1)+"</span><span>"+esc(r.player)+"</span><span>"+r.tiers.map(t=>(TIERS[t]||TIERS[0]).e).join("")+"</span><b>"+r.score+"</b></div>").join(""):"")+"<p class=\"fine\">"+rows.length+" of 7 have dived today.</p>"}
   catch(e){$("board").innerHTML="<p class=\"fine\">The board could not be loaded right now.</p>"}}
+/* where you landed among everyone who dived today, Club and guests alike */
+async function showCurve(){try{
+  if(!S.played){const r=await fetch(SBASE+"krillst0ne_plays",{method:"POST",headers:{apikey:SBK,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({dive:DIVE_N,score:S.score,club:!GUEST})});if(r.ok){S.played=true;save()}}
+  const rows=await (await fetch(SBASE+"krillst0ne_plays?dive=eq."+DIVE_N+"&select=score",{headers:{apikey:SBK}})).json();if(!Array.isArray(rows))throw 0;
+  const xs=rows.map(r=>r.score);if(!xs.length)xs.push(S.score);const n=xs.length,CW=320,CH=92,bw=Math.max(34,Math.min(80,170/Math.sqrt(n)));
+  const pts=[];let mx=0;for(let x=0;x<=700;x+=10){let d=0;for(const v of xs)d+=Math.exp(-.5*Math.pow((x-v)/bw,2));pts.push([x,d]);if(d>mx)mx=d}
+  const px=x=>(x/700*CW).toFixed(1),py=d=>(CH-2-d/mx*(CH-16)).toFixed(1),me=px(S.score);
+  const line=pts.map((p,i)=>(i?"L":"M")+px(p[0])+","+py(p[1])).join(" ");
+  $("curve").innerHTML='<svg viewBox="0 0 '+CW+' '+(CH+18)+'" style="width:100%;height:auto;display:block;margin-top:14px"><path d="'+line+' L'+CW+','+CH+' L0,'+CH+' Z" fill="rgba(125,249,200,.16)"/><path d="'+line+'" fill="none" stroke="#7df9c8" stroke-width="2"/><line x1="0" y1="'+CH+'" x2="'+CW+'" y2="'+CH+'" stroke="#1f4450"/><line x1="'+me+'" y1="6" x2="'+me+'" y2="'+CH+'" stroke="#ffb454" stroke-width="2"/><circle cx="'+me+'" cy="6" r="4" fill="#ffb454"/>'+[0,100,200,300,400,500,600,700].map(v=>'<text x="'+px(v)+'" y="'+(CH+13)+'" font-size="9" fill="#86a9ad" text-anchor="'+(v===0?"start":v===700?"end":"middle")+'" font-family="IBM Plex Mono,monospace">'+v+'</text>').join("")+'<text x="'+Math.max(14,Math.min(CW-14,+me))+'" y="'+(CH+13)+'" font-size="9" font-weight="700" fill="#ffb454" text-anchor="middle" font-family="IBM Plex Mono,monospace" paint-order="stroke" stroke="#061016" stroke-width="4">YOU</text></svg>';
+  const lower=xs.filter(v=>v<S.score).length;
+  $("curveMsg").textContent=n<2?"You are the first one down today. The curve fills in as others dive.":"DEEPER THAN "+Math.round(lower/(n-1)*100)+"% OF TODAY'S OTHER DIVERS · "+n+" SO FAR, CLUB AND GUESTS";
+}catch(e){$("curve").innerHTML="";$("curveMsg").textContent=""}}
 /* a dive already made under this name on another device locks this one too */
 async function checkRemote(){const w=$("who").value;if(GUEST||!w||!DAY||S.res.length>=7||S.phase!=="title")return;
   try{const rows=await (await sb("?dive=eq."+DIVE_N+"&player=eq."+encodeURIComponent(w)+"&select=tiers,answers")).json();if(!Array.isArray(rows)||!rows[0]||S.phase!=="title")return;
-    const r=rows[0];S.res=r.tiers.map((p,i)=>({q:DAY[i].q,name:(r.answers&&r.answers[i])||"",pts:p,round:i}));S.seen=6;S.posted=true;S.score=S.res.reduce((a,x)=>a+x.pts,0);S.depth=0;S.gold=false;save();S.phase="end";show("title",false);buildEnd()}catch(e){}}
+    const r=rows[0];S.res=r.tiers.map((p,i)=>({q:DAY[i].q,name:(r.answers&&r.answers[i])||"",pts:p,round:i}));S.seen=6;S.posted=true;S.played=true;S.score=S.res.reduce((a,x)=>a+x.pts,0);S.depth=0;S.gold=false;save();S.phase="end";show("title",false);buildEnd()}catch(e){}}
 $("sub").textContent="DIVE "+NUM+" · ONE DIVE PER DAY";$("eNum").textContent="DIVE "+NUM+" COMPLETE";
 function noDive(){$("begin").disabled=true;$("begin").textContent="NO DIVE TODAY";$("begin").style.opacity=.6;$("sub").textContent="DIVE "+NUM+" HAS NOT BEEN WRITTEN YET"}
 setInterval(()=>{const p=new Intl.DateTimeFormat("en-GB",{timeZone:"America/Los_Angeles",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=+x.value,a),{});const left=86400-((p.hour%24)*3600+p.minute*60+p.second),f=n=>String(n).padStart(2,"0");$("nextIn").textContent="One dive per day. Next dive in "+f(left/3600|0)+":"+f(left%3600/60|0)+":"+f(left%60)+" (midnight Pacific)."},1000);
 showWho(false);
 function restore(){let st=null;try{st=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){}if(!st||!Array.isArray(st.res))return;
-  S.res=st.res;S.seen=st.seen;S.posted=!!st.posted;
+  S.res=st.res;S.seen=st.seen;S.posted=!!st.posted;S.played=!!st.played;
   while(S.res.length<=S.seen&&S.res.length<7){const r=S.res.length;S.res.push({q:DAY[r].q,name:"left mid-round",pts:0,round:r})}
   S.score=S.res.reduce((a,r)=>a+r.pts,0);S.depth=S.score*10;S.gold=S.res.some(r=>r.pts===100);$("hs").textContent=fmt(S.score);save();
   if(S.res.length>=7){S.phase="end";S.depth=0;S.cam=0;show("title",false);buildEnd()}else{S.cam=S.depth;S.i=S.res.length-1;S.phase="result";show("title",false);show("hud",true);show("snd",true);
