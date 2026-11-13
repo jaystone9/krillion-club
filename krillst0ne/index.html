@@ -203,10 +203,10 @@ summary b{font-variant-numeric:tabular-nums;color:var(--amber)}
     <div id="board"><p class="fine">Loading the board…</p></div>
     <h2>THE CATCH · TAP A ROUND FOR EVERY ANSWER</h2>
     <div id="catch"></div>
-    <h2>NOTES FOR THE QUESTION DESK</h2>
+    <h2>SEND A NOTE TO THE QUESTION DESK</h2>
     <textarea id="fb" placeholder="An answer that should have counted? A topic you want more of?"></textarea>
-    <button class="btn alt" id="fbCopy" type="button">COPY NOTE TO SEND TO JAY</button>
-    <p class="fine">Prototype: answer lists are hand-built and short, so a fair answer may be missing. That is exactly what the notes box is for.</p>
+    <button class="btn alt" id="fbCopy" type="button">SEND NOTE</button>
+    <p class="fine">Notes go straight to the question desk. Tell us about a fair answer that was missing, a tier that felt wrong, or topics you want more of.</p>
   </div>
 </div>
 
@@ -373,12 +373,14 @@ function buildEnd(){
   const b=BEAR.find(x=>S.score>=x[0]&&S.score<=x[1])||BEAR[0];$("eBear").textContent=b[2];
   $("log").innerHTML=S.res.map((r,i)=>"<div><u style=\"height:"+Math.max(2,r.pts*1.15)+"px\"></u><s>"+TIERS[r.pts].e+"</s><b>"+(i+1)+"</b></div>").join("");
   $("bear").innerHTML=BEAR.map(x=>"<tr"+(x===b?" class=\"on\"":"")+"><td>"+x[0]+(x[1]===700?"+":"–"+x[1])+"</td><td>"+x[2]+"</td></tr>").join("");
-  $("catch").innerHTML=S.res.map((r,i)=>{const d=DAY[r.round];let h="";for(const p of ORDER.slice().reverse()){const T=TIERS[p];h+="<h3 style=\"color:"+T.c+"\">"+T.e+" "+T.n+" · +"+p+"</h3><p>"+d.t[p].split(";").filter(Boolean).map(e=>{const n=e.split("|")[0];return n===r.name&&r.pts?"<mark>"+esc(n)+" · YOU</mark>":esc(n)}).join(", ")+"</p>";for(const e of d.t[p].split(";")){const n=e.split("|")[0];if(d.notes[n])h+="<i>"+esc(n)+": "+esc(d.notes[n])+"</i>"}}
+  $("catch").innerHTML=S.res.map((r,i)=>{const d=DAY[r.round];let h="";for(const p of ORDER.slice().reverse()){const T=TIERS[p];h+="<h3 style=\"color:"+T.c+"\">"+T.e+" "+T.n+" · +"+p+" · "+(function(){const all=d.t[p].split(";").filter(Boolean).map(e=>e.split("|")[0]);let show=all.slice(0,150);if(r.pts===p&&!show.includes(r.name))show.unshift(r.name);return all.length+"</h3><p>"+show.map(n=>n===r.name&&r.pts===p?"<mark>"+esc(n)+" · YOU</mark>":esc(n)).join(", ")+(all.length>show.length?" <b>and "+(all.length-show.length).toLocaleString("en-US")+" more</b>":"")+"</p>"})();for(const n in d.notes){if(d.t[p].split(";").some(e=>e.split("|")[0]===n))h+="<i>"+esc(n)+": "+esc(d.notes[n])+"</i>"}}
     return"<details><summary><span>"+TIERS[r.pts].e+"</span><span><small>"+esc(r.q)+"</small><span>"+esc(r.name)+"</span></span><b>"+r.pts+"</b></summary><div class=\"al\">"+h+"</div></details>"}).join("");
   $("shareOut").style.display="none";$("copy").textContent="COPY RESULT";if(S.posted){$("saveMsg").textContent="Score saved to the Club ✓";loadBoard()}else postScore();$("end").scrollTop=0;show("end",true);show("hud",false);show("snd",false)}
 function copyText(txt,btn,done,box){const fall=()=>{if(box){box.value=txt;box.style.display="block";box.focus();box.select()}btn.textContent="SELECT AND COPY BELOW"};try{navigator.clipboard.writeText(txt).then(()=>{btn.textContent=done},fall)}catch(e){fall()}}
 $("copy").onclick=()=>copyText(shareText(),$("copy"),"COPIED ✓",$("shareOut"));
-$("fbCopy").onclick=()=>{const v=$("fb").value.trim();if(!v){$("fb").focus();return}copyText("krillst0ne "+NUM+" note:\n"+v,$("fbCopy"),"COPIED ✓ PASTE IT TO JAY",null)};
+$("fbCopy").onclick=async()=>{const v=$("fb").value.trim().slice(0,1500);if(!v){$("fb").focus();return}const b=$("fbCopy");b.disabled=true;b.textContent="SENDING…";
+  try{const r=await fetch(SBASE+"krillst0ne_notes",{method:"POST",headers:{apikey:SBK,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({dive:DIVE_N,player:$("who").value||"unknown",note:v})});if(!r.ok)throw 0;$("fb").value="";b.textContent="SENT ✓ THANKS"}
+  catch(e){b.textContent="COULD NOT SEND. TRY AGAIN"}b.disabled=false};
 /* ---------- one dive per day, kept on this device ---------- */
 const KEY="krillst0ne-dive-"+DIVE_N,NKEY="krillst0ne-name";
 function save(){try{localStorage.setItem(KEY,JSON.stringify({seen:S.seen,res:S.res,posted:!!S.posted}))}catch(e){}}
@@ -388,7 +390,7 @@ function showWho(pick){const w=$("who").value;const set=!!w&&!pick;document.quer
 $("who").onchange=()=>{try{localStorage.setItem(NKEY,$("who").value)}catch(e){}showWho(false);if(DAY)$("sub").textContent="DIVE "+NUM+" · ONE DIVE PER DAY";checkRemote()};
 $("whoChange").onclick=()=>showWho(true);
 /* ---------- shared score store ---------- */
-const SB="https://apjlbzyiszkgwyhpvyiq.supabase.co/rest/v1/krillst0ne_scores",SBK="sb_publishable_YM9K9YqwnTvz77h7Y-K_cQ_I8HQuWKT";
+const SBASE="https://apjlbzyiszkgwyhpvyiq.supabase.co/rest/v1/",SB=SBASE+"krillst0ne_scores",SBK="sb_publishable_YM9K9YqwnTvz77h7Y-K_cQ_I8HQuWKT";
 function sb(q,opt){return fetch(SB+q,Object.assign({headers:{apikey:SBK,"Content-Type":"application/json",Prefer:"return=minimal"}},opt||{}))}
 async function postScore(){const w=$("who").value;if(!w||S.res.length<7){$("saveMsg").textContent=w?"":"No name was picked, so this score was not saved. Copy your result and send it to Jay.";loadBoard();return}
   $("saveMsg").textContent="Saving your score…";
@@ -414,7 +416,10 @@ function restore(){let st=null;try{st=JSON.parse(localStorage.getItem(KEY)||"nul
   if(S.res.length>=7){S.phase="end";S.depth=0;S.cam=0;show("title",false);buildEnd()}else{S.cam=S.depth;S.i=S.res.length-1;S.phase="result";show("title",false);show("hud",true);show("snd",true);
     $("rIcon").textContent="🦐";$("rTier").textContent="DIVE IN PROGRESS";$("rTier").style.color="var(--amber)";$("rAns").textContent="Prompt "+(S.res.length+1)+" of 7 is next";$("rPts").innerHTML="<b>"+fmt(S.score)+" PTS</b> · "+fmt(S.depth)+"m down";$("rFlav").textContent="A dive has to be finished once it starts. A question you leave mid-clock scores 0.";$("rNote").style.display="none";$("next").textContent="DESCEND ▼";show("res",true);show("next",true);pips()}}
 (async function boot(){$("begin").disabled=true;$("begin").textContent="LOADING THE DIVE…";
-  try{const r=await fetch("dives/"+DIVE_N+".dat",{cache:"no-store"});if(r.ok){const t=(await r.text()).trim();if(t&&t[0]!=="<"){const bin=atob(t.split("").reverse().join(""));setDay(JSON.parse(new TextDecoder().decode(Uint8Array.from(bin,c=>c.charCodeAt(0)))))}}}catch(e){}
+  const dec=t=>JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(t.trim().split("").reverse().join("")),c=>c.charCodeAt(0))));
+  /* today's dive comes from the store, which only releases a dive once its day has started in Pacific time; older builds fall back to a file */
+  try{const j=await (await fetch(SBASE+"krillst0ne_dives?dive=eq."+DIVE_N+"&select=data",{headers:{apikey:SBK}})).json();if(Array.isArray(j)&&j[0])setDay(dec(j[0].data))}catch(e){}
+  if(!DAY)try{const r=await fetch("dives/"+DIVE_N+".dat",{cache:"no-store"});if(r.ok){const t=await r.text();if(t&&t.trim()[0]!=="<")setDay(dec(t))}}catch(e){}
   if(!DAY){noDive();return}
   $("begin").disabled=false;$("begin").textContent="▼ DROP IN ▼";restore();checkRemote()})();
 requestAnimationFrame(frame);
