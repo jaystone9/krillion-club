@@ -25,6 +25,7 @@ async function build(spec){
     const query=`SELECT ?item ?itemLabel ?links (GROUP_CONCAT(DISTINCT ?alt;separator='|') AS ?alts) WHERE { ${w} ?item wikibase:sitelinks ?links. FILTER(?links>=${min}) OPTIONAL{?item skos:altLabel ?alt FILTER(lang(?alt)='en')} SERVICE wikibase:label{bd:serviceParam wikibase:language 'en'} } GROUP BY ?item ?itemLabel ?links ORDER BY DESC(?links) LIMIT ${o.limit||4000}`;
     const rows=await sparql(query);info.raw=(info.raw||0)+rows.length;await sleep(400);
     for(const b of rows){let name=b.itemLabel.value;if(/^Q\d+$/.test(name))continue;
+      if(o.latin&&(/^[A-Z][a-z]+$/.test(name)||/^[A-Z][a-z]+ [a-z]+(us|um|is|ae|ii|ensis|ix|ax|ex|yx|ops|a|i)$/.test(name)||/(idae|iformes|inae|oidea|acea|aceae|ales)$/.test(name)))continue;
       if(o.clean!==false)name=name.replace(/\s*\((?!.*\b(part|vol)\b)[^)]*\)\s*$/i,'');
       name=cap(name.trim());if(!name||name.length>70)continue;
       const al=(b.alts?b.alts.value.split('|'):[]).map(a=>a.trim()).filter(a=>a.length>1&&a.length<=45&&/^[\x20-\x7EÀ-ɏ’]+$/.test(a)&&!/[;|]/.test(a));
