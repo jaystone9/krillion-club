@@ -21,7 +21,7 @@
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Chakra+Petch:wght@600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Silkscreen:wght@700&family=Chakra+Petch:wght@600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style id="css">
 /* Layout idea: a dive-computer readout. No cards: sections sit on the water, split by letterspaced labels and dashed rules. Hard edges, pixel numerals, one hot accent. Single theme by choice. */
 :root{
@@ -196,6 +196,18 @@ td.num{white-space:nowrap}
 /* legible numerals */
 .big,.rank,.lab i,.grade b,.duel .v,.strip button,.award .who,.lbrow.top b{font-variant-numeric:tabular-nums;letter-spacing:.01em}
 .big small{letter-spacing:.12em;text-transform:uppercase}
+
+/* game toggle: real Krillion and our own krillst0ne are tallied separately */
+.games{display:flex;gap:0;border:2px solid var(--rule);width:max-content;max-width:100%}
+.games button{font:600 12px/1 var(--body);letter-spacing:.2em;text-transform:uppercase;padding:11px 16px;background:transparent;color:var(--dim);border:0;cursor:pointer}
+.games button.on{background:var(--pink);color:var(--abyss)}
+.games button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.playlink{font:600 12px/1 var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--cyan)}
+body.ks{--sea:#0c3340;--abyss:#061016;--line:#1f4450;--rule:#2f6a78;--ink:#e9f5f2;--dim:#86a9ad;--pink:#ffb454;--cyan:#7df9c8;--gold:#ffcf3a;
+  background:linear-gradient(180deg,#2b2a52 0,#b65a7c 120px,#ffb37a 210px,#1f7a8c 212px,#0c3340 620px,#061016 1300px) #061016;background-repeat:no-repeat}
+body.ks h1{font-family:"Silkscreen",var(--pixel);text-transform:none;font-size:clamp(34px,10.5vw,72px);letter-spacing:.02em;text-shadow:3px 3px 0 #0a2a33}
+body.ks h1 em{font-style:normal;color:var(--pink)}
+body.ks .head p{color:#fff}
 </style>
 </head>
 <body>
@@ -222,7 +234,8 @@ const dayName=d=>new Date(d+'T12:00:00Z').toLocaleDateString('en-US',{weekday:'s
 
 let state=JSON.parse(document.getElementById('state').textContent);
 try{const L=JSON.parse(localStorage.getItem('krillion-league')||'null');if(L&&L.rev>state.rev)state=L}catch(e){}
-let ui={metric:'avg',range:'all'};
+const RDAYS=state.days,KDAYS={};
+let ui={metric:'avg',range:'all',game:'krillion'};
 try{Object.assign(ui,JSON.parse(sessionStorage.getItem('krillion-ui2')||'{}'))}catch(e){}
 const keepUi=()=>{try{sessionStorage.setItem('krillion-ui2',JSON.stringify(ui))}catch(e){}};
 let artifact=null, parsed=[], owner=false;
@@ -402,11 +415,13 @@ function recap(c){
 /* ---------- shell ---------- */
 const TABS=[['standings','Standings',vStandings],['report-card','Report card',vReport],['dive-log','Dive log',vLog],['head-to-head','Head to head',vDuel],['log-scores','Log scores',vEnter]];
 function render(){
+  const ks=ui.game==='krillst0ne';state.days=ks?KDAYS:RDAYS;document.body.classList.toggle('ks',ks);
   const tabs=TABS.filter(t=>owner||t[0]!=='log-scores'),ms=months(),tab=tabs.find(t=>'#'+t[0]===location.hash)||tabs[0];
   if(ui.range!=='all'&&!ms.includes(ui.range))ui.range='all';
   const c=ms.length?calc(ui.range):null;
-  const body=tab[0]==='log-scores'?vEnter():(c&&c.list.length?tab[2](c):`<section class="panel"><h2>No dives logged yet</h2><p class="dim">Scores will show up here once the first day is logged.</p></section>`);
-  $('#app').innerHTML=`<header class="head"><div><p>Seven divers · seven prompts a day</p><h1>Krillion Club</h1></div>
+  const body=tab[0]==='log-scores'?vEnter():(c&&c.list.length?tab[2](c):`<section class="panel"><h2>No dives logged yet</h2><p class="dim">${ks?'Krillst0ne scores show up here by themselves as soon as someone finishes a dive.':'Scores will show up here once the first day is logged.'}</p></section>`);
+  $('#app').innerHTML=`<div class="games" role="group" aria-label="Which game"><button type="button" data-game="krillion" class="${ks?'':'on'}" aria-pressed="${!ks}">Krillion</button><button type="button" data-game="krillst0ne" class="${ks?'on':''}" aria-pressed="${ks}">Krillst0ne</button></div>
+  <header class="head"><div><p>${ks?'Our own dive · on trial · tallied separately':'Seven divers · seven prompts a day'}</p><h1>${ks?'krillst<em>0</em>ne':'Krillion Club'}</h1>${ks?'<p><a class="playlink" href="krillst0ne/">Play today\'s dive →</a></p>':''}</div>
   ${ms.length>1?`<select id="month" aria-label="Time range"><option value="all" ${ui.range==='all'?'selected':''}>All time</option>${[...ms].reverse().map(m=>`<option value="${m}" ${m===ui.range?'selected':''}>${monthName(m)}</option>`).join('')}</select>`:''}</header>
   <nav>${tabs.map(t=>`<a href="#${t[0]}" class="${t===tab?'on':''}">${t[1]}</a>`).join('')}</nav>${body}`;
   if(tab[0]==='log-scores')state.players.forEach(p=>pvScore(p.id));
@@ -420,7 +435,7 @@ function countUp(){if(calm())return;const t0=performance.now(),els=[...document.
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),3200)}
 function buildDoc(){
   const json=JSON.stringify(state).replace(/</g,'\\u003c');
-  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>Krillion Club</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Chakra+Petch:wght@600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">\n<style id="css">'+document.getElementById('css').textContent+'</style>\n</head>\n<body>\n<div id="app"></div>\n<div id="toast" role="status"></div>\n<script id="state" type="application/json">'+json+'<\/script>\n<script id="js">'+document.getElementById('js').textContent+'<\/script>\n</body>\n</html>\n';
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>Krillion Club</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Silkscreen:wght@700&family=Chakra+Petch:wght@600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">\n<style id="css">'+document.getElementById('css').textContent+'</style>\n</head>\n<body>\n<div id="app"></div>\n<div id="toast" role="status"></div>\n<script id="state" type="application/json">'+json+'<\/script>\n<script id="js">'+document.getElementById('js').textContent+'<\/script>\n</body>\n</html>\n';
 }
 function persist(msg){
   if(!owner)return toast('Only Jay can log scores.');
@@ -457,9 +472,11 @@ document.addEventListener('change',e=>{const t=e.target;
   else if(t.dataset.duel){ui[t.dataset.duel]=t.value;render()}
   else if(/^e-g\d$/.test(t.id))t.dataset.manual=1;
 });
+document.addEventListener('click',e=>{const g=e.target.closest&&e.target.closest('[data-game]');if(g&&g.dataset.game!==ui.game){ui.game=g.dataset.game;ui.day=null;ui.edate=null;ui.range='all';render()}});
 window.addEventListener('hashchange',render);
 render();
-/* krillst0ne: scores the game posts to the shared store show up here as days, no manual logging.
+/* krillst0ne: scores the game posts to the shared store show up under the Krillst0ne toggle, no manual logging.
+   They are kept apart from the real-Krillion days so the two tallies never mix.
    Dive #1 = Nov 13, 2026. Prompts stay hidden until the day is over or all seven are in, so the log can't spoil a dive. */
 (async()=>{try{
   const K='sb_publishable_YM9K9YqwnTvz77h7Y-K_cQ_I8HQuWKT',U='https://apjlbzyiszkgwyhpvyiq.supabase.co/rest/v1/krillst0ne_scores?select=dive,player,tiers&order=dive';
@@ -469,8 +486,8 @@ render();
   const ID={};state.players.forEach(p=>ID[p.name]=p.id);
   const today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles'}).format(new Date()),L=Date.UTC(2026,10,13);
   for(const r of rows){const d=iso(L+(r.dive-1)*864e5),id=ID[r.player];if(!id||!Array.isArray(r.tiers))continue;
-    const day=state.days[d]||(state.days[d]={prompts:[],scores:{}});day.k=r.dive;day.scores[id]={q:r.tiers}}
-  for(const d in state.days){const day=state.days[d];if(day.k&&(d<today||state.players.every(p=>day.scores[p.id]))){const pr=await dive(day.k);if(pr)day.prompts=pr}}
+    const day=KDAYS[d]||(KDAYS[d]={prompts:[],scores:{}});day.k=r.dive;day.scores[id]={q:r.tiers}}
+  for(const d in KDAYS){const day=KDAYS[d];if(day.k&&(d<today||state.players.every(p=>day.scores[p.id]))){const pr=await dive(day.k);if(pr)day.prompts=pr}}
   render();
 }catch(e){}})();
 })();
