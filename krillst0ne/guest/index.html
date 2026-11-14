@@ -140,6 +140,8 @@ summary b{font-variant-numeric:tabular-nums;color:var(--amber)}
 .al p{margin:0;color:var(--drift)}.al mark{background:var(--amber);color:#1b1206;padding:0 3px}
 .al i{display:block;font-style:normal;font-size:12px;color:var(--foam);border-left:2px solid var(--amber);padding-left:8px;margin:4px 0}
 #board .r{display:grid;grid-template-columns:20px 1fr auto 44px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #12303a;font-size:14px}
+#board .r{cursor:pointer}#board .r small{color:var(--drift);font-size:11px}
+#board .ans{padding:6px 0 10px 28px;border-bottom:1px solid #12303a}#board .ans>div{display:grid;grid-template-columns:22px 1fr 30px;gap:8px;align-items:start;padding:5px 0;font-size:14px}#board .ans i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--drift)}#board .ans em{color:var(--drift)}#board .ans b{text-align:right;color:var(--amber);font-variant-numeric:tabular-nums}
 #board .r.me{color:var(--amber);font-weight:600}#board .r span:nth-child(3){font-size:13px;letter-spacing:1px}#board .r b{text-align:right;font-variant-numeric:tabular-nums}
 #fb{width:100%;min-height:84px;background:#0b1c24;border:2px solid var(--line);padding:10px;font-size:15px;border-radius:0}
 body.guest .clubonly,body.guest .who,body.guest #whoSet{display:none!important}
@@ -251,7 +253,7 @@ function findCore(round,k){const L=INDEX[round];const sing=x=>x.replace(/s$/,"")
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const BUILD="1794629199";
+const BUILD="1794631258";
 /* phones can hold on to an old copy of this page; if a newer build is live, load it (only from the title screen, never mid-dive) */
 (async()=>{try{const v=(await (await fetch(new URL("version.txt",document.baseURI).href+"?"+Date.now(),{cache:"no-store"})).text()).trim();if(/^\d+$/.test(v)&&+v>+BUILD&&new URLSearchParams(location.search).get("v")!==v&&(typeof S==="undefined"||S.phase==="title"||S.res.length>=7)){const q=new URLSearchParams(location.search);q.set("v",v);location.replace(location.pathname+"?"+q.toString()+location.hash)}}catch(e){}})();
 /* Club devices only: the name list and the Club board are for the seven players. A device becomes a Club device by opening the Club link (?club=CODE) or typing the Club code once; everyone else is a guest. Devices that already finished Club dive #1 are let in. */
@@ -425,8 +427,12 @@ async function postScore(){if(GUEST){$("saveMsg").textContent="Guest dive. Your 
     if(r.ok||r.status===409){S.posted=true;save();$("saveMsg").textContent=r.ok?"Score saved to the Club ✓":"The Club already has a dive from "+w+" today, so that one stands."}else throw 0}
   catch(e){$("saveMsg").textContent="Could not save your score. Copy your result and send it to Jay."}
   loadBoard()}
-async function loadBoard(){if(GUEST)return;try{const rows=await (await sb("?dive=eq."+DIVE_N+"&select=player,score,tiers&order=score.desc")).json();if(!Array.isArray(rows))throw 0;const w=$("who").value;
-    $("board").innerHTML=(rows.length?rows.map((r,i)=>"<div class=\"r"+(r.player===w?" me":"")+"\"><span>"+(i+1)+"</span><span>"+esc(r.player)+"</span><span>"+r.tiers.map(t=>(TIERS[t]||TIERS[0]).e).join("")+"</span><b>"+r.score+"</b></div>").join(""):"")+"<p class=\"fine\">"+rows.length+" of 7 have dived today.</p>"}
+async function loadBoard(){if(GUEST)return;try{const rows=await (await sb("?dive=eq."+DIVE_N+"&select=player,score,tiers,answers&order=score.desc")).json();if(!Array.isArray(rows))throw 0;const w=$("who").value;
+    /* tap a name to see what that player answered, round by round (the board only shows after your own dive is done) */
+    const det=r=>"<div class=\"ans\" hidden>"+r.tiers.map((t,k)=>{const T=TIERS[t]||TIERS[0],a=(r.answers&&r.answers[k])||"";return "<div><span>"+T.e+"</span><span><i>"+esc(DAY&&DAY[k]?DAY[k].q:"Round "+(k+1))+"</i>"+(a?esc(a):"<em>no answer</em>")+"</span><b>"+t+"</b></div>"}).join("")+"</div>";
+    $("board").innerHTML=(rows.length?"<p class=\"fine\" style=\"margin:0 0 4px\">Tap a name to see their answers.</p>"+rows.map((r,i)=>"<div class=\"r"+(r.player===w?" me":"")+"\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\"><span>"+(i+1)+"</span><span>"+esc(r.player)+" <small>▸</small></span><span>"+r.tiers.map(t=>(TIERS[t]||TIERS[0]).e).join("")+"</span><b>"+r.score+"</b></div>"+det(r)).join(""):"")+"<p class=\"fine\">"+rows.length+" of 7 have dived today.</p>";
+    $("board").onclick=e=>{const row=e.target.closest(".r");if(!row)return;const d=row.nextElementSibling;if(!d||!d.classList.contains("ans"))return;const open=d.hidden;d.hidden=!open;row.setAttribute("aria-expanded",open?"true":"false");const c=row.querySelector("small");if(c)c.textContent=open?"▾":"▸"};
+    $("board").onkeydown=e=>{if((e.key==="Enter"||e.key===" ")&&e.target.classList&&e.target.classList.contains("r")){e.preventDefault();e.target.click()}}}
   catch(e){$("board").innerHTML="<p class=\"fine\">The board could not be loaded right now.</p>"}}
 /* where you landed among everyone who dived today, Club and guests alike */
 async function showCurve(){try{
