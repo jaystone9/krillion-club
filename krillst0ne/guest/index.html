@@ -264,7 +264,7 @@ function findCore(round,k){const L=INDEX[round];const sing=x=>x.replace(/s$/,"")
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const BUILD="1794636608";
+const BUILD="1794668896";
 /* phones can hold on to an old copy of this page; if a newer build is live, load it (only from the title screen, never mid-dive) */
 (async()=>{try{const v=(await (await fetch(new URL("version.txt",document.baseURI).href+"?"+Date.now(),{cache:"no-store"})).text()).trim();if(/^\d+$/.test(v)&&+v>+BUILD&&new URLSearchParams(location.search).get("v")!==v&&(typeof S==="undefined"||S.phase==="title"||S.res.length>=7)){const q=new URLSearchParams(location.search);q.set("v",v);location.replace(location.pathname+"?"+q.toString()+location.hash)}}catch(e){}})();
 /* Club devices only: the name list and the Club board are for the seven players. A device becomes a Club device by opening the Club link (?club=CODE) or typing the Club code once; everyone else is a guest. Devices that already finished Club dive #1 are let in. */
@@ -472,9 +472,12 @@ async function showCurve(){try{
   const df=S.score-avg;$("curveAvg").textContent=n<2?"":"TODAY'S AVERAGE "+avg+" (DASHED LINE) · TOP SCORE "+top+" · YOU "+S.score+(df===0?", RIGHT ON AVERAGE":df>0?", "+df+" ABOVE AVERAGE":", "+(-df)+" BELOW AVERAGE");
 }catch(e){$("curve").innerHTML="";$("curveMsg").textContent=""}}
 /* a dive already made under this name on another device locks this one too */
-async function checkRemote(){const w=$("who").value;if(GUEST||!w||!DAY||S.res.length>=7||S.phase!=="title")return;
-  try{const rows=await (await sb("?dive=eq."+DIVE_N+"&player=eq."+encodeURIComponent(w)+"&select=tiers,answers")).json();if(!Array.isArray(rows)||!rows[0]||S.phase!=="title")return;
-    const r=rows[0];S.res=r.tiers.map((p,i)=>({q:DAY[i].q,name:(r.answers&&r.answers[i])||"",pts:p,round:i}));S.seen=6;S.posted=true;S.played=true;S.score=S.res.reduce((a,x)=>a+x.pts,0);S.depth=0;S.gold=false;save();S.phase="end";show("title",false);buildEnd()}catch(e){}}
+/* the Club store is the record. On opening: a device with no dive today shows the one this name already posted elsewhere; a device holding a finished dive that no longer matches the store (a retake on another device, or a score cleared for a retake) follows the store. A dive in progress is left alone. */
+async function checkRemote(){const w=$("who").value;if(GUEST||!w||!DAY)return;const done=S.res.length>=7;if(!done&&(S.res.length>0||S.phase!=="title"))return;
+  try{const rows=await (await sb("?dive=eq."+DIVE_N+"&player=eq."+encodeURIComponent(w)+"&select=tiers,answers")).json();if(!Array.isArray(rows))return;
+    if(!rows[0]){if(done&&S.posted){try{localStorage.removeItem(KEY)}catch(e){}location.reload()}return}
+    const r=rows[0];if(done){if(!S.posted)return;const same=S.res.map(x=>x.pts).join("/")===r.tiers.join("/")&&S.res.every((x,i)=>(x.name||"")===((r.answers&&r.answers[i])||""));if(same)return}else if(S.phase!=="title")return;
+    S.res=r.tiers.map((p,i)=>({q:DAY[i].q,name:(r.answers&&r.answers[i])||"",pts:p,round:i}));S.seen=6;S.posted=true;S.played=true;S.score=S.res.reduce((a,x)=>a+x.pts,0);S.depth=0;S.gold=false;save();S.phase="end";show("title",false);buildEnd()}catch(e){}}
 $("sub").textContent="DIVE "+NUM+" · ONE DIVE PER DAY";$("eNum").textContent="DIVE "+NUM+" COMPLETE";
 function noDive(){$("begin").disabled=true;$("begin").textContent="NO DIVE TODAY";$("begin").style.opacity=.6;$("sub").textContent="DIVE "+NUM+" HAS NOT BEEN WRITTEN YET"}
 setInterval(()=>{const p=new Intl.DateTimeFormat("en-GB",{timeZone:"America/Los_Angeles",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=+x.value,a),{});const left=86400-((p.hour%24)*3600+p.minute*60+p.second),f=n=>String(n).padStart(2,"0");$("nextIn").textContent="One dive per day. Next dive in "+f(left/3600|0)+":"+f(left%3600/60|0)+":"+f(left%60)+" (midnight Pacific)."},1000);
