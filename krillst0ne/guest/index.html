@@ -142,6 +142,8 @@ summary b{font-variant-numeric:tabular-nums;color:var(--amber)}
 #board .r{display:grid;grid-template-columns:20px 1fr auto 44px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #12303a;font-size:14px}
 #board .r{cursor:pointer}#board .r small{color:var(--drift);font-size:11px}
 #board .ans{padding:6px 0 10px 28px;border-bottom:1px solid #12303a}#board .ans>div{display:grid;grid-template-columns:22px 1fr 30px;gap:8px;align-items:start;padding:5px 0;font-size:14px}#board .ans i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--drift)}#board .ans em{color:var(--drift)}#board .ans b{text-align:right;color:var(--amber);font-variant-numeric:tabular-nums}
+#past .d{border-bottom:1px solid #12303a;padding:10px 0}#past .h{display:grid;grid-template-columns:1fr auto 48px;gap:8px;align-items:center;cursor:pointer;font-size:14px}#past .h small{display:block;color:var(--drift);font-size:11px;letter-spacing:.06em}#past .h span:nth-child(2){font-size:13px;letter-spacing:1px}#past .h b{text-align:right;color:var(--amber);font-size:16px;font-variant-numeric:tabular-nums}#past .st{color:var(--glow);font-size:11px;letter-spacing:.04em;margin:6px 0 0}
+#past .ans{padding:8px 0 2px}#past .ans>div{display:grid;grid-template-columns:22px 1fr 30px;gap:8px;align-items:start;padding:5px 0;font-size:14px}#past .ans i{display:block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--drift)}#past .ans em{color:var(--drift)}#past .ans b{text-align:right;color:var(--amber);font-variant-numeric:tabular-nums}#past .cp{margin-top:8px;padding:9px 8px;font-size:12px}
 #board .r.me{color:var(--amber);font-weight:600}#board .r span:nth-child(3){font-size:13px;letter-spacing:1px}#board .r b{text-align:right;font-variant-numeric:tabular-nums}
 #fb{width:100%;min-height:84px;background:#0b1c24;border:2px solid var(--line);padding:10px;font-size:15px;border-radius:0}
 body.guest .clubonly,body.guest .who,body.guest #whoSet{display:none!important}
@@ -170,7 +172,7 @@ body.guest .clubonly,body.guest .who,body.guest #whoSet{display:none!important}
     <div class="sub hide" id="whoSet" style="margin:0 0 12px;color:var(--foam)">DIVING AS <b id="whoName" style="color:var(--amber)"></b> · <button id="whoChange" type="button" style="background:none;border:0;padding:0;color:var(--glow);font:inherit;letter-spacing:inherit;text-decoration:underline">NOT YOU?</button></div>
     <button class="big" id="begin" type="button">▼ DROP IN ▼</button>
     <div class="sub" id="sub">ONE DIVE PER DAY</div>
-    <div class="links"><a class="clubonly" href="https://jaystone9.github.io/krillion-club/" target="_blank" rel="noopener">CLUB STANDINGS ↗</a><a href="https://krillion.io" target="_blank" rel="noopener">THE REAL KRILLION ↗</a></div>
+    <div class="links"><a class="clubonly" href="https://jaystone9.github.io/krillion-club/" target="_blank" rel="noopener">CLUB STANDINGS ↗</a><a href="https://krillion.io" target="_blank" rel="noopener">THE REAL KRILLION ↗</a><button type="button" id="pastOpen" style="background:none;border:0;padding:0;font-family:var(--display);font-size:10px;letter-spacing:.14em;color:var(--glow);text-decoration:underline">YOUR PAST DIVES</button></div>
   </div>
 
   <div id="play" class="layer hide">
@@ -189,6 +191,14 @@ body.guest .clubonly,body.guest .who,body.guest #whoSet{display:none!important}
   </div>
   <button id="next" class="hide" type="button">DESCEND ▼</button>
 
+  <div id="pastLayer" class="layer hide" style="top:0;bottom:0;overflow-y:auto;background:rgba(6,16,22,.97);padding:18px 18px 60px;z-index:60">
+    <div class="top"><strong>krillst<em>0</em>ne</strong><span>YOUR PAST DIVES</span></div>
+    <button class="btn alt" id="pastClose" type="button" style="margin:14px 0 6px">← BACK</button>
+    <p class="fine" id="pastNote"></p>
+    <div id="past"></div>
+    <textarea id="pastOut" rows="4" readonly aria-label="A past result, ready to copy" style="display:none;width:100%;margin-top:10px"></textarea>
+  </div>
+
   <div id="end" class="layer hide">
     <div class="top"><strong>krillst<em>0</em>ne</strong><span id="eNum">DIVE COMPLETE</span></div>
     <div id="eScore"></div>
@@ -203,6 +213,7 @@ body.guest .clubonly,body.guest .who,body.guest #whoSet{display:none!important}
     <button class="btn" id="copy" type="button">COPY RESULT</button>
     <textarea id="shareOut" rows="4" readonly aria-label="Your result, ready to copy"></textarea>
     <p class="fine" id="nextIn">One dive per day. The next one opens at midnight Pacific.</p>
+    <button class="btn alt" id="pastBtn" type="button">YOUR PAST DIVES</button>
     <button class="btn alt clubonly" id="guestLink" type="button">COPY A LINK FOR SOMEONE OUTSIDE THE CLUB</button>
     <a class="btn alt clubonly" href="https://jaystone9.github.io/krillion-club/" target="_blank" rel="noopener">KRILLION CLUB STANDINGS ↗</a>
     <a class="btn alt" href="https://krillion.io" target="_blank" rel="noopener">PLAY THE REAL KRILLION ↗</a>
@@ -253,7 +264,7 @@ function findCore(round,k){const L=INDEX[round];const sing=x=>x.replace(/s$/,"")
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const BUILD="1794631258";
+const BUILD="1794636608";
 /* phones can hold on to an old copy of this page; if a newer build is live, load it (only from the title screen, never mid-dive) */
 (async()=>{try{const v=(await (await fetch(new URL("version.txt",document.baseURI).href+"?"+Date.now(),{cache:"no-store"})).text()).trim();if(/^\d+$/.test(v)&&+v>+BUILD&&new URLSearchParams(location.search).get("v")!==v&&(typeof S==="undefined"||S.phase==="title"||S.res.length>=7)){const q=new URLSearchParams(location.search);q.set("v",v);location.replace(location.pathname+"?"+q.toString()+location.hash)}}catch(e){}})();
 /* Club devices only: the name list and the Club board are for the seven players. A device becomes a Club device by opening the Club link (?club=CODE) or typing the Club code once; everyone else is a guest. Devices that already finished Club dive #1 are let in. */
@@ -407,6 +418,19 @@ if(!CLUBDEV){const w=document.createElement("div");w.style.cssText="margin:10px 
   const tryCode=()=>{if(clubHash($("clubCode").value)===CLUBH){try{localStorage.setItem("krillst0ne-club","1")}catch(e){}location.href=location.pathname.replace(/guest\/?(index\.html)?$/i,"")}else $("clubNo").textContent="Not the code."};
   $("clubGo").onclick=tryCode;$("clubCode").onkeydown=e=>{if(e.key==="Enter")tryCode()}}
 $("copy").onclick=()=>copyText(shareText(),$("copy"),"COPIED ✓",$("shareOut"));
+/* past dives finished on this device: score, answers, how it compared, and a copy button. Kept in this browser's storage, so it is per device. */
+function pastList(){const out=[];for(let n=DIVE_N-1;n>=1;n--){let st=null;try{st=JSON.parse(localStorage.getItem("krillst0ne-"+(GUEST?"guest-":"")+"dive-"+n)||"null")}catch(e){}if(st&&Array.isArray(st.res)&&st.res.length>=7)out.push({n,res:st.res,score:st.res.reduce((a,x)=>a+(x.pts||0),0)})}return out}
+function pastShare(d){const w=GUEST?"":$("who").value;return(w?w+"\n":"")+"krillst0ne #"+d.n+" 🦐\n"+d.score+"\n\n"+d.res.map(r=>(TIERS[r.pts]||TIERS[0]).e).join("")}
+async function openPast(){const L=pastList();show("pastLayer",true);$("pastLayer").scrollTop=0;$("pastOut").style.display="none";
+  $("pastNote").textContent=L.length?"Every dive you finished on this device. Tap one for your answers.":"No past dives on this device yet. Finish today's dive and it will be kept here from tomorrow on.";
+  const day=n=>new Date(Date.parse(LAUNCH)+(n-1)*864e5).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",timeZone:"UTC"});
+  $("past").innerHTML=L.map((d,i)=>"<div class=\"d\" data-i=\""+i+"\"><div class=\"h\" role=\"button\" tabindex=\"0\"><span>DIVE #"+d.n+" <small>"+esc(day(d.n))+" ▸</small></span><span>"+d.res.map(r=>(TIERS[r.pts]||TIERS[0]).e).join("")+"</span><b>"+d.score+"</b></div><p class=\"st\" id=\"pst"+d.n+"\"></p><div class=\"ans\" hidden>"+d.res.map((r,k)=>"<div><span>"+(TIERS[r.pts]||TIERS[0]).e+"</span><span><i>"+esc(r.q||"Round "+(k+1))+"</i>"+(r.name?esc(r.name):"<em>no answer</em>")+"</span><b>"+(r.pts||0)+"</b></div>").join("")+"<button class=\"btn alt cp\" type=\"button\">COPY THIS RESULT</button></div></div>").join("");
+  $("past").onclick=e=>{const el=e.target.closest(".d");if(!el)return;const d=L[+el.dataset.i];if(e.target.classList.contains("cp")){copyText(pastShare(d),e.target,"COPIED ✓",$("pastOut"));return}if(!e.target.closest(".h"))return;const a=el.querySelector(".ans");a.hidden=!a.hidden;const c=el.querySelector(".h small");c.textContent=c.textContent.replace(a.hidden?"▾":"▸",a.hidden?"▸":"▾")};
+  $("past").onkeydown=e=>{if((e.key==="Enter"||e.key===" ")&&e.target.classList&&e.target.classList.contains("h")){e.preventDefault();e.target.click()}};
+  if(!L.length)return;
+  try{const rows=await (await fetch(SBASE+"krillst0ne_plays?dive=in.("+L.map(d=>d.n).join(",")+")&select=dive,score",{headers:{apikey:SBK}})).json();if(!Array.isArray(rows))return;
+    for(const d of L){const xs=rows.filter(r=>r.dive===d.n).map(r=>r.score);const el=$("pst"+d.n);if(!el||xs.length<2)continue;const avg=Math.round(xs.reduce((a,v)=>a+v,0)/xs.length),lower=xs.filter(v=>v<d.score).length;el.textContent="DEEPER THAN "+Math.round(lower/(xs.length-1)*100)+"% OF "+xs.length+" DIVERS · AVERAGE "+avg+" · TOP "+Math.max.apply(null,xs)}}catch(e){}}
+$("pastOpen").onclick=openPast;$("pastBtn").onclick=openPast;$("pastClose").onclick=()=>show("pastLayer",false);
 $("fbCopy").onclick=async()=>{const v=$("fb").value.trim().slice(0,1500);if(!v){$("fb").focus();return}const b=$("fbCopy");b.disabled=true;b.textContent="SENDING…";
   try{const r=await fetch(SBASE+"krillst0ne_notes",{method:"POST",headers:{apikey:SBK,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({dive:DIVE_N,player:GUEST?"guest":($("who").value||"unknown"),note:v})});if(!r.ok)throw 0;$("fb").value="";b.textContent="SENT ✓ THANKS"}
   catch(e){b.textContent="COULD NOT SEND. TRY AGAIN"}b.disabled=false};
