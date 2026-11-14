@@ -193,6 +193,7 @@ body.guest .clubonly,body.guest .who,body.guest #whoSet{display:none!important}
     <div id="eBear"></div>
     <div id="curve" aria-hidden="true"></div>
     <p class="fine" id="curveMsg" style="color:var(--glow);margin-top:2px"></p>
+    <p class="fine" id="curveAvg" style="color:var(--foam);margin-top:2px"></p>
     <h2>DIVE LOG · DEEPER = RARER</h2>
     <div id="log"></div>
     <h2 style="margin-top:40px">THE BEARING</h2>
@@ -430,11 +431,12 @@ async function showCurve(){try{
   const rows=await (await fetch(SBASE+"krillst0ne_plays?dive=eq."+DIVE_N+"&select=score",{headers:{apikey:SBK}})).json();if(!Array.isArray(rows))throw 0;
   const xs=rows.map(r=>r.score);if(!xs.length)xs.push(S.score);const n=xs.length,CW=320,CH=92,bw=Math.max(34,Math.min(80,170/Math.sqrt(n)));
   const pts=[];let mx=0;for(let x=0;x<=700;x+=10){let d=0;for(const v of xs)d+=Math.exp(-.5*Math.pow((x-v)/bw,2));pts.push([x,d]);if(d>mx)mx=d}
-  const px=x=>(x/700*CW).toFixed(1),py=d=>(CH-2-d/mx*(CH-16)).toFixed(1),me=px(S.score);
+  const avg=Math.round(xs.reduce((a,v)=>a+v,0)/n),top=Math.max.apply(null,xs);const px=x=>(x/700*CW).toFixed(1),py=d=>(CH-2-d/mx*(CH-16)).toFixed(1),me=px(S.score);
   const line=pts.map((p,i)=>(i?"L":"M")+px(p[0])+","+py(p[1])).join(" ");
-  $("curve").innerHTML='<svg viewBox="0 0 '+CW+' '+(CH+18)+'" style="width:100%;height:auto;display:block;margin-top:14px"><path d="'+line+' L'+CW+','+CH+' L0,'+CH+' Z" fill="rgba(125,249,200,.16)"/><path d="'+line+'" fill="none" stroke="#7df9c8" stroke-width="2"/><line x1="0" y1="'+CH+'" x2="'+CW+'" y2="'+CH+'" stroke="#1f4450"/><line x1="'+me+'" y1="6" x2="'+me+'" y2="'+CH+'" stroke="#ffb454" stroke-width="2"/><circle cx="'+me+'" cy="6" r="4" fill="#ffb454"/>'+[0,100,200,300,400,500,600,700].map(v=>'<text x="'+px(v)+'" y="'+(CH+13)+'" font-size="9" fill="#86a9ad" text-anchor="'+(v===0?"start":v===700?"end":"middle")+'" font-family="IBM Plex Mono,monospace">'+v+'</text>').join("")+'<text x="'+Math.max(14,Math.min(CW-14,+me))+'" y="'+(CH+13)+'" font-size="9" font-weight="700" fill="#ffb454" text-anchor="middle" font-family="IBM Plex Mono,monospace" paint-order="stroke" stroke="#061016" stroke-width="4">YOU</text></svg>';
+  $("curve").innerHTML='<svg viewBox="0 0 '+CW+' '+(CH+18)+'" style="width:100%;height:auto;display:block;margin-top:14px"><path d="'+line+' L'+CW+','+CH+' L0,'+CH+' Z" fill="rgba(125,249,200,.16)"/><path d="'+line+'" fill="none" stroke="#7df9c8" stroke-width="2"/><line x1="0" y1="'+CH+'" x2="'+CW+'" y2="'+CH+'" stroke="#1f4450"/><line x1="'+me+'" y1="6" x2="'+me+'" y2="'+CH+'" stroke="#ffb454" stroke-width="2"/><circle cx="'+me+'" cy="6" r="4" fill="#ffb454"/>'+(n>1?'<line x1="'+px(avg)+'" y1="14" x2="'+px(avg)+'" y2="'+CH+'" stroke="#e9f5f2" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>':"")+[0,100,200,300,400,500,600,700].map(v=>'<text x="'+px(v)+'" y="'+(CH+13)+'" font-size="9" fill="#86a9ad" text-anchor="'+(v===0?"start":v===700?"end":"middle")+'" font-family="IBM Plex Mono,monospace">'+v+'</text>').join("")+'<text x="'+Math.max(14,Math.min(CW-14,+me))+'" y="'+(CH+13)+'" font-size="9" font-weight="700" fill="#ffb454" text-anchor="middle" font-family="IBM Plex Mono,monospace" paint-order="stroke" stroke="#061016" stroke-width="4">YOU</text></svg>';
   const lower=xs.filter(v=>v<S.score).length;
   $("curveMsg").textContent=n<2?"You are the first one down today. The curve fills in as others dive.":"DEEPER THAN "+Math.round(lower/(n-1)*100)+"% OF TODAY'S OTHER DIVERS · "+n+" SO FAR, CLUB AND GUESTS";
+  const df=S.score-avg;$("curveAvg").textContent=n<2?"":"TODAY'S AVERAGE "+avg+" (DASHED LINE) · TOP SCORE "+top+" · YOU "+S.score+(df===0?", RIGHT ON AVERAGE":df>0?", "+df+" ABOVE AVERAGE":", "+(-df)+" BELOW AVERAGE");
 }catch(e){$("curve").innerHTML="";$("curveMsg").textContent=""}}
 /* a dive already made under this name on another device locks this one too */
 async function checkRemote(){const w=$("who").value;if(GUEST||!w||!DAY||S.res.length>=7||S.phase!=="title")return;
