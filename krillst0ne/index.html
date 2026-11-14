@@ -164,7 +164,7 @@ body.guest .clubonly,body.guest .who,body.guest #whoSet{display:none!important}
     <p class="how">7 prompts. 25 seconds each.<br>Name one thing.<br>The rarer your answer, the deeper you sink. Every point is 10 metres. 700 points hits the sea floor.</p>
     <div class="sp"></div>
     <label class="who" for="who">WHO'S DIVING?
-      <select id="who"><option value="">pick your name</option><option>Jay</option><option>Lauren Jane</option><option>Marti</option><option>Carolyn</option><option>Andrew</option><option>Lacey</option><option>Emma</option></select></label>
+      <select id="who"><option value="">pick your name</option><option>Jay</option><option>Lauren Jane</option><option>Marti</option><option>Carolyn</option><option>Andrew</option><option>Lacey</option><option>Emma</option><option value="__guest">I'm a guest (not in the Club)</option></select></label>
     <div class="sub hide" id="whoSet" style="margin:0 0 12px;color:var(--foam)">DIVING AS <b id="whoName" style="color:var(--amber)"></b> · <button id="whoChange" type="button" style="background:none;border:0;padding:0;color:var(--glow);font:inherit;letter-spacing:inherit;text-decoration:underline">NOT YOU?</button></div>
     <button class="big" id="begin" type="button">▼ DROP IN ▼</button>
     <div class="sub" id="sub">ONE DIVE PER DAY</div>
@@ -250,7 +250,9 @@ function findCore(round,k){const L=INDEX[round];const sing=x=>x.replace(/s$/,"")
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const GUEST=/^#guest/i.test(location.hash)||/[?&]guest\b/i.test(location.search)||/\/guest\/?(index\.html)?$/i.test(location.pathname);if(GUEST)document.body.classList.add("guest");addEventListener("hashchange",()=>location.reload());
+/* a guest can also say so in the name list; that choice is remembered on this device (undo with ?club or the link on the title screen) */
+let GFLAG=false;try{if(/[?&]club\b/i.test(location.search))localStorage.removeItem("krillst0ne-guest");GFLAG=localStorage.getItem("krillst0ne-guest")==="1"}catch(e){}
+const GUEST=GFLAG||/^#guest/i.test(location.hash)||/[?&]guest\b/i.test(location.search)||/\/guest\/?(index\.html)?$/i.test(location.pathname);if(GUEST)document.body.classList.add("guest");addEventListener("hashchange",()=>location.reload());
 const cv=$("sea"),cx=cv.getContext("2d");
 let W=0,H=0,DPR=1;
 function size(){const r=cv.getBoundingClientRect();DPR=Math.min(2,window.devicePixelRatio||1);W=r.width;H=r.height;cv.width=W*DPR;cv.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0)}
@@ -391,6 +393,7 @@ function buildEnd(){
 function copyText(txt,btn,done,box){const fall=()=>{if(box){box.value=txt;box.style.display="block";box.focus();box.select()}btn.textContent="SELECT AND COPY BELOW"};try{navigator.clipboard.writeText(txt).then(()=>{btn.textContent=done},fall)}catch(e){fall()}}
 $("guestLink").onclick=()=>copyText("Try today's krillst0ne dive: https://jaystone9.github.io/krillion-club/krillst0ne/guest/",$("guestLink"),"LINK COPIED ✓",$("shareOut"));
 if(GUEST)$("tag").textContent="THE DAILY DIVE · GUEST";
+if(GFLAG){const b=document.createElement("button");b.type="button";b.textContent="IN THE CLUB? TAP TO PICK YOUR NAME";b.style.cssText="display:block;margin:10px auto 0;background:none;border:0;padding:0;color:var(--glow);font:inherit;font-size:11px;letter-spacing:.08em;text-decoration:underline";b.onclick=()=>{try{localStorage.removeItem("krillst0ne-guest")}catch(e){}location.href=location.pathname.replace(/guest\/?(index\.html)?$/i,"")};$("tag").insertAdjacentElement("afterend",b)}
 $("copy").onclick=()=>copyText(shareText(),$("copy"),"COPIED ✓",$("shareOut"));
 $("fbCopy").onclick=async()=>{const v=$("fb").value.trim().slice(0,1500);if(!v){$("fb").focus();return}const b=$("fbCopy");b.disabled=true;b.textContent="SENDING…";
   try{const r=await fetch(SBASE+"krillst0ne_notes",{method:"POST",headers:{apikey:SBK,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({dive:DIVE_N,player:GUEST?"guest":($("who").value||"unknown"),note:v})});if(!r.ok)throw 0;$("fb").value="";b.textContent="SENT ✓ THANKS"}
@@ -399,9 +402,9 @@ $("fbCopy").onclick=async()=>{const v=$("fb").value.trim().slice(0,1500);if(!v){
 const KEY="krillst0ne-"+(GUEST?"guest-":"")+"dive-"+DIVE_N,NKEY="krillst0ne-name";
 function save(){try{localStorage.setItem(KEY,JSON.stringify({seen:S.seen,res:S.res,posted:!!S.posted,played:!!S.played}))}catch(e){}}
 try{if(location.hash==="#testreset")localStorage.removeItem(KEY)}catch(e){}
-try{$("who").value=localStorage.getItem(NKEY)||""}catch(e){}
+try{const nm=localStorage.getItem(NKEY)||"";$("who").value=nm==="__guest"?"":nm}catch(e){}
 function showWho(pick){const w=$("who").value;const set=!!w&&!pick;document.querySelector(".who").classList.toggle("hide",set);document.querySelector(".who").style.display=set?"none":"";$("whoSet").classList.toggle("hide",!set);$("whoSet").style.display=set?"":"none";$("whoName").textContent=w.toUpperCase()}
-$("who").onchange=()=>{try{localStorage.setItem(NKEY,$("who").value)}catch(e){}showWho(false);if(DAY)$("sub").textContent="DIVE "+NUM+" · ONE DIVE PER DAY";checkRemote()};
+$("who").onchange=()=>{if($("who").value==="__guest"){try{localStorage.setItem("krillst0ne-guest","1")}catch(e){}location.reload();return}try{localStorage.setItem(NKEY,$("who").value)}catch(e){}showWho(false);if(DAY)$("sub").textContent="DIVE "+NUM+" · ONE DIVE PER DAY";checkRemote()};
 $("whoChange").onclick=()=>showWho(true);
 /* ---------- shared score store ---------- */
 const SBASE="https://apjlbzyiszkgwyhpvyiq.supabase.co/rest/v1/",SB=SBASE+"krillst0ne_scores",SBK="sb_publishable_YM9K9YqwnTvz77h7Y-K_cQ_I8HQuWKT";
