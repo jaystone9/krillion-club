@@ -235,7 +235,12 @@ let DAY=null,INDEX=[];const NUM="#"+String(DIVE_N).padStart(3,"0");
 function norm(s){return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/&/g," and ").replace(/['’.]/g,"").replace(/[^a-z0-9]+/g," ").trim().replace(/^(the|a|an) /,"")}
 function lev(a,b){if(Math.abs(a.length-b.length)>2)return 9;const p=[];for(let j=0;j<=b.length;j++)p[j]=j;for(let i=1;i<=a.length;i++){let d=p[0];p[0]=i;for(let j=1;j<=b.length;j++){const t=p[j];p[j]=Math.min(p[j]+1,p[j-1]+1,d+(a[i-1]===b[j-1]?0:1));d=t}}return p[b.length]}
 function setDay(d){DAY=d;INDEX=d.map(r=>{const list=[];for(const pts of ORDER){for(const ent of (r.t[pts]||"").split(";").filter(Boolean)){const al=ent.split("|");const name=al[0];for(const a of al)list.push({k:norm(a),name,pts})}}return list})}
-function findAnswer(round,raw){const k=norm(raw);if(!k)return null;const L=INDEX[round];const sing=x=>x.replace(/s$/,"");
+const LEAD=/^(long haired|longhaired|short haired|shorthaired|wire haired|wirehaired|smooth haired|rough haired|curly haired|long coated|smooth coated|rough coated|miniature|mini|toy|teacup|standard|giant|dwarf|baby|purebred) /;
+function findAnswer(round,raw){let k=norm(raw);if(!k)return null;let m=findCore(round,k);
+  /* a coat or size word in front of a real answer ("long haired jack russell") still counts, shown as a correction */
+  while(!m&&LEAD.test(k)){k=k.replace(LEAD,"");if(k.length<4)break;m=findCore(round,k);if(m)m=Object.assign({},m,{fuzzy:true})}
+  return m}
+function findCore(round,k){const L=INDEX[round];const sing=x=>x.replace(/s$/,"");
   let m=L.find(e=>e.k===k)||L.find(e=>sing(e.k)===sing(k));if(m)return m;
   const max=k.length>=13?3:k.length>=8?2:k.length>=4?1:0;if(!max)return null;
   let best=null,bd=9,tie=false;for(const e of L){const d=lev(k,e.k);if(d<bd){bd=d;best=e;tie=false}else if(d===bd&&best&&e.name!==best.name)tie=true}
