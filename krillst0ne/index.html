@@ -249,7 +249,7 @@ function findCore(round,k){const L=INDEX[round];const sing=x=>x.replace(/s$/,"")
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const GUEST=location.hash==="#guest";if(GUEST)document.body.classList.add("guest");addEventListener("hashchange",()=>location.reload());
+const GUEST=/^#guest/i.test(location.hash)||/[?&]guest\b/i.test(location.search)||/\/guest\/?(index\.html)?$/i.test(location.pathname);if(GUEST)document.body.classList.add("guest");addEventListener("hashchange",()=>location.reload());
 const cv=$("sea"),cx=cv.getContext("2d");
 let W=0,H=0,DPR=1;
 function size(){const r=cv.getBoundingClientRect();DPR=Math.min(2,window.devicePixelRatio||1);W=r.width;H=r.height;cv.width=W*DPR;cv.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0)}
@@ -388,7 +388,7 @@ function buildEnd(){
     return"<details><summary><span>"+TIERS[r.pts].e+"</span><span><small>"+esc(r.q)+"</small><span>"+esc(r.name)+"</span></span><b>"+r.pts+"</b></summary><div class=\"al\">"+h+"</div></details>"}).join("");
   $("shareOut").style.display="none";$("copy").textContent="COPY RESULT";if(S.posted&&!GUEST){$("saveMsg").textContent="Score saved to the Club ✓";loadBoard()}else postScore();showCurve();$("end").scrollTop=0;show("end",true);show("hud",false);show("snd",false)}
 function copyText(txt,btn,done,box){const fall=()=>{if(box){box.value=txt;box.style.display="block";box.focus();box.select()}btn.textContent="SELECT AND COPY BELOW"};try{navigator.clipboard.writeText(txt).then(()=>{btn.textContent=done},fall)}catch(e){fall()}}
-$("guestLink").onclick=()=>copyText("Try today's krillst0ne dive: https://jaystone9.github.io/krillion-club/krillst0ne/#guest",$("guestLink"),"LINK COPIED ✓",$("shareOut"));
+$("guestLink").onclick=()=>copyText("Try today's krillst0ne dive: https://jaystone9.github.io/krillion-club/krillst0ne/guest/",$("guestLink"),"LINK COPIED ✓",$("shareOut"));
 if(GUEST)$("tag").textContent="THE DAILY DIVE · GUEST";
 $("copy").onclick=()=>copyText(shareText(),$("copy"),"COPIED ✓",$("shareOut"));
 $("fbCopy").onclick=async()=>{const v=$("fb").value.trim().slice(0,1500);if(!v){$("fb").focus();return}const b=$("fbCopy");b.disabled=true;b.textContent="SENDING…";
