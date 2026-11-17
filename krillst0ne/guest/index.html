@@ -266,14 +266,24 @@ function findCore(round,k){const L=INDEX[round];const sing=x=>x.replace(/s$/,"")
   const bk=bare(ck);if(bk.length>=3){m=L.find(e=>bare(canon(e.k))===bk);if(m)return m}
   /* "Manx cat", "Brie cheese", "Nile river": a trailing category word is not a miss */
   const tk=trail(ck);if(tk!==ck&&tk.length>=3){m=L.find(e=>e.k===tk||trail(canon(e.k))===tk);if(m)return m}
-  const max=ck.length>=13?3:ck.length>=8?2:ck.length>=4?1:0;if(!max)return null;
-  let best=null,bd=9,tie=false;for(const e of L){const d=lev(ck,canon(e.k));if(d<bd){bd=d;best=e;tie=false}else if(d===bd&&best&&e.name!==best.name)tie=true}
-  return bd<=max&&!tie?Object.assign({fuzzy:true},best):null}
+  const max=ck.length>=13?3:ck.length>=8?2:ck.length>=4?1:0;
+  if(max){let best=null,bd=9,tie=false;for(const e of L){const d=lev(ck,canon(e.k));if(d<bd){bd=d;best=e;tie=false}else if(d===bd&&best&&e.name!==best.name)tie=true}
+    if(bd<=max&&!tie)return Object.assign({fuzzy:true},best)}
+  m=loose(L,ck);return m?Object.assign({fuzzy:true},m):null}
+/* forgiving last resort, always shown to the player to confirm: same words in another order ("blue russian"),
+   a listed answer inside what was typed ("orions belt" for Orion, "pho soup with beef" for Pho),
+   or what was typed being a clear, unambiguous part of one listed answer ("bun bo" for Bun bo Hue) */
+function loose(L,ck){const tok=x=>x.split(" ").map(w=>w.length>3?w.replace(/s$/,""):w),T=tok(ck),ts=" "+T.join(" ")+" ";if(ck.length<4)return null;
+  const srt=T.slice().sort().join(" ");let m=L.find(e=>tok(canon(e.k)).sort().join(" ")===srt);if(m)return m;
+  let best=null,bl=0,tie=false;for(const e of L){const E=tok(canon(e.k)),es=E.join(" ");if(es.length<3||T.length-E.length>3||T.length<=E.length)continue;if(ts.includes(" "+es+" ")){if(es.length>bl){best=e;bl=es.length;tie=false}else if(es.length===bl&&e.name!==best.name)tie=true}}
+  if(best&&!tie)return best;
+  if(T.join(" ").length<5)return null;const hits=new Set();let h=null;for(const e of L){const es=" "+tok(canon(e.k)).join(" ")+" ";if(es.includes(ts)){hits.add(e.name);h=e}}
+  return hits.size===1?h:null}
 /*DATA-END*/
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const BUILD="1794957055";
+const BUILD="1794957561";
 /* phones can hold on to an old copy of this page; if a newer build is live, load it (only from the title screen, never mid-dive) */
 (async()=>{try{const v=(await (await fetch(new URL("version.txt",document.baseURI).href+"?"+Date.now(),{cache:"no-store"})).text()).trim();if(/^\d+$/.test(v)&&+v>+BUILD&&new URLSearchParams(location.search).get("v")!==v&&(typeof S==="undefined"||S.phase==="title"||S.res.length>=7)){const q=new URLSearchParams(location.search);q.set("v",v);location.replace(location.pathname+"?"+q.toString()+location.hash)}}catch(e){}})();
 /* Club devices only: the name list and the Club board are for the seven players. A device becomes a Club device by opening the Club link (?club=CODE) or typing the Club code once; everyone else is a guest. Devices that already finished Club dive #1 are let in. */
@@ -376,7 +386,7 @@ function frame(now){
   if(S.phase!=="title"){$("hd").textContent=fmt(Math.max(0,S.cy))+"m"}
   // clock
   if(S.phase==="ready"){const left=Math.ceil((S.readyAt-now)/1000);if(left<=0){S.phase="input";S.tEnd=now+25000;$("go").disabled=false;$("msg").textContent=""}else if(!S.msgLock)$("msg").textContent="read it… the clock starts in "+left}
-  if(S.phase==="input"){const left=Math.max(0,(S.tEnd-now)/1000),sec=Math.ceil(left);if($("secs").textContent!=sec){$("secs").textContent=sec;if(sec<=5&&sec>0)blip(880,.05,"square",.04)}$("arc").style.strokeDashoffset=138.2*(1-left/25);$("ring").classList.toggle("hot",left<=5);if(left<=0){const v=$("ans").value.trim();if(v)S.last=v;resolve(v?findAnswer(S.i,v):null)}}
+  if(S.phase==="input"){const left=Math.max(0,(S.tEnd-now)/1000),sec=Math.ceil(left);if($("secs").textContent!=sec){$("secs").textContent=sec;if(sec<=5&&sec>0)blip(880,.05,"square",.04)}$("arc").style.strokeDashoffset=138.2*(1-left/25);$("ring").classList.toggle("hot",left<=5);if(left<=0){const v=$("ans").value.trim();if(v)S.last=v;const tm=v?findAnswer(S.i,v):null;if(v&&!tm)logMiss(v);resolve(tm)}}
   requestAnimationFrame(frame);
 }
 
@@ -387,9 +397,12 @@ function startRound(i){S.seen=Math.max(S.seen,i);save();S.i=i;S.phase="ready";S.
   $("qn").textContent="PROMPT "+(i+1)+" OF 7";$("q").textContent=DAY[i].q;$("ans").value="";$("go").disabled=true;$("secs").textContent="25";$("arc").style.strokeDashoffset=0;$("ring").classList.remove("hot");
   show("res",false);show("next",false);show("play",true);pips();try{$("ans").focus({preventScroll:true})}catch(e){}}
 $("bar").addEventListener("submit",ev=>{ev.preventDefault();if(S.phase!=="input")return;const v=$("ans").value.trim();if(!v)return;S.last=v;const m=findAnswer(S.i,v);
-  if(!m){$("msg").textContent="“"+v+"” isn't on the list. Try another.";S.msgLock=true;$("ans").classList.remove("shake");void $("ans").offsetWidth;$("ans").classList.add("shake");$("ans").select();blip(140,.15,"sawtooth",.04);return}
+  if(!m){logMiss(v);$("msg").textContent="“"+v+"” isn't on the list. Try another.";S.msgLock=true;$("ans").classList.remove("shake");void $("ans").offsetWidth;$("ans").classList.add("shake");$("ans").select();blip(140,.15,"sawtooth",.04);return}
   if(m.fuzzy){S.fix={from:v,to:m.name};$("ans").value=m.name;S.msgLock=true;$("msg").innerHTML="“"+esc(v)+"” → <b style=\"color:var(--glow)\">“"+esc(m.name)+"”</b><br>tap DIVE again to confirm, or edit";blip(620,.08,"square",.04);return}
   resolve(m)});
+/* answers the list turned down are noted (dive, prompt, what was typed) so gaps in the lists get found and filled */
+const MISSED=new Set();function logMiss(v){try{const k=DIVE_N+"|"+S.i+"|"+norm(v);if(MISSED.has(k)||v.length>80)return;MISSED.add(k);
+  fetch(SBASE+"krillst0ne_stage",{method:"POST",headers:{apikey:SBK,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({key:"miss-"+DIVE_N+"-"+(S.i+1),data:JSON.stringify({a:v,who:GUEST?"guest":($("who").value||"")})})}).catch(()=>{})}catch(e){}}
 function resolve(m){if(S.phase!=="input")return;S.phase="reveal";$("ans").blur();show("play",false);
   const pts=m?m.pts:0,name=m?m.name:(S.last||"no answer"),d0=S.depth,d1=d0+pts*10;
   const gates=ORDER.map(p=>({pts:p,d:d0+p*10,hit:0}));
