@@ -247,7 +247,7 @@ const LAUNCH="2026-11-13";
 const TODAY=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Los_Angeles"}).format(new Date());
 const DIVE_N=Math.round((Date.parse(TODAY)-Date.parse(LAUNCH))/864e5)+1;
 let DAY=null,INDEX=[];const NUM="#"+String(DIVE_N).padStart(3,"0");
-function norm(s){return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/&/g," and ").replace(/['’.]/g,"").replace(/[^a-z0-9]+/g," ").trim().replace(/^(the|a|an) /,"")}
+function norm(s){return s.toLowerCase().replace(/đ/g,"d").replace(/ø/g,"o").replace(/ł/g,"l").replace(/ß/g,"ss").replace(/æ/g,"ae").replace(/œ/g,"oe").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/&/g," and ").replace(/['’.]/g,"").replace(/[^a-z0-9]+/g," ").trim().replace(/^(the|a|an) /,"")}
 function lev(a,b){if(Math.abs(a.length-b.length)>2)return 9;const p=[];for(let j=0;j<=b.length;j++)p[j]=j;for(let i=1;i<=a.length;i++){let d=p[0];p[0]=i;for(let j=1;j<=b.length;j++){const t=p[j];p[j]=Math.min(p[j]+1,p[j-1]+1,d+(a[i-1]===b[j-1]?0:1));d=t}}return p[b.length]}
 function setDay(d){DAY=d;INDEX=d.map(r=>{const list=[];for(const pts of ORDER){for(const ent of (r.t[pts]||"").split(";").filter(Boolean)){const al=ent.split("|");const name=al[0];for(const a of al)list.push({k:norm(a),name,pts})}}return list})}
 const LEAD=/^(long haired|longhaired|short haired|shorthaired|wire haired|wirehaired|smooth haired|rough haired|curly haired|long coated|smooth coated|rough coated|miniature|mini|toy|teacup|standard|giant|dwarf|baby|purebred) /;
@@ -273,7 +273,7 @@ function findCore(round,k){const L=INDEX[round];const sing=x=>x.replace(/s$/,"")
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const BUILD="1794876015";
+const BUILD="1794957055";
 /* phones can hold on to an old copy of this page; if a newer build is live, load it (only from the title screen, never mid-dive) */
 (async()=>{try{const v=(await (await fetch(new URL("version.txt",document.baseURI).href+"?"+Date.now(),{cache:"no-store"})).text()).trim();if(/^\d+$/.test(v)&&+v>+BUILD&&new URLSearchParams(location.search).get("v")!==v&&(typeof S==="undefined"||S.phase==="title"||S.res.length>=7)){const q=new URLSearchParams(location.search);q.set("v",v);location.replace(location.pathname+"?"+q.toString()+location.hash)}}catch(e){}})();
 /* Club devices only: the name list and the Club board are for the seven players. A device becomes a Club device by opening the Club link (?club=CODE) or typing the Club code once; everyone else is a guest. Devices that already finished Club dive #1 are let in. */
