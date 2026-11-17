@@ -256,12 +256,16 @@ function findAnswer(round,raw){let k=norm(raw);if(!k)return null;let m=findCore(
   while(!m&&LEAD.test(k)){k=k.replace(LEAD,"");if(k.length<4)break;m=findCore(round,k);if(m)m=Object.assign({},m,{fuzzy:true})}
   return m}
 function canon(k){return k.replace(/\bmt\b/g,"mount").replace(/\bmtn\b/g,"mountain").replace(/\bst\b/g,"saint").replace(/\bft\b/g,"fort").replace(/\bmts\b/g,"mountains")}
+const TRAIL=/ (cat|cats|dog|dogs|breed|cheese|beer|wine|tree|trees|fish|bird|flower|plant|river|lake|island|islands|sea|desert|bridge|soup|bread|pasta|sauce|salad|pie|cake|cookie|cookies|candy|sausage|car|cars|airlines|airline|airways|university|college|the movie|movie|film|song|album|musical|opera|dance|font|hat|horse|monkey|dinosaur|volcano|national park|park)$/;
+function trail(k){return k.replace(TRAIL,"")}
 function bare(k){return k.replace(/^(mount|mont|monte|mountain) /,"").replace(/ (mountain|mount|peak|volcano)$/,"")}
 function findCore(round,k){const L=INDEX[round];const sing=x=>x.replace(/s$/,"");
   let m=L.find(e=>e.k===k)||L.find(e=>sing(e.k)===sing(k));if(m)return m;
   /* "Mt Hood", "Mt. St Helens", "Rainier Mountain", "Mount Fuji" for "Fuji": spell out the usual abbreviations, then compare with the Mount/Mountain/Peak wrapper taken off */
   const ck=canon(k);m=L.find(e=>canon(e.k)===ck);if(m)return m;
   const bk=bare(ck);if(bk.length>=3){m=L.find(e=>bare(canon(e.k))===bk);if(m)return m}
+  /* "Manx cat", "Brie cheese", "Nile river": a trailing category word is not a miss */
+  const tk=trail(ck);if(tk!==ck&&tk.length>=3){m=L.find(e=>e.k===tk||trail(canon(e.k))===tk);if(m)return m}
   const max=ck.length>=13?3:ck.length>=8?2:ck.length>=4?1:0;if(!max)return null;
   let best=null,bd=9,tie=false;for(const e of L){const d=lev(ck,canon(e.k));if(d<bd){bd=d;best=e;tie=false}else if(d===bd&&best&&e.name!==best.name)tie=true}
   return bd<=max&&!tie?Object.assign({fuzzy:true},best):null}
@@ -269,7 +273,7 @@ function findCore(round,k){const L=INDEX[round];const sing=x=>x.replace(/s$/,"")
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const BUILD="1794875518";
+const BUILD="1794876015";
 /* phones can hold on to an old copy of this page; if a newer build is live, load it (only from the title screen, never mid-dive) */
 (async()=>{try{const v=(await (await fetch(new URL("version.txt",document.baseURI).href+"?"+Date.now(),{cache:"no-store"})).text()).trim();if(/^\d+$/.test(v)&&+v>+BUILD&&new URLSearchParams(location.search).get("v")!==v&&(typeof S==="undefined"||S.phase==="title"||S.res.length>=7)){const q=new URLSearchParams(location.search);q.set("v",v);location.replace(location.pathname+"?"+q.toString()+location.hash)}}catch(e){}})();
 /* Club devices only: the name list and the Club board are for the seven players. A device becomes a Club device by opening the Club link (?club=CODE) or typing the Club code once; everyone else is a guest. Devices that already finished Club dive #1 are let in. */
