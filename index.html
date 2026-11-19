@@ -317,7 +317,7 @@ function sea(c){
   const mx=Math.max(...c.list.map(s=>s.avg)),topv=Math.min(700,Math.max(250,Math.ceil(mx*1.25/50)*50)),step=topv>400?100:50;
   let h='';for(let v=0;v<=topv;v+=step)h+=`<div class="tick" style="top:${v/topv*100}%"><span>${v?fm(v)+' pts':'surface'}</span></div>`;
   for(const [v,l,p] of [[70,'all 🫧',10],[210,'all 🐟',30],[420,'all 🦑',60],[595,'all 🏮',85]])if(v<=topv)h+=`<div class="ref" style="top:${v/topv*100}%;--c:${TP[p].c}"><span>${l}</span></div>`;
-  h+='<div class="cols">'+state.players.map(p=>{const s=c.P[p.id];if(!s.n)return `<div class="col" style="--c:${p.c}"><div class="diver" style="top:0;opacity:.45">${av(p)}</div><div class="lab"><b>${esc(p.short)}</b><i>deck</i></div></div>`;
+  h+='<div class="cols">'+state.players.filter(p=>ui.game!=='krillst0ne'||c.P[p.id].n).map(p=>{const s=c.P[p.id];if(!s.n)return `<div class="col" style="--c:${p.c}"><div class="diver" style="top:0;opacity:.45">${av(p)}</div><div class="lab"><b>${esc(p.short)}</b><i>deck</i></div></div>`;
     const y=s.avg/topv*100;return `<div class="col" style="--c:${p.c}"><div class="rope" style="height:${y}%"></div><div class="diver" style="top:${y}%">${av(p)}</div><div class="lab"><b>${esc(p.short)}</b><i data-count="${Math.round(s.avg)}">${fm(s.avg)}</i></div></div>`}).join('')+'</div>';
   let bub='';for(let i=0;i<18;i++){const r=(i*7919%97)/97,r2=(i*104729%89)/89;bub+=`<span class="bub" style="left:${(4+r*92).toFixed(1)}%;--s:${2+Math.round(r2*4)}px;--d:${(7+r2*9).toFixed(1)}s;--dl:-${(r*14).toFixed(1)}s"></span>`}
   return `<div class="sea">${bub}<div class="water">${h}</div></div>`;
