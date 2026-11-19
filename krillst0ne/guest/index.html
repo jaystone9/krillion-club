@@ -283,7 +283,7 @@ function loose(L,ck){const tok=x=>x.split(" ").map(w=>w.length>3?w.replace(/s$/,
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const BUILD="1794957561";
+const BUILD="1795104809";
 /* phones can hold on to an old copy of this page; if a newer build is live, load it (only from the title screen, never mid-dive) */
 (async()=>{try{const v=(await (await fetch(new URL("version.txt",document.baseURI).href+"?"+Date.now(),{cache:"no-store"})).text()).trim();if(/^\d+$/.test(v)&&+v>+BUILD&&new URLSearchParams(location.search).get("v")!==v&&(typeof S==="undefined"||S.phase==="title"||S.res.length>=7)){const q=new URLSearchParams(location.search);q.set("v",v);location.replace(location.pathname+"?"+q.toString()+location.hash)}}catch(e){}})();
 /* Club devices only: the name list and the Club board are for the seven players. A device becomes a Club device by opening the Club link (?club=CODE) or typing the Club code once; everyone else is a guest. Devices that already finished Club dive #1 are let in. */
@@ -422,7 +422,7 @@ $("next").onclick=()=>{if(S.phase!=="result")return;audio();if(S.i<6)startRound(
 function audio(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume()}catch(e){}}
 $("begin").onclick=()=>{if(S.res.length>=7||!DAY)return;if(!GUEST&&!$("who").value){showWho(true);$("sub").textContent="PICK YOUR NAME FIRST";$("who").focus();return}audio();show("title",false);show("hud",true);show("snd",true);startRound(S.res.length)};
 function finish(){S.phase="end";S.gatesHold=null;show("res",false);show("next",false);S.surf={d0:S.depth,t0:performance.now(),T:RM?400:2400};pips();setTimeout(buildEnd,RM?300:1700)}
-function shareText(){const w=GUEST?"":$("who").value;return(w?w+"\n":"")+"krillst0ne "+NUM.replace(/#0*/,"#")+" 🦐\n"+S.score+"\n\n"+S.res.map(r=>TIERS[r.pts].e).join("")}
+function shareText(){const w=GUEST?"":$("who").value;return(w?w+"\n":"")+"krillst0ne "+NUM.replace(/#0*/,"#")+" 🦐\n"+S.score+"\n\n"+S.res.map(r=>r.pts===100?"🌟":TIERS[r.pts].e).join("")}
 function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function buildEnd(){
   $("eScore").innerHTML=fmt(S.score)+"<span>-"+fmt(S.score*10)+"m</span>";
@@ -442,7 +442,7 @@ if(!CLUBDEV){const w=document.createElement("div");w.style.cssText="margin:10px 
 $("copy").onclick=()=>copyText(shareText(),$("copy"),"COPIED ✓",$("shareOut"));
 /* past dives finished on this device: score, answers, how it compared, and a copy button. Kept in this browser's storage, so it is per device. */
 function pastList(){const out=[];for(let n=DIVE_N-1;n>=1;n--){let st=null;try{st=JSON.parse(localStorage.getItem("krillst0ne-"+(GUEST?"guest-":"")+"dive-"+n)||"null")}catch(e){}if(st&&Array.isArray(st.res)&&st.res.length>=7)out.push({n,res:st.res,score:st.res.reduce((a,x)=>a+(x.pts||0),0)})}return out}
-function pastShare(d){const w=GUEST?"":$("who").value;return(w?w+"\n":"")+"krillst0ne #"+d.n+" 🦐\n"+d.score+"\n\n"+d.res.map(r=>(TIERS[r.pts]||TIERS[0]).e).join("")}
+function pastShare(d){const w=GUEST?"":$("who").value;return(w?w+"\n":"")+"krillst0ne #"+d.n+" 🦐\n"+d.score+"\n\n"+d.res.map(r=>r.pts===100?"🌟":(TIERS[r.pts]||TIERS[0]).e).join("")}
 async function openPast(){const L=pastList();show("pastLayer",true);$("pastLayer").scrollTop=0;$("pastOut").style.display="none";
   $("pastNote").textContent=L.length?"Every dive you finished on this device. Tap one for your answers.":"No past dives on this device yet. Finish today's dive and it will be kept here from tomorrow on.";
   const day=n=>new Date(Date.parse(LAUNCH)+(n-1)*864e5).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",timeZone:"UTC"});
