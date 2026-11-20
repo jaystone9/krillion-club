@@ -397,7 +397,7 @@ function startRound(i){S.seen=Math.max(S.seen,i);save();S.i=i;S.phase="ready";S.
   $("qn").textContent="PROMPT "+(i+1)+" OF 7";$("q").textContent=DAY[i].q;$("ans").value="";$("go").disabled=true;$("secs").textContent="25";$("arc").style.strokeDashoffset=0;$("ring").classList.remove("hot");
   show("res",false);show("next",false);show("play",true);pips();try{$("ans").focus({preventScroll:true})}catch(e){}}
 $("bar").addEventListener("submit",ev=>{ev.preventDefault();if(S.phase!=="input")return;const v=$("ans").value.trim();if(!v)return;S.last=v;const m=findAnswer(S.i,v);
-  if(!m){logMiss(v);$("msg").textContent="“"+v+"” isn't on the list. Try another.";S.msgLock=true;$("ans").classList.remove("shake");void $("ans").offsetWidth;$("ans").classList.add("shake");$("ans").select();blip(140,.15,"sawtooth",.04);return}
+  if(!m){logMiss(v);$("msg").textContent="“"+v+"” isn't on the list. Try another.";S.msgLock=true;$("ans").classList.remove("shake");void $("ans").offsetWidth;$("ans").classList.add("shake");$("ans").value="";try{$("ans").focus({preventScroll:true})}catch(e){}blip(140,.15,"sawtooth",.04);return}
   if(m.fuzzy){S.fix={from:v,to:m.name};$("ans").value=m.name;S.msgLock=true;$("msg").innerHTML="“"+esc(v)+"” → <b style=\"color:var(--glow)\">“"+esc(m.name)+"”</b><br>tap DIVE again to confirm, or edit";blip(620,.08,"square",.04);return}
   resolve(m)});
 /* answers the list turned down are noted (dive, prompt, what was typed) so gaps in the lists get found and filled */
