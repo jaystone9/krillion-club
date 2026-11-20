@@ -267,7 +267,7 @@ function findCore(round,k){const L=INDEX[round];const sing=x=>x.replace(/s$/,"")
   /* "Manx cat", "Brie cheese", "Nile river": a trailing category word is not a miss */
   const tk=trail(ck);if(tk!==ck&&tk.length>=3){m=L.find(e=>e.k===tk||trail(canon(e.k))===tk);if(m)return m}
   const max=ck.length>=13?3:ck.length>=8?2:ck.length>=4?1:0;
-  if(max){let best=null,bd=9,tie=false;for(const e of L){const d=lev(ck,canon(e.k));if(d<bd){bd=d;best=e;tie=false}else if(d===bd&&best&&e.name!==best.name)tie=true}
+  if(max){let best=null,bd=9,tie=false;for(const e of L){const ce=canon(e.k);const d=Math.min(lev(ck,ce),lev(tk,trail(ce)));if(d<bd){bd=d;best=e;tie=false}else if(d===bd&&best&&e.name!==best.name)tie=true}
     if(bd<=max&&!tie)return Object.assign({fuzzy:true},best)}
   m=loose(L,ck);return m?Object.assign({fuzzy:true},m):null}
 /* forgiving last resort, always shown to the player to confirm: same words in another order ("blue russian"),
@@ -283,7 +283,7 @@ function loose(L,ck){const tok=x=>x.split(" ").map(w=>w.length>3?w.replace(/s$/,
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const BUILD="1795198327";
+const BUILD="1795202156";
 /* phones can hold on to an old copy of this page; if a newer build is live, load it (only from the title screen, never mid-dive) */
 (async()=>{try{const v=(await (await fetch(new URL("version.txt",document.baseURI).href+"?"+Date.now(),{cache:"no-store"})).text()).trim();if(/^\d+$/.test(v)&&+v>+BUILD&&new URLSearchParams(location.search).get("v")!==v&&(typeof S==="undefined"||S.phase==="title"||S.res.length>=7)){const q=new URLSearchParams(location.search);q.set("v",v);location.replace(location.pathname+"?"+q.toString()+location.hash)}}catch(e){}})();
 /* Club devices only: the name list and the Club board are for the seven players. A device becomes a Club device by opening the Club link (?club=CODE) or typing the Club code once; everyone else is a guest. Devices that already finished Club dive #1 are let in. */
