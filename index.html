@@ -423,7 +423,8 @@ function pvPaste(){const {out}=parsePaste($('#paste').value);parsed=out;$('#past
 
 function recap(c){
   const r=ranked(c),md=['🥇','🥈','🥉'],aw=awards(c);
-  return `🌊 KRILLION CLUB · ${rangeName(c.m)}\n${c.dates.length} day${c.dates.length>1?'s':''} played\n\n`+r.map(s=>`${s.rank?md[s.rank-1]||s.rank+'.':'–'} ${s.p.e} ${s.p.name}${s.tied?' (tied)':''} · ${fm(s.avg)} avg · ${s.n} day${s.n>1?'s':''} · overall ${s.qavg!=null?grade(s.qavg):'n/a'}`).join('\n')+`\n\n🏆 TROPHIES\n`+aw.map(a=>`${a.title}: ${a.who} (${a.line})`).join('\n');
+  const ks=ui.game==='krillst0ne';
+  return `${ks?'🧪 KRILLST0NE':'🌊 KRILLION'} RECAP · Krillion Club · ${rangeName(c.m)}\n${c.dates.length} day${c.dates.length>1?'s':''} played\n\n`+r.map(s=>`${s.rank?md[s.rank-1]||s.rank+'.':'–'} ${s.p.e} ${s.p.name}${s.tied?' (tied)':''} · ${fm(s.avg)} avg · ${s.n} day${s.n>1?'s':''} · overall ${s.qavg!=null?grade(s.qavg):'n/a'}`).join('\n')+`\n\n🏆 TROPHIES\n`+aw.map(a=>`${a.title}: ${a.who} (${a.line})`).join('\n');
 }
 
 /* ---------- shell ---------- */
@@ -463,7 +464,7 @@ document.addEventListener('click',e=>{
   if(d.metric){ui.metric=d.metric;render()}
   else if(d.day){ui.day=d.day;render()}
   else if(d.act==='spoil'){(ui.spoil=ui.spoil||{})[d.d]=1;render()}
-  else if(d.act==='recap'){const txt=recap(calc(ui.range));navigator.clipboard.writeText(txt).then(()=>toast('Recap copied. Paste it in the chat.')).catch(()=>{const p=b.closest('.panel');if(!p.querySelector('#recap-txt'))p.insertAdjacentHTML('beforeend','<textarea id="recap-txt" aria-label="Recap text"></textarea>');p.querySelector('#recap-txt').value=txt;toast('Select the text below and copy it.')})}
+  else if(d.act==='recap'){const txt=recap(calc(ui.range));navigator.clipboard.writeText(txt).then(()=>toast((ui.game==='krillst0ne'?'Krillst0ne':'Krillion')+' recap copied. Paste it in the chat.')).catch(()=>{const p=b.closest('.panel');if(!p.querySelector('#recap-txt'))p.insertAdjacentHTML('beforeend','<textarea id="recap-txt" aria-label="Recap text"></textarea>');p.querySelector('#recap-txt').value=txt;toast('Select the '+(ui.game==='krillst0ne'?'Krillst0ne':'Krillion')+' recap below and copy it.')})}
   else if(d.act==='import'){const ok=parsed.filter(r=>r.q);if(!ok.length)return toast('Nothing to save yet.');
     const {known}=parsePaste($('#paste').value);for(const k in known)if(EMO[k]==null)state.emo[k]=known[k];
     for(const r of ok){const day=state.days[r.d]||(state.days[r.d]={prompts:[],scores:{}});day.n=r.num||dateToNum(r.d);day.scores[r.p.id]={q:r.q}}
