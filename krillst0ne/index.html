@@ -172,7 +172,7 @@ body.guest .clubonly,body.guest .who,body.guest #whoSet{display:none!important}
     <div class="sub hide" id="whoSet" style="margin:0 0 12px;color:var(--foam)">DIVING AS <b id="whoName" style="color:var(--amber)"></b> · <button id="whoChange" type="button" style="background:none;border:0;padding:0;color:var(--glow);font:inherit;letter-spacing:inherit;text-decoration:underline">NOT YOU?</button></div>
     <button class="big" id="begin" type="button">▼ DROP IN ▼</button>
     <div class="sub" id="sub">ONE DIVE PER DAY</div>
-    <div class="links"><a class="clubonly" href="https://jaystone9.github.io/krillion-club/" target="_blank" rel="noopener">CLUB STANDINGS ↗</a><a href="https://krillion.io" target="_blank" rel="noopener">THE REAL KRILLION ↗</a><button type="button" id="pastOpen" style="background:none;border:0;padding:0;font-family:var(--display);font-size:10px;letter-spacing:.14em;color:var(--glow);text-decoration:underline">YOUR PAST DIVES</button></div>
+    <div class="links"><a class="clubonly" id="standL" href="https://jaystone9.github.io/krillion-club/" target="_blank" rel="noopener">CLUB STANDINGS ↗</a><a href="https://krillion.io" target="_blank" rel="noopener">THE REAL KRILLION ↗</a><button type="button" id="pastOpen" style="background:none;border:0;padding:0;font-family:var(--display);font-size:10px;letter-spacing:.14em;color:var(--glow);text-decoration:underline">YOUR PAST DIVES</button></div>
   </div>
 
   <div id="play" class="layer hide">
@@ -215,9 +215,9 @@ body.guest .clubonly,body.guest .who,body.guest #whoSet{display:none!important}
     <p class="fine" id="nextIn">One dive per day. The next one opens at midnight Pacific.</p>
     <button class="btn alt" id="pastBtn" type="button">YOUR PAST DIVES</button>
     <button class="btn alt clubonly" id="guestLink" type="button">COPY A LINK FOR SOMEONE OUTSIDE THE CLUB</button>
-    <a class="btn alt clubonly" href="https://jaystone9.github.io/krillion-club/" target="_blank" rel="noopener">KRILLION CLUB STANDINGS ↗</a>
+    <a class="btn alt clubonly" id="standA" href="https://jaystone9.github.io/krillion-club/" target="_blank" rel="noopener">KRILLION CLUB STANDINGS ↗</a>
     <a class="btn alt" href="https://krillion.io" target="_blank" rel="noopener">PLAY THE REAL KRILLION ↗</a>
-    <h2 class="clubonly">TODAY'S CLUB BOARD</h2>
+    <h2 class="clubonly" id="boardH">TODAY'S CLUB BOARD</h2>
     <p class="fine" id="saveMsg" style="margin:0 0 8px;color:var(--amber)"></p>
     <div id="board" class="clubonly"><p class="fine">Loading the board…</p></div>
     <h2>THE CATCH · TAP A ROUND FOR EVERY ANSWER</h2>
@@ -283,15 +283,25 @@ function loose(L,ck){const tok=x=>x.split(" ").map(w=>w.length>3?w.replace(/s$/,
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const BUILD="1795104809";
+const BUILD="1795198327";
 /* phones can hold on to an old copy of this page; if a newer build is live, load it (only from the title screen, never mid-dive) */
 (async()=>{try{const v=(await (await fetch(new URL("version.txt",document.baseURI).href+"?"+Date.now(),{cache:"no-store"})).text()).trim();if(/^\d+$/.test(v)&&+v>+BUILD&&new URLSearchParams(location.search).get("v")!==v&&(typeof S==="undefined"||S.phase==="title"||S.res.length>=7)){const q=new URLSearchParams(location.search);q.set("v",v);location.replace(location.pathname+"?"+q.toString()+location.hash)}}catch(e){}})();
 /* Club devices only: the name list and the Club board are for the seven players. A device becomes a Club device by opening the Club link (?club=CODE) or typing the Club code once; everyone else is a guest. Devices that already finished Club dive #1 are let in. */
-const CLUBH=692343390;function clubHash(v){let x=5381;for(const c of String(v).trim().toLowerCase())x=((x<<5)+x+c.charCodeAt(0))>>>0;return x}
-let CLUBDEV=false;try{const cq=new URLSearchParams(location.search).get("club");if(cq&&clubHash(cq)===CLUBH){localStorage.setItem("krillst0ne-club","1");history.replaceState(null,"",location.pathname+location.hash)}
-  localStorage.removeItem("krillst0ne-guest");CLUBDEV=localStorage.getItem("krillst0ne-club")==="1"||!!localStorage.getItem("krillst0ne-dive-1");if(CLUBDEV)localStorage.setItem("krillst0ne-club","1")}catch(e){}
+const CLUBH=692343390,FAMH=2232555948;function clubHash(v){let x=5381;for(const c of String(v).trim().toLowerCase())x=((x<<5)+x+c.charCodeAt(0))>>>0;return x}
+/* two groups share this game: Krillion Club and Krill Fam. Each has its own code and its own name list; Jay and Marti are in both and can switch. A score is stored once per name, so their one dive counts on both boards. */
+const ROST={club:["Jay","Lauren Jane","Marti","Carolyn","Andrew","Lacey","Emma"],fam:["Jay","Nicole","Ben","Max","Marti","Amir","Ruby","Larry"]};
+const GN={club:{tag:"KRILLION CLUB EDITION",board:"TODAY'S CLUB BOARD",nm:"the Club",stand:"https://jaystone9.github.io/krillion-club/",standT:"KRILLION CLUB STANDINGS ↗",standS:"CLUB STANDINGS ↗",out:"COPY A LINK FOR SOMEONE OUTSIDE THE CLUB"},fam:{tag:"KRILL FAM EDITION",board:"TODAY'S FAM BOARD",nm:"Krill Fam",stand:"https://jaystone9.github.io/krill-fam/",standT:"KRILL FAM STANDINGS ↗",standS:"FAM STANDINGS ↗",out:"COPY A LINK FOR SOMEONE OUTSIDE KRILL FAM"}};
+let HASC=false,HASF=false,GRP=null;try{const q=new URLSearchParams(location.search),cq=q.get("club"),fq=q.get("fam");
+  if(cq&&clubHash(cq)===CLUBH)localStorage.setItem("krillst0ne-club","1");if(fq&&clubHash(fq)===FAMH)localStorage.setItem("krillst0ne-fam","1");
+  if((cq||fq)&&history.replaceState){q.delete("club");q.delete("fam");const qs=q.toString();history.replaceState(null,"",location.pathname+(qs?"?"+qs:"")+location.hash)}
+  localStorage.removeItem("krillst0ne-guest");HASC=localStorage.getItem("krillst0ne-club")==="1"||!!localStorage.getItem("krillst0ne-dive-1");if(HASC)localStorage.setItem("krillst0ne-club","1");HASF=localStorage.getItem("krillst0ne-fam")==="1";
+  const g=localStorage.getItem("krillst0ne-group");GRP=HASC&&HASF?(g==="fam"?"fam":"club"):HASC?"club":HASF?"fam":null}catch(e){}
+const CLUBDEV=!!GRP;
 const URLGUEST=/^#guest/i.test(location.hash)||/[?&]guest\b/i.test(location.search)||/\/guest\/?(index\.html)?$/i.test(location.pathname);
 const GUEST=!CLUBDEV||URLGUEST;if(GUEST)document.body.classList.add("guest");addEventListener("hashchange",()=>location.reload());
+const G=GN[GRP||"club"],RO=GRP?ROST[GRP]:[];
+$("who").innerHTML='<option value="">pick your name</option>'+RO.map(n=>"<option>"+n+"</option>").join("");
+$("boardH").textContent=G.board;$("standA").href=G.stand;$("standA").textContent=G.standT;$("standL").href=G.stand;$("standL").textContent=G.standS;$("guestLink").textContent=G.out;
 const cv=$("sea"),cx=cv.getContext("2d");
 let W=0,H=0,DPR=1;
 function size(){const r=cv.getBoundingClientRect();DPR=Math.min(2,window.devicePixelRatio||1);W=r.width;H=r.height;cv.width=W*DPR;cv.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0)}
@@ -431,14 +441,23 @@ function buildEnd(){
   $("bear").innerHTML=BEAR.map(x=>"<tr"+(x===b?" class=\"on\"":"")+"><td>"+x[0]+(x[1]===700?"+":"–"+x[1])+"</td><td>"+x[2]+"</td></tr>").join("");
   $("catch").innerHTML=S.res.map((r,i)=>{const d=DAY[r.round];let h="";for(const p of ORDER.slice().reverse()){const T=TIERS[p];if(!(d.t[p]||"").split(";").filter(Boolean).length)continue;h+="<h3 style=\"color:"+T.c+"\">"+T.e+" "+T.n+" · +"+p+" · "+(function(){const all=d.t[p].split(";").filter(Boolean).map(e=>e.split("|")[0]);let show=all.slice(0,150);if(r.pts===p&&!show.includes(r.name))show.unshift(r.name);return all.length+"</h3><p>"+show.map(n=>n===r.name&&r.pts===p?"<mark>"+esc(n)+" · YOU</mark>":esc(n)).join(", ")+(all.length>show.length?" <b>and "+(all.length-show.length).toLocaleString("en-US")+" more</b>":"")+"</p>"})();for(const n in d.notes){if(d.t[p].split(";").some(e=>e.split("|")[0]===n))h+="<i>"+esc(n)+": "+esc(d.notes[n])+"</i>"}}
     return"<details><summary><span>"+TIERS[r.pts].e+"</span><span><small>"+esc(r.q)+"</small><span>"+esc(r.name)+"</span></span><b>"+r.pts+"</b></summary><div class=\"al\">"+h+"</div></details>"}).join("");
-  $("shareOut").style.display="none";$("copy").textContent="COPY RESULT";if(S.posted&&!GUEST){$("saveMsg").textContent="Score saved to the Club ✓";loadBoard()}else postScore();showCurve();$("end").scrollTop=0;show("end",true);show("hud",false);show("snd",false)}
+  $("shareOut").style.display="none";$("copy").textContent="COPY RESULT";if(S.posted&&!GUEST){$("saveMsg").textContent="Score saved to "+G.nm+" ✓";loadBoard()}else postScore();showCurve();$("end").scrollTop=0;show("end",true);show("hud",false);show("snd",false)}
 function copyText(txt,btn,done,box){const fall=()=>{if(box){box.value=txt;box.style.display="block";box.focus();box.select()}btn.textContent="SELECT AND COPY BELOW"};try{navigator.clipboard.writeText(txt).then(()=>{btn.textContent=done},fall)}catch(e){fall()}}
 $("guestLink").onclick=()=>copyText("Try today's krillst0ne dive: https://jaystone9.github.io/krillion-club/krillst0ne/guest/",$("guestLink"),"LINK COPIED ✓",$("shareOut"));
-if(GUEST)$("tag").textContent="THE DAILY DIVE · GUEST";
-if(!CLUBDEV){const w=document.createElement("div");w.style.cssText="margin:10px auto 0;font-size:11px;letter-spacing:.08em";w.innerHTML='<button type="button" id="clubAsk" style="background:none;border:0;padding:0;color:var(--glow);font:inherit;letter-spacing:inherit;text-decoration:underline">IN THE CLUB? ENTER THE CLUB CODE</button><span id="clubForm" style="display:none"><input id="clubCode" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="club code" style="width:9.5em;padding:6px 8px;background:#0b1c26;border:1px solid var(--glow);color:var(--foam);font:inherit"> <button type="button" id="clubGo" style="padding:6px 10px;background:var(--glow);border:0;color:#061016;font:inherit">GO</button> <span id="clubNo" style="color:var(--amber)"></span></span>';$("tag").insertAdjacentElement("afterend",w);
-  $("clubAsk").onclick=()=>{$("clubAsk").style.display="none";$("clubForm").style.display="";$("clubCode").focus()};
-  const tryCode=()=>{if(clubHash($("clubCode").value)===CLUBH){try{localStorage.setItem("krillst0ne-club","1")}catch(e){}location.href=location.pathname.replace(/guest\/?(index\.html)?$/i,"")}else $("clubNo").textContent="Not the code."};
-  $("clubGo").onclick=tryCode;$("clubCode").onkeydown=e=>{if(e.key==="Enter")tryCode()}}
+if(GUEST)$("tag").textContent="THE DAILY DIVE · GUEST";else $("tag").textContent=G.tag;
+{const w=document.createElement("div");w.style.cssText="margin:10px auto 0;font-size:11px;letter-spacing:.08em";
+  const btn='background:none;border:0;padding:0;color:var(--glow);font:inherit;letter-spacing:inherit;text-decoration:underline',sw=(on)=>'padding:5px 10px;border:1px solid var(--glow);font:inherit;letter-spacing:inherit;cursor:pointer;'+(on?'background:var(--glow);color:#061016':'background:none;color:var(--glow)');
+  const lbl=!CLUBDEV?"IN THE CLUB OR KRILL FAM? ENTER YOUR CODE":"IN THE OTHER GROUP TOO? ENTER ITS CODE";
+  w.innerHTML=(HASC&&HASF&&!URLGUEST?'<div style="margin-bottom:8px">VIEWING <button type="button" id="grpClub" style="'+sw(GRP==="club")+'">CLUB</button> <button type="button" id="grpFam" style="'+sw(GRP==="fam")+'">KRILL FAM</button></div>':"")
+   +((HASC&&HASF)?"":'<button type="button" id="clubAsk" style="'+btn+'">'+lbl+'</button><span id="clubForm" style="display:none"><input id="clubCode" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="your code" style="width:9.5em;padding:6px 8px;background:#0b1c26;border:1px solid var(--glow);color:var(--foam);font:inherit"> <button type="button" id="clubGo" style="padding:6px 10px;background:var(--glow);border:0;color:#061016;font:inherit">GO</button> <span id="clubNo" style="color:var(--amber)"></span></span>');
+  $("tag").insertAdjacentElement("afterend",w);
+  const pick=g=>{try{localStorage.setItem("krillst0ne-group",g)}catch(e){}location.reload()};
+  if($("grpClub")){$("grpClub").onclick=()=>pick("club");$("grpFam").onclick=()=>pick("fam")}
+  if($("clubAsk")){$("clubAsk").onclick=()=>{$("clubAsk").style.display="none";$("clubForm").style.display="";$("clubCode").focus()};
+  const tryCode=()=>{const hv=clubHash($("clubCode").value);let g=null;if(hv===CLUBH)g="club";else if(hv===FAMH)g="fam";
+    if(!g){$("clubNo").textContent="Not the code.";return}
+    try{localStorage.setItem(g==="club"?"krillst0ne-club":"krillst0ne-fam","1");localStorage.setItem("krillst0ne-group",g)}catch(e){}location.href=location.pathname.replace(/guest\/?(index\.html)?$/i,"")};
+  $("clubGo").onclick=tryCode;$("clubCode").onkeydown=e=>{if(e.key==="Enter")tryCode()}}}
 $("copy").onclick=()=>copyText(shareText(),$("copy"),"COPIED ✓",$("shareOut"));
 /* past dives finished on this device: score, answers, how it compared, and a copy button. Kept in this browser's storage, so it is per device. */
 function pastList(){const out=[];for(let n=DIVE_N-1;n>=1;n--){let st=null;try{st=JSON.parse(localStorage.getItem("krillst0ne-"+(GUEST?"guest-":"")+"dive-"+n)||"null")}catch(e){}if(st&&Array.isArray(st.res)&&st.res.length>=7)out.push({n,res:st.res,score:st.res.reduce((a,x)=>a+(x.pts||0),0)})}return out}
@@ -470,13 +489,13 @@ function sb(q,opt){return fetch(SB+q,Object.assign({headers:{apikey:SBK,"Content
 async function postScore(){if(GUEST){$("saveMsg").textContent="Guest dive. Your score stays on this device.";return}const w=$("who").value;if(!w||S.res.length<7){$("saveMsg").textContent=w?"":"No name was picked, so this score was not saved. Copy your result and send it to Jay.";loadBoard();return}
   $("saveMsg").textContent="Saving your score…";
   try{const r=await sb("",{method:"POST",body:JSON.stringify({dive:DIVE_N,player:w,score:S.score,tiers:S.res.map(r=>r.pts),answers:S.res.map(r=>String(r.name).slice(0,60))})});
-    if(r.ok||r.status===409){S.posted=true;save();$("saveMsg").textContent=r.ok?"Score saved to the Club ✓":"The Club already has a dive from "+w+" today, so that one stands."}else throw 0}
+    if(r.ok||r.status===409){S.posted=true;save();$("saveMsg").textContent=r.ok?"Score saved to "+G.nm+" ✓":(G.nm==="the Club"?"The Club":G.nm)+" already has a dive from "+w+" today, so that one stands."}else throw 0}
   catch(e){$("saveMsg").textContent="Could not save your score. Copy your result and send it to Jay."}
   loadBoard()}
-async function loadBoard(){if(GUEST)return;try{const rows=await (await sb("?dive=eq."+DIVE_N+"&select=player,score,tiers,answers&order=score.desc")).json();if(!Array.isArray(rows))throw 0;const w=$("who").value;
+async function loadBoard(){if(GUEST)return;try{let rows=await (await sb("?dive=eq."+DIVE_N+"&select=player,score,tiers,answers&order=score.desc")).json();if(!Array.isArray(rows))throw 0;rows=rows.filter(r=>RO.includes(r.player));const w=$("who").value;
     /* tap a name to see what that player answered, round by round (the board only shows after your own dive is done) */
     const det=r=>"<div class=\"ans\" hidden>"+r.tiers.map((t,k)=>{const T=TIERS[t]||TIERS[0],a=(r.answers&&r.answers[k])||"";return "<div><span>"+T.e+"</span><span><i>"+esc(DAY&&DAY[k]?DAY[k].q:"Round "+(k+1))+"</i>"+(a?esc(a):"<em>no answer</em>")+"</span><b>"+t+"</b></div>"}).join("")+"</div>";
-    $("board").innerHTML=(rows.length?"<p class=\"fine\" style=\"margin:0 0 4px\">Tap a name to see their answers.</p>"+rows.map((r,i)=>"<div class=\"r"+(r.player===w?" me":"")+"\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\"><span>"+(i+1)+"</span><span>"+esc(r.player)+" <small>▸</small></span><span>"+r.tiers.map(t=>(TIERS[t]||TIERS[0]).e).join("")+"</span><b>"+r.score+"</b></div>"+det(r)).join(""):"")+"<p class=\"fine\">"+rows.length+" of 7 have dived today.</p>";
+    $("board").innerHTML=(rows.length?"<p class=\"fine\" style=\"margin:0 0 4px\">Tap a name to see their answers.</p>"+rows.map((r,i)=>"<div class=\"r"+(r.player===w?" me":"")+"\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\"><span>"+(i+1)+"</span><span>"+esc(r.player)+" <small>▸</small></span><span>"+r.tiers.map(t=>(TIERS[t]||TIERS[0]).e).join("")+"</span><b>"+r.score+"</b></div>"+det(r)).join(""):"")+"<p class=\"fine\">"+rows.length+" of "+RO.length+" have dived today.</p>";
     $("board").onclick=e=>{const row=e.target.closest(".r");if(!row)return;const d=row.nextElementSibling;if(!d||!d.classList.contains("ans"))return;const open=d.hidden;d.hidden=!open;row.setAttribute("aria-expanded",open?"true":"false");const c=row.querySelector("small");if(c)c.textContent=open?"▾":"▸"};
     $("board").onkeydown=e=>{if((e.key==="Enter"||e.key===" ")&&e.target.classList&&e.target.classList.contains("r")){e.preventDefault();e.target.click()}}}
   catch(e){$("board").innerHTML="<p class=\"fine\">The board could not be loaded right now.</p>"}}
