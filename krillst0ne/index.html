@@ -283,7 +283,7 @@ function loose(L,ck){const tok=x=>x.split(" ").map(w=>w.length>3?w.replace(/s$/,
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const BUILD="1795202206";
+const BUILD="1795202666";
 /* phones can hold on to an old copy of this page; if a newer build is live, load it (only from the title screen, never mid-dive) */
 (async()=>{try{const v=(await (await fetch(new URL("version.txt",document.baseURI).href+"?"+Date.now(),{cache:"no-store"})).text()).trim();if(/^\d+$/.test(v)&&+v>+BUILD&&new URLSearchParams(location.search).get("v")!==v&&(typeof S==="undefined"||S.phase==="title"||S.res.length>=7)){const q=new URLSearchParams(location.search);q.set("v",v);location.replace(location.pathname+"?"+q.toString()+location.hash)}}catch(e){}})();
 /* Club devices only: the name list and the Club board are for the seven players. A device becomes a Club device by opening the Club link (?club=CODE) or typing the Club code once; everyone else is a guest. Devices that already finished Club dive #1 are let in. */
@@ -492,7 +492,7 @@ async function postScore(){if(GUEST){$("saveMsg").textContent="Guest dive. Your 
     if(r.ok||r.status===409){S.posted=true;save();$("saveMsg").textContent=r.ok?"Score saved to "+G.nm+" ✓":(G.nm==="the Club"?"The Club":G.nm)+" already has a dive from "+w+" today, so that one stands."}else throw 0}
   catch(e){$("saveMsg").textContent="Could not save your score. Copy your result and send it to Jay."}
   loadBoard()}
-async function loadBoard(){if(GUEST)return;try{const all=await (await sb("?dive="+DIVE_N+"&select=player,score,tiers,answers&order=score.desc")).json();if(!Array.isArray(all))throw 0;const w=$("who").value;
+async function loadBoard(){if(GUEST)return;try{const all=await (await sb("?dive=eq."+DIVE_N+"&select=player,score,tiers,answers&order=score.desc")).json();if(!Array.isArray(all))throw 0;const w=$("who").value;
     /* Jay and Marti play in both groups: once they have finished, their results screen shows the Club board and the Fam board together. Everyone else sees only their own group. */
     const BOTH=!!w&&(w==="Jay"||w==="Marti"),gs=BOTH?(GRP==="fam"?["fam","club"]:["club","fam"]):[GRP||"club"];
     /* tap a name to see what that player answered, round by round (the board only shows after your own dive is done) */
