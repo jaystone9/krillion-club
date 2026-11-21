@@ -214,6 +214,30 @@ body.ks{--sea:#0c3340;--abyss:#061016;--line:#1f4450;--rule:#2f6a78;--ink:#e9f5f
 body.ks h1{font-family:"Silkscreen",var(--pixel);text-transform:none;font-size:clamp(34px,10.5vw,72px);letter-spacing:.02em;text-shadow:3px 3px 0 #0a2a33}
 body.ks h1 em{font-style:normal;color:var(--pink)}
 body.ks .head p{color:#fff}
+
+.seam{display:none}
+@media (max-width:520px){
+  .sea{display:none}
+  .seam{display:block;background:linear-gradient(90deg,#3A6076 0,#1C3654 9%,#0D1C3A 38%,var(--abyss) 100%);border:2px solid var(--line);padding:6px 10px 10px 8px;margin-top:10px}
+  .mhead{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);text-align:right;padding:2px 2px 4px 74px}
+  .mrow{display:grid;grid-template-columns:70px 1fr;align-items:center;height:50px}
+  .mname{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .mname b{font:600 10px/1 var(--body);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mname i{font:500 15px/1 var(--display);font-style:normal;color:var(--c);font-variant-numeric:tabular-nums}
+  .mrow.deck .mname i{font:500 10px/1.1 var(--body);color:var(--dim);letter-spacing:.04em}
+  .mtrack{position:relative;height:100%;margin:0 19px}
+  .mgrid{position:absolute;inset:0}
+  .mt{position:absolute;top:0;bottom:0;border-left:1px dashed rgba(132,151,194,.22)}
+  .mref{position:absolute;top:0;bottom:0;border-left:1px solid var(--c);opacity:.45}
+  .mref span{position:absolute;top:1px;left:3px;font-size:9px}
+  .mrope{position:absolute;left:0;top:50%;height:0;border-top:2px solid var(--c);opacity:.7;animation:mrope 1.2s cubic-bezier(.2,.7,.2,1) backwards}
+  .mdiver{position:absolute;top:50%;transform:translate(-50%,-50%);z-index:1;animation:mdive 1.2s cubic-bezier(.2,.7,.2,1) backwards}
+  .mdiver .av{width:34px;height:34px}
+  .mrow.deck .mdiver{opacity:.5}
+  .mdeck{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:10px 2px 2px;border-top:1px solid rgba(132,151,194,.2);margin-top:6px}
+  @keyframes mrope{from{width:0}}@keyframes mdive{from{left:0}}
+}
+@media (prefers-reduced-motion:reduce){.mrope,.mdiver{animation:none}}
 </style>
 </head>
 <body>
@@ -275,16 +299,17 @@ function calc(m){
     s.qavg=s.qn?Object.entries(s.tiers).reduce((a,[v,c])=>a+v*c,0)/s.qn:null;
   }
   const list=Object.values(P).filter(s=>s.n);
-  return {m,dates,P,list,prompts,open,need:Math.max(1,Math.ceil(dates.length/2)),genres:Object.keys(GEN).filter(g=>list.some(s=>s.genre[g]))};
+  return {m,dates,P,list,prompts,open,need:3,genres:Object.keys(GEN).filter(g=>list.some(s=>s.genre[g]))};
 }
 const TBW=[[s=>s.wins,'more daily wins'],[s=>s.tiers[100]||0,'more One in a Krillion answers'],[s=>s.tiers[85]||0,'more Deep Cuts'],[s=>s.tiers[60]||0,'more Rare answers'],[s=>s.tiers[30]||0,'more Schoolers']];
 const tbs=k=>[k==='total'?[s=>s.avg,'a better daily average']:[s=>s.total,'more total points'],...TBW];
 const prim=(s,k)=>k==='total'?s.total:s.avg;
 function cmpRank(a,b,k){const d=prim(b,k)-prim(a,k);if(d)return d;for(const [f] of tbs(k)){const x=f(b)-f(a);if(x)return x}return 0}
-function ranked(c,k){const any=c.list.some(s=>s.n>=c.need),ok=s=>k==='total'||!any||s.n>=c.need,r=c.list.filter(ok).sort((a,b)=>cmpRank(a,b,k)),u=c.list.filter(s=>!ok(s)).sort((a,b)=>cmpRank(a,b,k));
+const qual=(c,s)=>s.n>=c.need||!c.list.some(x=>x.n>=c.need);
+function ranked(c,k){const ok=s=>k==='total'||qual(c,s),r=c.list.filter(ok).sort((a,b)=>cmpRank(a,b,k)),u=c.list.filter(s=>!ok(s)).sort((a,b)=>cmpRank(a,b,k));
   r.forEach((s,i)=>{const q=r[i-1];s.rank=i&&cmpRank(q,s,k)===0?q.rank:i+1;s.tied=false;s.why=''});
   r.forEach((s,i)=>{const n=r[i+1];if(!n)return;if(n.rank===s.rank){s.tied=n.tied=true}else if(prim(n,k)===prim(s,k)){const w=tbs(k).find(([f])=>f(s)>f(n));s.why=`Tiebreak over ${n.p.short}: ${w[1]}`}});
-  u.forEach(s=>{s.rank=null;s.tied=false;s.why=`Unranked until ${c.need} days are logged`});
+  u.forEach(s=>{s.rank=null;s.tied=false;s.why=`Needs ${c.need} dives to be ranked (${s.n} so far)`});
   return r.concat(u)}
 const bearing=x=>{const t=Math.round(x);return t<=150?'🫧 Plankton':t<=250?'🐟 Schooler':t<=350?'🦑 Rare':t<450?'🏮 Deep cut':'🦐 One in a krillion'};
 function grade(v){const S=[[80,'A+'],[70,'A'],[62,'A-'],[55,'B+'],[48,'B'],[42,'B-'],[36,'C+'],[30,'C'],[25,'C-'],[15,'D']];for(const [m,g] of S)if(v>=m)return g;return 'F'}
@@ -314,22 +339,31 @@ function awards(c){
 
 /* ---------- views ---------- */
 function sea(c){
-  const mx=Math.max(...c.list.map(s=>s.avg)),topv=Math.min(700,Math.max(250,Math.ceil(mx*1.25/50)*50)),step=topv>400?100:50;
+  const mx=Math.max(...c.list.filter(s=>qual(c,s)).map(s=>s.avg)),topv=Math.min(700,Math.max(250,Math.ceil(mx*1.25/50)*50)),step=topv>400?100:50;
   let h='';for(let v=0;v<=topv;v+=step)h+=`<div class="tick" style="top:${v/topv*100}%"><span>${v?fm(v)+' pts':'surface'}</span></div>`;
   for(const [v,l,p] of [[70,'all 🫧',10],[210,'all 🐟',30],[420,'all 🦑',60],[595,'all 🏮',85]])if(v<=topv)h+=`<div class="ref" style="top:${v/topv*100}%;--c:${TP[p].c}"><span>${l}</span></div>`;
-  h+='<div class="cols">'+state.players.filter(p=>ui.game!=='krillst0ne'||c.P[p.id].n).map(p=>{const s=c.P[p.id];if(!s.n)return `<div class="col" style="--c:${p.c}"><div class="diver" style="top:0;opacity:.45">${av(p)}</div><div class="lab"><b>${esc(p.short)}</b><i>deck</i></div></div>`;
+  h+='<div class="cols">'+state.players.filter(p=>ui.game!=='krillst0ne'||c.P[p.id].n).map(p=>{const s=c.P[p.id];if(!s.n||!qual(c,s))return `<div class="col" style="--c:${p.c}"><div class="diver" style="top:0;opacity:.45">${av(p)}</div><div class="lab"><b>${esc(p.short)}</b><i>${s.n}/${c.need}</i></div></div>`;
     const y=s.avg/topv*100;return `<div class="col" style="--c:${p.c}"><div class="rope" style="height:${y}%"></div><div class="diver" style="top:${y}%">${av(p)}</div><div class="lab"><b>${esc(p.short)}</b><i data-count="${Math.round(s.avg)}">${fm(s.avg)}</i></div></div>`}).join('')+'</div>';
   let bub='';for(let i=0;i<18;i++){const r=(i*7919%97)/97,r2=(i*104729%89)/89;bub+=`<span class="bub" style="left:${(4+r*92).toFixed(1)}%;--s:${2+Math.round(r2*4)}px;--d:${(7+r2*9).toFixed(1)}s;--dl:-${(r*14).toFixed(1)}s"></span>`}
   return `<div class="sea">${bub}<div class="water">${h}</div></div>`;
+}
+function seaM(c){
+  const q=c.list.filter(s=>qual(c,s)),mx=Math.max(...q.map(s=>s.avg)),topv=Math.min(700,Math.max(250,Math.ceil(mx*1.25/50)*50)),step=topv>400?100:50;
+  const pct=v=>(v/topv*100).toFixed(2);
+  let grid='';for(let v=0;v<=topv;v+=step)grid+=`<div class="mt" style="left:${pct(v)}%"></div>`;
+  for(const [v,l,p] of [[70,'🫧',10],[210,'🐟',30],[420,'🦑',60],[595,'🏮',85]])if(v<=topv)grid+=`<div class="mref" style="left:${pct(v)}%;--c:${TP[p].c}"><span>${l}</span></div>`;
+  const row=(p,s,deep)=>{const y=deep?pct(s.avg):0;return `<div class="mrow${deep?'':' deck'}" style="--c:${p.c}"><div class="mname"><b>${esc(p.short)}</b><i${deep?` data-count="${Math.round(s.avg)}"`:''}>${deep?fm(s.avg):(s.n?s.n+' of '+c.need+' dives':'deck')}</i></div><div class="mtrack"><div class="mgrid">${grid}</div>${deep?`<div class="mrope" style="width:${y}%"></div>`:''}<div class="mdiver" style="left:${y}%">${av(p)}</div></div></div>`};
+  const show=state.players.filter(p=>ui.game!=='krillst0ne'||c.P[p.id].n),deep=show.filter(p=>c.P[p.id].n&&qual(c,c.P[p.id])).sort((a,b)=>c.P[b.id].avg-c.P[a.id].avg),deck=show.filter(p=>!deep.includes(p));
+  return `<div class="seam"><div class="mhead"><span>average points per day</span></div>${deep.map(p=>row(p,c.P[p.id],1)).join('')}${deck.length?`<div class="mdeck">on deck · ranked after ${c.need} dives</div>`+deck.map(p=>row(p,c.P[p.id],0)).join(''):''}</div>`;
 }
 function spark(s,c){const n=c.dates.length;if(n<2)return '<svg width="80" height="26"></svg>';const pts=s.days.map(x=>[c.dates.indexOf(x.d)/(n-1)*76+2,2+x.t/700*22]);
   return `<svg width="80" height="26" viewBox="0 0 80 26" aria-hidden="true"><polyline points="${pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="${s.p.c}" stroke-width="1.8" stroke-linejoin="round"/><circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="2.6" fill="${s.p.c}"/></svg>`}
 function vStandings(c){
   const aw=awards(c),r=ranked(c,ui.metric);
-  return `<section class="panel"><div class="row between"><h2>The dive chart</h2><span class="dim sm">${rangeName(c.m)} · average score per day · ${c.dates.length} day${c.dates.length>1?'s':''} logged${c.open?' · latest still open':''}</span></div>${sea(c)}</section>
+  return `<section class="panel"><div class="row between"><h2>The dive chart</h2><span class="dim sm">${rangeName(c.m)} · average score per day · ${c.dates.length} day${c.dates.length>1?'s':''} logged${c.open?' · latest still open':''}</span></div>${sea(c)}${seaM(c)}</section>
   <section class="panel"><div class="row between"><h2>Standings</h2><div class="seg"><button data-metric="avg" class="${ui.metric==='avg'?'on':''}">Average score</button><button data-metric="total" class="${ui.metric==='total'?'on':''}">Total score</button></div></div>
   <div class="lb">${r.map((s,i)=>`<div class="lbrow${s.rank===1?' top':''}" style="--i:${i}"><span class="rank">${s.rank||'–'}</span>${av(s.p)}<div><b>${esc(s.p.name)}</b>${s.rank===1?' <span class="tag lead">Deepest diver</span>':''}<div class="dim sm num">${s.tied?'Tied · ':''}${bearing(s.avg)} · ${s.n} day${s.n>1?'s':''}</div>${s.why?`<div class="dim sm">${esc(s.why)}</div>`:''}</div>${spark(s,c)}<div class="pts"><div class="big"><span data-count="${Math.round(ui.metric==='total'?s.total:s.avg)}">${fm(ui.metric==='total'?s.total:s.avg)}</span> <small>pts</small></div><div class="crn${s.wins?'':' z'}" title="Daily wins" aria-label="${s.wins} daily win${s.wins===1?'':'s'}">👑 ${s.wins}</div></div></div>`).join('')}</div>
-  <div class="row between"><span class="dim sm">Scores match the app, out of 700 a day. Deeper is better. The game's bearings: 🫧 to 150, 🐟 to 250, 🦑 to 350, 🏮 to 449, 🦐 450+. Level averages are split by total points (level totals by daily average), then daily wins, then who went deeper: most One in a Krillion answers, then Deep Cuts, Rares and Schoolers. Still level is a tie. 👑 counts daily wins: the win goes to the best score among whoever dived that day, once the day closes. Ranking by average takes at least half the logged days.</span><button data-act="recap">Copy recap for the group chat</button></div></section>
+  <div class="row between"><span class="dim sm">Scores match the app, out of 700 a day. Deeper is better. The game's bearings: 🫧 to 150, 🐟 to 250, 🦑 to 350, 🏮 to 449, 🦐 450+. Level averages are split by total points (level totals by daily average), then daily wins, then who went deeper: most One in a Krillion answers, then Deep Cuts, Rares and Schoolers. Still level is a tie. 👑 counts daily wins: the win goes to the best score among whoever dived that day, once the day closes. Ranking by average takes at least 3 dives; until then a player waits on deck.</span><button data-act="recap">Copy recap for the group chat</button></div></section>
   <section class="panel"><h2>Trophy shelf</h2><div class="awards">${aw.map(a=>`<div class="award" style="--c:${a.c}"><h3>${a.title}</h3><div class="who">${a.e} ${esc(a.who)}</div><div class="dim sm">${a.line}</div></div>`).join('')}</div></section>`;
 }
 function vReport(c){
