@@ -358,11 +358,13 @@ function seaM(c){
 }
 function spark(s,c){const n=c.dates.length;if(n<2)return '<svg width="80" height="26"></svg>';const pts=s.days.map(x=>[c.dates.indexOf(x.d)/(n-1)*76+2,2+x.t/700*22]);
   return `<svg width="80" height="26" viewBox="0 0 80 26" aria-hidden="true"><polyline points="${pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="${s.p.c}" stroke-width="1.8" stroke-linejoin="round"/><circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="2.6" fill="${s.p.c}"/></svg>`}
+function lbRows(c,k){const r=ranked(c,k);
+  return r.map((s,i)=>`<div class="lbrow${s.rank===1?' top':''}" style="--i:${i}"><span class="rank">${s.rank||'–'}</span>${av(s.p)}<div><b>${esc(s.p.name)}</b>${s.rank===1?' <span class="tag lead">Deepest diver</span>':''}<div class="dim sm num">${s.tied?'Tied · ':''}${bearing(s.avg)} · ${s.n} day${s.n>1?'s':''}</div>${s.why?`<div class="dim sm">${esc(s.why)}</div>`:''}</div>${spark(s,c)}<div class="pts"><div class="big"><span data-count="${Math.round(k==='total'?s.total:s.avg)}">${fm(k==='total'?s.total:s.avg)}</span> <small>pts</small></div><div class="crn${s.wins?'':' z'}" title="Daily wins" aria-label="${s.wins} daily win${s.wins===1?'':'s'}">👑 ${s.wins}</div></div></div>`).join('')}
 function vStandings(c){
-  const aw=awards(c),r=ranked(c,ui.metric);
+  const aw=awards(c);
   return `<section class="panel"><div class="row between"><h2>The dive chart</h2><span class="dim sm">${rangeName(c.m)} · average score per day · ${c.dates.length} day${c.dates.length>1?'s':''} logged${c.open?' · latest still open':''}</span></div>${sea(c)}${seaM(c)}</section>
   <section class="panel"><div class="row between"><h2>Standings</h2><div class="seg"><button data-metric="avg" class="${ui.metric==='avg'?'on':''}">Average score</button><button data-metric="total" class="${ui.metric==='total'?'on':''}">Total score</button></div></div>
-  <div class="lb">${r.map((s,i)=>`<div class="lbrow${s.rank===1?' top':''}" style="--i:${i}"><span class="rank">${s.rank||'–'}</span>${av(s.p)}<div><b>${esc(s.p.name)}</b>${s.rank===1?' <span class="tag lead">Deepest diver</span>':''}<div class="dim sm num">${s.tied?'Tied · ':''}${bearing(s.avg)} · ${s.n} day${s.n>1?'s':''}</div>${s.why?`<div class="dim sm">${esc(s.why)}</div>`:''}</div>${spark(s,c)}<div class="pts"><div class="big"><span data-count="${Math.round(ui.metric==='total'?s.total:s.avg)}">${fm(ui.metric==='total'?s.total:s.avg)}</span> <small>pts</small></div><div class="crn${s.wins?'':' z'}" title="Daily wins" aria-label="${s.wins} daily win${s.wins===1?'':'s'}">👑 ${s.wins}</div></div></div>`).join('')}</div>
+  <div class="lb">${lbRows(c,ui.metric)}</div>
   <div class="row between"><span class="dim sm">Scores match the app, out of 700 a day. Deeper is better. The game's bearings: 🫧 to 150, 🐟 to 250, 🦑 to 350, 🏮 to 449, 🦐 450+. Level averages are split by total points (level totals by daily average), then daily wins, then who went deeper: most One in a Krillion answers, then Deep Cuts, Rares and Schoolers. Still level is a tie. 👑 counts daily wins: the win goes to the best score among whoever dived that day, once the day closes. Ranking by average takes at least 3 dives; until then a player waits on deck.</span><button data-act="recap">Copy recap for the group chat</button></div></section>
   <section class="panel"><h2>Trophy shelf</h2><div class="awards">${aw.map(a=>`<div class="award" style="--c:${a.c}"><h3>${a.title}</h3><div class="who">${a.e} ${esc(a.who)}</div><div class="dim sm">${a.line}</div></div>`).join('')}</div></section>`;
 }
@@ -479,7 +481,7 @@ function render(){
   keepUi();
 }
 const calm=()=>window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-function countUp(){if(calm())return;const t0=performance.now(),els=[...document.querySelectorAll('[data-count]')];
+function countUp(root){if(calm())return;const t0=performance.now(),els=[...(root||document).querySelectorAll('[data-count]')];
   (function step(t){const k=Math.min(1,(t-t0)/1100),e=1-Math.pow(1-k,3);for(const el of els)el.textContent=fm(el.dataset.count*e);if(k<1)requestAnimationFrame(step)})(t0)}
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),3200)}
 function buildDoc(){
@@ -495,7 +497,11 @@ function persist(msg){
 }
 document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;
-  if(d.metric){ui.metric=d.metric;render()}
+  if(d.metric){ui.metric=d.metric;
+    document.querySelectorAll('.seg button[data-metric]').forEach(x=>x.classList.toggle('on',x.dataset.metric===ui.metric));
+    const ms=months(),c=ms.length?calc(ui.range):null,lb=$('.lb');
+    if(c&&lb){lb.innerHTML=lbRows(c,ui.metric);countUp(lb)}
+    keepUi()}
   else if(d.day){ui.day=d.day;render()}
   else if(d.act==='spoil'){(ui.spoil=ui.spoil||{})[d.d]=1;render()}
   else if(d.act==='recap'){const txt=recap(calc(ui.range));navigator.clipboard.writeText(txt).then(()=>toast((ui.game==='krillst0ne'?'Krillst0ne':'Krillion')+' recap copied. Paste it in the chat.')).catch(()=>{const p=b.closest('.panel');if(!p.querySelector('#recap-txt'))p.insertAdjacentHTML('beforeend','<textarea id="recap-txt" aria-label="Recap text"></textarea>');p.querySelector('#recap-txt').value=txt;toast('Select the '+(ui.game==='krillst0ne'?'Krillst0ne':'Krillion')+' recap below and copy it.')})}
