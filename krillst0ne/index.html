@@ -348,7 +348,7 @@ function loose(L,ck){const tok=x=>x.split(" ").map(w=>w.length>3?w.replace(/s$/,
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const BUILD="1795676500";
+const BUILD="1795677600";
 /* phones can hold on to an old copy of this page; if a newer build is live, load it (only from the title screen, never mid-dive) */
 (async()=>{try{const v=(await (await fetch(new URL("version.txt",document.baseURI).href+"?"+Date.now(),{cache:"no-store"})).text()).trim();if(/^\d+$/.test(v)&&+v>+BUILD&&new URLSearchParams(location.search).get("v")!==v&&(typeof S==="undefined"||S.phase==="title"||S.res.length>=7)){const q=new URLSearchParams(location.search);q.set("v",v);location.replace(location.pathname+"?"+q.toString()+location.hash)}}catch(e){}})();
 /* Club devices only: the name list and the Club board are for the eight players. A device becomes a Club device by opening the Club link (?club=CODE) or typing the Club code once; everyone else is a guest. Devices that already finished Club dive #1 are let in. */
@@ -444,6 +444,27 @@ const RS=2*Math.max(U,2);
 function caveW(dn,dr,side){if(dr<230)return 0;const g=dr<600?(dr-230)/370*.07:dr<2200?.07+(dr-600)/1600*.08:Math.min(.19,.15+(dr-2200)/5000*.06),a=rnd(Math.floor(dn/22)+side*311),b=rnd(Math.floor(dn/90)+side*733),k=Math.floor(dn/170),o=rnd(k+side*57)>.6?Math.sin((dn/170-k)*Math.PI)*(.05+.07*rnd(k+side*91)):0;return Math.min(.23,g*(.5+.5*a+.45*b)+o*Math.min(1,(dr-230)/500))*W}
 const RST=[[250,[12,58,64]],[900,[30,54,82]],[2000,[50,42,84]],[4000,[44,36,62]],[7000,[36,32,42]]];
 function rockC(d,l,al){d=Math.max(250,Math.min(7000,d));for(let i=1;i<RST.length;i++){if(d<=RST[i][0]){const a=RST[i-1],b=RST[i],t=(d-a[0])/(b[0]-a[0]);return"rgba("+a[1].map((v,j)=>Math.min(255,Math.round((v+(b[1][j]-v)*t)*l))).join(",")+","+al+")"}}return"rgba(11,10,13,"+al+")"}
+/* things to find on the way down. Some sit at the depth their fact line talks about; the rest move to new depths every day, so each dive's cave is a little different. All of it is dim until the shrimp's light gets near. */
+function mkS(rows,pal){const w=Math.max.apply(null,rows.map(r=>r.length)),c=document.createElement("canvas");c.width=w;c.height=rows.length;const g=c.getContext("2d");rows.forEach((r,y)=>{for(let x=0;x<r.length;x++){if(pal[r[x]]){g.fillStyle=pal[r[x]];g.fillRect(x,y,1,1)}}});return c}
+function drawS(img,x,y,sc,flip,al){const z=sc*(PIX?U:3);cx.save();cx.globalAlpha=Math.max(0,Math.min(1,al));cx.translate(sn(x),sn(y));if(flip<0)cx.scale(-1,1);cx.imageSmoothingEnabled=false;cx.drawImage(img,-Math.round(img.width/2)*z,-Math.round(img.height/2)*z,img.width*z,img.height*z);cx.restore()}
+const SP={
+  diver:mkS(["...yyyy.......","..kkkkkkk.ss..","ffkkkkkkkkssg.","f.kkkkkkk.....","....k..k......"],{y:"#e8c15a",k:"#16323c",s:"#d9a27a",g:"#9fd8e0",f:"#2a5a68"}),
+  peng:mkS(["..kkkkk...",".kkkkkkky.","kkwwwwkk..",".kwwwk....","..oo......"],{k:"#0d1a22",w:"#e9f5f2",y:"#ffb454",o:"#ffb454"}),
+  angler:mkS(["m..........",".a.........","..a.kkkk...","..kkkkkkk.k",".ekkkkkkkkk",".wkwkkkkk.k","..kkkkkk...","...kkk....."],{m:"#7df9c8",a:"#4a5866",k:"#2a3446",e:"#e9f5f2",w:"#cfd8d4"}),
+  whale:mkS(["..kkkkkkkkkk..........",".kkkkkkkkkkkkkk.......","kkkkkkkkkkkkkkkkk....k","kkekkkkkkkkkkkkkkkk.kk","kkkkkkkkkkkkkkkkkkkkk.",".wwwwwkkkkkkkkkkkk..kk","......kk.kkkkkk......k",".......k.............."],{k:"#232c3c",e:"#0a0e14",w:"#56606e"}),
+  squid:mkS(["..rrrr....",".rrrrrrttt","rrerrrrt.t",".rrrrrrttt","..rrrr...."],{r:"#8a3a44",t:"#6e2c36",e:"#e9f5f2"}),
+  titanic:mkS(["..............r.....r.........","..............r.....r.........","......rrr....rrr...rrr........","r.....rrrrrrrrrrrrrrrrrrrrr...","rr..rrrrrrrrrrrrrrrrrrrrrrrrr.",".rrrrrrrrrrrrrrrrrrrrrrrrrrrrr",".rrprprprprprprprprprprprrrrrr","..rrrrrrrrrrrrrrrrrrrrrrrrrrrr","..rrrrrrrrrrrrrrrrrrrrrrrrrrr.","...rrrrrrrrrrrrrrrrrrrrrrrrr.."],{r:"#5a3830",p:"#1c1210"}),
+  titan:mkS(["..wwwwwww..",".wwwwwwwwwg","cwwbwwwwwwg",".wwwwwwwww.","..g.....g.."],{w:"#d8dde0",c:"#7df9c8",b:"#22303a",g:"#6b8085"}),
+  cuke:mkS(["..pppp..",".pppppp.","p.p.p.p."],{p:"#9a6488"}),
+  sub:mkS(["........gg..........","........gg..........","..gggggggggggggggg..","gggggggggggggggggggp",".ggggggggggggggggggp","...gggggggggggggg..."],{g:"#3c4a56",p:"#55666c"}),
+  snail:mkS([".wwww.....","wewwwwww.w","wwwwwwwwww",".wwwww...w"],{w:"#e6d5e0",e:"#22303a"}),
+  chest:mkS([".bbbbbbb.","bgbbbbbgb","bbbbybbbb","ggggygggg","bbbbbbbbb","bgbbbbbgb","bbbbbbbbb"],{b:"#6b4a2a",g:"#c98a00",y:"#ffcf3a"}),
+  anchor:mkS(["..ggg..","..g.g..","..ggg..","...g...","ggggggg","...g...","g..g..g","gg.g.gg",".ggggg."],{g:"#66787e"}),
+  bones:mkS(["..www......",".wewww.w.w.","wwwwwwwwwww",".wwwww.w.w.","..www......"],{w:"#cfd8d4",e:"#22303a"})};
+const PIECES=[{d:367,k:"diver"},{d:565,k:"peng"},{d:1290,k:"angler",sd:1},{d:2060,k:"whale",l:0},{d:2440,k:"vent",sd:0},{d:3850,k:"titanic",l:0},{d:3795,k:"titan",l:0},{d:4740,k:"cuke",sd:0},{d:5350,k:"sub",l:0},{d:6540,k:"snail"}];
+{const dr=i=>rnd(DIVE_N*17.31+i*3.7),add=(k,lo,hi,i)=>{let d=lo+dr(i)*(hi-lo);for(let n=0;n<5;n++)if(PIECES.some(p=>Math.abs(p.d-d)<150))d+=170;PIECES.push({d,k,sd:dr(i+50)<.5?0:1})};
+  add("eye",900,3400,1);add("tent",1500,4000,2);add("chest",700,4200,3);add("anchor",380,1100,4);add("bones",1200,4200,5);add("eel",1600,4000,6);add("angler",2600,4600,7);add("eye",4000,6600,8);add("tent",4200,6600,9);add("chest",4400,6800,10)}
+PIECES.forEach((p,i)=>{p.l=p.l===0?0:1;p.s=rnd(i+.77)});
 let prev=performance.now(),lastCy=0,lastDr=0;
 function frame(now){
   /* hit-stop: a rare answer freezes the whole sea for a beat before the pow */
@@ -499,6 +520,28 @@ function frame(now){
   if(cam<760){cx.lineCap="round";for(let k=0;k<6;k++){const bx=k<3?10+k*22:W-12-(k-3)*22,d0=70+k*26,d1=470+rnd(k)*90;cx.strokeStyle="rgba(5,34,38,"+(.5+rnd(k+3)*.25)+")";cx.lineWidth=5+rnd(k)*3;cx.beginPath();for(let d=d1;d>=d0;d-=18){const x=bx+Math.sin(d*.03+t*.9+k)*7*(1-(d-d0)/(d1-d0)*.6);d===d1?cx.moveTo(x,Y(d)):cx.lineTo(x,Y(d))}cx.stroke()}}
   // sea floor of stones
   const yf=Y(7030);if(yf<H){cx.fillStyle="#0b1114";cx.fillRect(0,yf,FW,FH-yf);for(let i=0;i<46;i++){const sx2=rnd(i)*W,sy2=yf+6+rnd(i+70)*Math.min(240,H),r=7+rnd(i+20)*18;cx.fillStyle=i%9===0?"rgba(125,249,200,.5)":"rgba("+(40+rnd(i)*40|0)+","+(52+rnd(i)*40|0)+","+(58+rnd(i)*40|0)+",1)";cx.beginPath();cx.ellipse(sx2,sy2,r,r*.62,0,0,7);cx.fill()}}
+  const pieces=layer=>{const u=Math.max(U,2);for(const p of PIECES){if(p.l!==layer)continue;const y=Y(p.d);if(y<-150||y>H+150)continue;const li=Math.max(0,1-Math.abs(y-sy)/330),al=.2+.8*li,wl=caveW(p.d,p.d,0),wr=W-caveW(p.d,p.d,1),ph=t+p.s*10,ex=p.sd?wr:wl,dir=p.sd?-1:1;
+    switch(p.k){
+    case"diver":{const x=W*.3+Math.sin(ph*.3)*14;drawS(SP.diver,x,y+Math.sin(ph)*3,1,1,Math.max(.7,al));if(Math.random()<dt*2)bubbles.push({x:x+14,d:p.d-5,r:2,v:30,l:1.4});break}
+    case"peng":{const c=(ph*.11)%1;if(c<.5){const q=c/.5;drawS(SP.peng,-40+q*(W+80),y+Math.sin(q*6.283)*26,1,1,.9)}break}
+    case"angler":{const x=ex+dir*(34-(1-li)*22),yy=y+Math.sin(ph*.8)*4,z=PIX?U:3,lx=x-dir*5*z,ly=yy-4*z,pu=.6+.35*Math.sin(ph*3);drawS(SP.angler,x,yy,1,-dir,al);cx.fillStyle="rgba(125,249,200,"+(pu*.16).toFixed(3)+")";R(lx-3*u,ly-3*u,7*u,7*u);cx.fillStyle="rgba(125,249,200,"+pu.toFixed(2)+")";R(lx,ly,u,u);break}
+    case"whale":{const x=W*.5+Math.sin(ph*.07)*W*.22;drawS(SP.whale,x,y,2,1,.38+.5*li);drawS(SP.squid,x-22*u-Math.sin(ph*.9)*4,y+5*u,1,1,.3+.6*li);break}
+    case"vent":{cx.globalAlpha=.55+.45*li;for(let j=0;j<8;j++){cx.fillStyle=j%2?"rgb(46,38,54)":"rgb(36,30,44)";R(ex+dir*(2*u)-(dir<0?(9-j)*u:0),y-j*3*u,(9-j)*u,3*u)}cx.globalAlpha=1;const tx2=ex+dir*4*u,ty2=y-24*u;cx.fillStyle="rgba(255,120,50,"+(.5+.3*Math.sin(ph*5)).toFixed(2)+")";R(tx2-u,ty2,3*u,u);R(ex+dir*3*u,y-8*u,u,3*u);
+      for(let i=0;i<9;i++){const c=(t*.22+i/9)%1;cx.fillStyle="rgba(58,50,68,"+((1-c)*.6).toFixed(2)+")";R(tx2+Math.sin(i*2+c*5)*14*c-(1+c*3)*u,ty2-c*120,(2+c*6)*u,(2+c*4)*u)}
+      for(let i=0;i<4;i++){const c=(t*.5+i/4)%1;cx.fillStyle="rgba(255,150,70,"+(1-c).toFixed(2)+")";R(tx2+Math.sin(i*3+c*9)*10,ty2-c*80,u,u)}break}
+    case"titanic":drawS(SP.titanic,W*.42,y,2,1,.3+.55*li);break;
+    case"titan":{const x=W*.68+Math.sin(ph*.25)*14,yy=y+Math.sin(ph*.7)*4;cx.fillStyle="rgba(125,249,200,.07)";cx.beginPath();cx.moveTo(x-16,yy);cx.lineTo(x-120,yy+34);cx.lineTo(x-120,yy+2);cx.fill();drawS(SP.titan,x,yy,1,1,.55+.45*li);break}
+    case"cuke":drawS(SP.cuke,ex+dir*(8+Math.sin(ph*.2)*5),y,1,dir,al);break;
+    case"sub":drawS(SP.sub,W*.55,y,2,1,.3+.5*li);break;
+    case"snail":{const sw=Math.sin(ph*.15);drawS(SP.snail,W*.5+sw*W*.2,y+Math.sin(ph*1.4)*4,1,Math.cos(ph*.15)>0?-1:1,.35+.5*li);break}
+    case"eye":{const x=ex-dir*6*u,op=Math.max(0,Math.min(1,(li-.2)*3))*((ph%5.3)<.16?0:1),h=Math.round(3*op);cx.fillStyle="rgb(5,5,9)";R(x-4*u,y-2*u,9*u,5*u);if(h>0){cx.fillStyle="rgba(255,207,58,.85)";R(x-3*u,y-Math.floor(h/2)*u,7*u,h*u);cx.fillStyle="rgb(8,6,4)";R(x+Math.max(-2,Math.min(2,Math.round((sx-x)/45)))*u-u*.5,y-Math.floor(h/2)*u,2*u,h*u)}break}
+    case"tent":{const n=11,reach=.25+.75*li;let px=ex,py=y;cx.globalAlpha=.45+.55*li;for(let j=0;j<n;j++){const a=(p.sd?Math.PI:0)+Math.sin(ph*1.3+j*.5)*.5*(j/n)-(j/n)*.9*dir;px+=Math.cos(a)*2.2*u*reach;py+=Math.sin(a)*2.2*u*reach;const w=(n-j>7?3:n-j>3?2:1)*u;cx.fillStyle="rgb(124,54,64)";R(px,py,w,w);if(j%2===0&&w>u){cx.fillStyle="rgb(214,150,150)";R(px,py+w-u,u,u)}}cx.globalAlpha=1;break}
+    case"chest":{const x=ex+dir*5*u;drawS(SP.chest,x,y,1,1,Math.max(.45,al));if(Math.sin(ph*2.2)>.86){cx.fillStyle="rgba(255,243,176,.95)";R(x-3*u,y-5*u,3*u,u);R(x-2*u,y-6*u,u,3*u)}break}
+    case"anchor":{const x=W*(p.sd?.74:.26)+Math.sin(ph*.5)*4;cx.fillStyle="rgba(102,120,126,"+(.5+.4*li).toFixed(2)+")";for(let j=0;j<16;j++)R(x+Math.sin(ph*.5+j*.2)*1.5,y-5*u-j*3*u,u,2*u);drawS(SP.anchor,x,y,1,1,.55+.45*li);break}
+    case"bones":drawS(SP.bones,ex+dir*(22+Math.sin(ph*.3)*6),y+Math.sin(ph*.5)*3,1,dir,al*.8);break;
+    case"eel":{const c=(ph*.045)%1,x0=p.sd?W+60-c*(W+200):-60+c*(W+200),dd=p.sd?1:-1;cx.globalAlpha=.4+.6*li;for(let j=0;j<22;j++){cx.fillStyle=j>19?"rgb(125,249,200)":"rgb(38,44,62)";R(x0+dd*j*2*u,y+Math.sin(ph*2-j*.45)*7,2*u,(j<3?2:1)*u)}cx.fillStyle="#e9f5f2";R(x0,y+Math.sin(ph*2)*7,u,u);cx.globalAlpha=1;break}
+    }}};
+  late.push(()=>pieces(0));
   /* the cave: below the kelp, rock closes in from both sides and keeps thickening all the way down. A dimmer back wall sits behind it, spikes hang under the overhangs, and things grow on the rock: weed near the top, tube worms in the middle, crystals in the deep. The near rock is drawn after the dark so it stays readable, brightest beside the shrimp. */
   {const dA=cam-ay/PPM,dB=cam+(H-ay)/PPM;if(dB>230){const DS=RS/PPM;
     for(let y=Math.max(0,sn(y0));y<H;y+=RS){const dn=cam*.65+(y-ay)/PPM,dr=dn/.65;if(dr<300)continue;const a=caveW(dn,dr,3)*1.5+W*.03,b=caveW(dn,dr,4)*1.5+W*.03;cx.fillStyle=rockC(dr,.42+.1*rnd(Math.floor(dn/14)),.7);cx.fillRect(0,y,sn(a),RS);cx.fillRect(sn(W-b),y,sn(b)+2*U,RS)}
@@ -512,6 +555,9 @@ function frame(now){
         else if(ty<.76){for(let q=0;q<3;q++){const hgt=(3+(rnd(k*6+q)*4|0))*u,fx=x+dir*(q*2*u+u),sw=Math.sin(t*1.6+k+q)*1.5;cx.fillStyle="rgb("+[176,168,152].map(q2=>Math.round(q2*Math.min(1,lv))).join(",")+")";R(fx,y-hgt,u,hgt);cx.fillStyle="rgba(255,107,94,"+(.45+.5*li).toFixed(2)+")";R(fx-u+sw,y-hgt-2*u,3*u,2*u)}}
         else{const cc=["125,249,200","201,184,255","255,180,84"][(rnd(k*5+s)*3)|0],n=2+(rnd(k+s)*2|0),pu=.55+.3*Math.sin(t*1.7+k);for(let q=0;q<n;q++){const hgt=(2+(rnd(k*8+q)*4|0))*u,fx=x+dir*(q*3*u+u),fy=y-q*u;cx.fillStyle="rgba("+cc+","+(pu*.12).toFixed(3)+")";R(fx-3*u,fy-hgt-2*u,7*u,hgt+5*u);cx.fillStyle="rgba("+cc+","+pu.toFixed(2)+")";R(fx,fy-hgt,u,hgt+u);R(fx-u,fy-hgt+u,3*u,hgt-u)}}}
     })}}
+  late.push(()=>{pieces(1);
+    /* rock streaks past the edges on a fast sink */
+    if(!RM&&Math.abs(speed)>260&&cam>260){cx.fillStyle="rgba(233,245,242,"+Math.min(.22,Math.abs(speed)*.00022).toFixed(3)+")";for(let i=0;i<7;i++){const yy=rnd(i+Math.floor(t*14))*H,d=cam+(yy-ay)/PPM,l=i%2;cx.fillRect(sn(l?W-caveW(d,d,1)-2*U:caveW(d,d,0)+U),sn(yy),U,sn(18+Math.abs(speed)*.05))}}});
   // surface line + buoy
   if(y0>-20&&y0<H+20){cx.fillStyle="rgba(255,240,220,.75)";const st=Math.max(U,2);for(let x=0;x<=W;x+=st)cx.fillRect(x,sn(y0+Math.sin(x*.05+t*1.6)*2.2),st,st);
     const bx=sn(W*.2),by=sn(y0+Math.sin(t*1.6+bx*.05)*2.2);cx.fillStyle="#12222a";R(bx-6,by-6,15,9);R(bx,by-24,3,18);cx.fillStyle=Math.sin(t*3)>0?"#ff6b5e":"#7a2a25";R(bx-3,by-30,6,6)}
@@ -600,6 +646,7 @@ function resolve(m){if(S.phase!=="input")return;S.phase="reveal";$("ans").blur()
   S.wob=!m;
   S.anim={d0,d1,t0:performance.now()+(RM?0:520+fz),T:RM?500:(m?1300+pts*30:800),gates,label:name,pts,done(){S.wob=false;S.depth=d1;S.score+=pts;S.res.push(rec);save();S.landAt=performance.now();S.landPts=pts;
     if(pts&&!RM){S.shake=Math.max(S.shake||0,2+pts*.05);rings.push({x:W*.5,y:H*.6+(S.cy-S.cam)*PPM,t0:S.landAt,T:600,R:50+pts*.6,w:3,c:TIERS[pts].c});for(let i=0;i<8+pts/7;i++)bubbles.push({x:W*.5+(Math.random()-.5)*60,d:d1+10+Math.random()*14,r:2+Math.random()*4,v:26+Math.random()*60,l:1+Math.random()});bump($("hudDepth"))}
+    if(pts&&!RM&&d1>260){const yy=H*.6+(S.cy-S.cam)*PPM;for(let i=0;i<14;i++){const l=i%2,dd=d1+(Math.random()-.5)*160;sparks.push({x:l?W-caveW(dd,dd,1):caveW(dd,dd,0),y:yy+(dd-d1)*PPM,vx:(l?-1:1)*(8+Math.random()*26),vy:Math.random()*14,l:.7+Math.random()*.8,c:"rgba(190,186,204,.75)",g:46})}}
     if(pts===100)goGold();tween($("hs"),S.score,S.score,0,fmt);
     const T=TIERS[pts];$("rIcon").textContent=T.e;$("rTier").textContent=T.n;$("rTier").style.color=T.c;$("rAns").innerHTML="“"+esc(name)+"”"+(S.fix&&S.fix.to===name?"<small>autocorrected from “"+esc(S.fix.from)+"”</small>":m&&m.fuzzy?"<small>autocorrected from “"+esc(S.last)+"”</small>":"");$("rPts").innerHTML="<b>+"+pts+" PTS</b>"+(pts?" · sink "+fmt(pts*10)+"m":"");$("rFlav").textContent=T.f;
     const note=m&&DAY[S.i].notes[name];$("rNote").textContent=note||"";$("rNote").style.display=note?"block":"none";
