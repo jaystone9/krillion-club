@@ -348,7 +348,7 @@ function loose(L,ck){const tok=x=>x.split(" ").map(w=>w.length>3?w.replace(/s$/,
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const BUILD="1795675262";
+const BUILD="1795675553";
 /* phones can hold on to an old copy of this page; if a newer build is live, load it (only from the title screen, never mid-dive) */
 (async()=>{try{const v=(await (await fetch(new URL("version.txt",document.baseURI).href+"?"+Date.now(),{cache:"no-store"})).text()).trim();if(/^\d+$/.test(v)&&+v>+BUILD&&new URLSearchParams(location.search).get("v")!==v&&(typeof S==="undefined"||S.phase==="title"||S.res.length>=7)){const q=new URLSearchParams(location.search);q.set("v",v);location.replace(location.pathname+"?"+q.toString()+location.hash)}}catch(e){}})();
 /* Club devices only: the name list and the Club board are for the eight players. A device becomes a Club device by opening the Club link (?club=CODE) or typing the Club code once; everyone else is a guest. Devices that already finished Club dive #1 are let in. */
@@ -591,8 +591,8 @@ function resolve(m){if(S.phase!=="input")return;S.phase="reveal";$("ans").blur()
 $("next").onclick=()=>{if(S.phase!=="result")return;audio();if(S.i<6)startRound(S.i+1);else finish()};
 $("begin").onclick=()=>{if(S.res.length>=7||!DAY)return;if(!GUEST&&!$("who").value){showWho(true);$("sub").textContent="PICK YOUR NAME FIRST";$("who").focus();return}audio();show("title",false);show("hud",true);show("snd",true);if(!S.res.length)splash();startRound(S.res.length)};
 function finish(){droneStop();S.phase="end";S.gatesHold=null;show("res",false);show("next",false);S.surf={d0:S.depth,t0:performance.now(),T:RM?400:2100};pips();setTimeout(buildEnd,RM?300:2000);
-  /* 500 CLUB: the first time a named player finishes on 500+, the mermaid cutscene plays over the results */
-  try{const w=$("who").value,k="krillst0ne-500-"+DIVE_N;if(!GUEST&&window.KS500&&KS500.eligible(w,S.score)&&!localStorage.getItem(k)){localStorage.setItem(k,"1");setTimeout(()=>KS500.play(w,S.score,DIVE_N),RM?500:2300)}}catch(e){}}
+  /* 500 CLUB: every time a named player finishes a dive on 500+, the mermaid cutscene plays over the results */
+  try{const w=$("who").value;if(!GUEST&&window.KS500&&KS500.eligible(w,S.score))setTimeout(()=>KS500.play(w,S.score,DIVE_N),RM?500:2300)}catch(e){}}
 function shareText(){const w=GUEST?"":$("who").value;return(w?w+"\n":"")+"krillst0ne "+NUM.replace(/#0*/,"#")+" 🦐\n"+S.score+"\n\n"+S.res.map(r=>r.pts===100?"🌟":TIERS[r.pts].e).join("")}
 function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function buildEnd(){
@@ -706,7 +706,7 @@ requestAnimationFrame(frame);
 <div id="k5" class="hide" aria-hidden="true"><canvas id="k5c" aria-label="500 Club: your shrimp turns into a mermaid with your face, dances, swims to the surface and high-fives the sun"></canvas><button id="k5skip" type="button">SKIP ›</button><button id="k5go" type="button">CONTINUE</button></div>
 <script>
 /* 500 CLUB: a logged-in player who finishes a dive on 500+ watches their shrimp turn into a mermaid with their face,
-   dance, say "oh yea", swim to the surface and high-five the sun. Plays once per dive per device after a live finish;
+   dance, say "oh yea", swim to the surface and high-five the sun. Plays after every live finish on 500+;
    the end screen keeps a button to watch it again. Faces come from the two tracker sites. Sound goes through the game's
    mute (MG). Everything lives in this one function so none of its names touch the game's. */
 (function(){"use strict";
