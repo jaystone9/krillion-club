@@ -348,7 +348,7 @@ function loose(L,ck){const tok=x=>x.split(" ").map(w=>w.length>3?w.replace(/s$/,
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const BUILD="1795676145";
+const BUILD="1795676500";
 /* phones can hold on to an old copy of this page; if a newer build is live, load it (only from the title screen, never mid-dive) */
 (async()=>{try{const v=(await (await fetch(new URL("version.txt",document.baseURI).href+"?"+Date.now(),{cache:"no-store"})).text()).trim();if(/^\d+$/.test(v)&&+v>+BUILD&&new URLSearchParams(location.search).get("v")!==v&&(typeof S==="undefined"||S.phase==="title"||S.res.length>=7)){const q=new URLSearchParams(location.search);q.set("v",v);location.replace(location.pathname+"?"+q.toString()+location.hash)}}catch(e){}})();
 /* Club devices only: the name list and the Club board are for the eight players. A device becomes a Club device by opening the Club link (?club=CODE) or typing the Club code once; everyone else is a guest. Devices that already finished Club dive #1 are let in. */
@@ -439,6 +439,11 @@ function pbub(x,y,r,a){if(!PIX){cx.strokeStyle="rgba(233,245,242,"+a.toFixed(2)+
   cx.fillRect(x-h+U,y-h,2*h-U,U);cx.fillRect(x-h+U,y+h,2*h-U,U);cx.fillRect(x-h,y-h+U,U,2*h-U);cx.fillRect(x+h,y-h+U,U,2*h-U);if(n>1){cx.fillStyle="rgba(255,255,255,"+(a*.9).toFixed(2)+")";cx.fillRect(x-h+U,y-h+U,U,U)}}
 function pring(x,y,r,w,c){cx.fillStyle=cx.strokeStyle=c;if(!PIX){cx.lineWidth=w;cx.beginPath();cx.arc(x,y,r,0,7);cx.stroke();return}const n=Math.max(8,Math.ceil(6.283*r/U)),z=Math.max(U,sn(w));for(let i=0;i<n;i++){const an=i/n*6.283;cx.fillRect(sn(x+Math.cos(an)*r),sn(y+Math.sin(an)*r),z,z)}}
 function jelly(x,y,ph,c){const p=Math.sin(ph)>0?1:0,u=Math.max(U,2);x=sn(x);y=sn(y);cx.fillStyle=c;cx.fillRect(x-2*u,y-2*u,5*u,u);cx.fillRect(x-3*u,y-u,7*u,2*u);if(p)cx.fillRect(x-4*u,y+u,9*u,u);for(let i=-1;i<=1;i++)cx.fillRect(x+i*2*u,y+u+p*u,u,(3+((i+p)&1))*u)}
+/* how far the rock reaches in from one side at a depth: nothing above 230 m, then steadily more, in blocky steps with ledges. Always leaves the middle clear for the shrimp. */
+const RS=2*Math.max(U,2);
+function caveW(dn,dr,side){if(dr<230)return 0;const g=dr<600?(dr-230)/370*.07:dr<2200?.07+(dr-600)/1600*.08:Math.min(.19,.15+(dr-2200)/5000*.06),a=rnd(Math.floor(dn/22)+side*311),b=rnd(Math.floor(dn/90)+side*733),k=Math.floor(dn/170),o=rnd(k+side*57)>.6?Math.sin((dn/170-k)*Math.PI)*(.05+.07*rnd(k+side*91)):0;return Math.min(.23,g*(.5+.5*a+.45*b)+o*Math.min(1,(dr-230)/500))*W}
+const RST=[[250,[12,58,64]],[900,[30,54,82]],[2000,[50,42,84]],[4000,[44,36,62]],[7000,[36,32,42]]];
+function rockC(d,l,al){d=Math.max(250,Math.min(7000,d));for(let i=1;i<RST.length;i++){if(d<=RST[i][0]){const a=RST[i-1],b=RST[i],t=(d-a[0])/(b[0]-a[0]);return"rgba("+a[1].map((v,j)=>Math.min(255,Math.round((v+(b[1][j]-v)*t)*l))).join(",")+","+al+")"}}return"rgba(11,10,13,"+al+")"}
 let prev=performance.now(),lastCy=0,lastDr=0;
 function frame(now){
   /* hit-stop: a rare answer freezes the whole sea for a beat before the pow */
@@ -494,6 +499,19 @@ function frame(now){
   if(cam<760){cx.lineCap="round";for(let k=0;k<6;k++){const bx=k<3?10+k*22:W-12-(k-3)*22,d0=70+k*26,d1=470+rnd(k)*90;cx.strokeStyle="rgba(5,34,38,"+(.5+rnd(k+3)*.25)+")";cx.lineWidth=5+rnd(k)*3;cx.beginPath();for(let d=d1;d>=d0;d-=18){const x=bx+Math.sin(d*.03+t*.9+k)*7*(1-(d-d0)/(d1-d0)*.6);d===d1?cx.moveTo(x,Y(d)):cx.lineTo(x,Y(d))}cx.stroke()}}
   // sea floor of stones
   const yf=Y(7030);if(yf<H){cx.fillStyle="#0b1114";cx.fillRect(0,yf,FW,FH-yf);for(let i=0;i<46;i++){const sx2=rnd(i)*W,sy2=yf+6+rnd(i+70)*Math.min(240,H),r=7+rnd(i+20)*18;cx.fillStyle=i%9===0?"rgba(125,249,200,.5)":"rgba("+(40+rnd(i)*40|0)+","+(52+rnd(i)*40|0)+","+(58+rnd(i)*40|0)+",1)";cx.beginPath();cx.ellipse(sx2,sy2,r,r*.62,0,0,7);cx.fill()}}
+  /* the cave: below the kelp, rock closes in from both sides and keeps thickening all the way down. A dimmer back wall sits behind it, spikes hang under the overhangs, and things grow on the rock: weed near the top, tube worms in the middle, crystals in the deep. The near rock is drawn after the dark so it stays readable, brightest beside the shrimp. */
+  {const dA=cam-ay/PPM,dB=cam+(H-ay)/PPM;if(dB>230){const DS=RS/PPM;
+    for(let y=Math.max(0,sn(y0));y<H;y+=RS){const dn=cam*.65+(y-ay)/PPM,dr=dn/.65;if(dr<300)continue;const a=caveW(dn,dr,3)*1.5+W*.03,b=caveW(dn,dr,4)*1.5+W*.03;cx.fillStyle=rockC(dr,.42+.1*rnd(Math.floor(dn/14)),.7);cx.fillRect(0,y,sn(a),RS);cx.fillRect(sn(W-b),y,sn(b)+2*U,RS)}
+    late.push(()=>{let pa=0,pb=0;const dkc=1-.35*dk;
+      for(let d=Math.floor(dA/DS)*DS-DS;d<=dB;d+=DS){if(d<230)continue;const a=sn(caveW(d,d,0)),b=sn(caveW(d,d,1)),y=sn(Y(d)),li=Math.max(0,1-Math.abs(y-sy)/260),v=(.72+.34*rnd(Math.floor(d/11)))*dkc*(1+li*li*.9),hh=RS+U;
+        if(a>=U){cx.fillStyle=rockC(d,v,1);cx.fillRect(0,y,a,hh);cx.fillStyle=rockC(d,v*.62,1);if(rnd(Math.floor(d/DS)+3)>.55)cx.fillRect(sn(a*rnd(d)*.7),y,sn(a*.25)+U,U);cx.fillStyle=rockC(d,v*1.75,1);cx.fillRect(a-U,y,U,hh);if(a>pa+U)cx.fillRect(pa,y,a-pa,U);if(pa>a+3*U){cx.fillStyle=rockC(d,v,1);cx.fillRect(pa-3*U,y,U,hh*2);cx.fillRect(pa-6*U,y,U,hh)}}
+        if(b>=U){const bx=sn(W-b);cx.fillStyle=rockC(d,v,1);cx.fillRect(bx,y,b+2*U,hh);cx.fillStyle=rockC(d,v*.62,1);if(rnd(Math.floor(d/DS)+9)>.55)cx.fillRect(bx+sn(b*rnd(d+1)*.7)+U,y,sn(b*.25)+U,U);cx.fillStyle=rockC(d,v*1.75,1);cx.fillRect(bx,y,U,hh);if(b>pb+U)cx.fillRect(bx,y,b-pb,U);if(pb>b+3*U){const px=sn(W-pb);cx.fillStyle=rockC(d,v,1);cx.fillRect(px+2*U,y,U,hh*2);cx.fillRect(px+5*U,y,U,hh)}}
+        pa=a;pb=b}
+      const FS=46;for(let k=Math.floor(dA/FS)-1;k<=dB/FS+3;k++)for(let s=0;s<2;s++){const d=k*FS+rnd(k+s*5)*30;if(d<260||rnd(k*2.7+s)>Math.min(.62,.34+d/9000))continue;const w=caveW(d,d,s);if(w<8)continue;const x=s?W-w:w,dir=s?-1:1,y=Y(d);if(y<-70||y>H+80)continue;const ty=rnd(k*9.1+s),u=Math.max(U,2),li=Math.max(0,1-Math.abs(y-sy)/300),lv=(.6+.8*li)*dkc;
+        if(d<1100?ty<.8:ty<.5){const n=2+(rnd(k+s*3)*3|0),deep=d>900,c=deep?[34,74,84]:[18,92,70];cx.fillStyle="rgb("+c.map(q=>Math.round(q*lv)).join(",")+")";for(let q=0;q<n;q++){const L=5+(rnd(k*4+q)*(deep?9:6)|0);let fx=0,fy=0;for(let j=0;j<L;j++){fx=x+dir*(q*2*u+j*u*.5)+Math.sin(t*1.2+k+q+j*.5)*j*.9;fy=y-j*2*u;R(fx,fy,u,2*u)}if(deep&&q===0&&ty<.17){cx.fillStyle="rgba(125,249,200,.75)";R(fx,fy-u,u,u);cx.fillStyle="rgb("+c.map(q2=>Math.round(q2*lv)).join(",")+")"}}}
+        else if(ty<.76){for(let q=0;q<3;q++){const hgt=(3+(rnd(k*6+q)*4|0))*u,fx=x+dir*(q*2*u+u),sw=Math.sin(t*1.6+k+q)*1.5;cx.fillStyle="rgb("+[176,168,152].map(q2=>Math.round(q2*Math.min(1,lv))).join(",")+")";R(fx,y-hgt,u,hgt);cx.fillStyle="rgba(255,107,94,"+(.45+.5*li).toFixed(2)+")";R(fx-u+sw,y-hgt-2*u,3*u,2*u)}}
+        else{const cc=["125,249,200","201,184,255","255,180,84"][(rnd(k*5+s)*3)|0],n=2+(rnd(k+s)*2|0),pu=.55+.3*Math.sin(t*1.7+k);for(let q=0;q<n;q++){const hgt=(2+(rnd(k*8+q)*4|0))*u,fx=x+dir*(q*3*u+u),fy=y-q*u;cx.fillStyle="rgba("+cc+","+(pu*.12).toFixed(3)+")";R(fx-3*u,fy-hgt-2*u,7*u,hgt+5*u);cx.fillStyle="rgba("+cc+","+pu.toFixed(2)+")";R(fx,fy-hgt,u,hgt+u);R(fx-u,fy-hgt+u,3*u,hgt-u)}}}
+    })}}
   // surface line + buoy
   if(y0>-20&&y0<H+20){cx.fillStyle="rgba(255,240,220,.75)";const st=Math.max(U,2);for(let x=0;x<=W;x+=st)cx.fillRect(x,sn(y0+Math.sin(x*.05+t*1.6)*2.2),st,st);
     const bx=sn(W*.2),by=sn(y0+Math.sin(t*1.6+bx*.05)*2.2);cx.fillStyle="#12222a";R(bx-6,by-6,15,9);R(bx,by-24,3,18);cx.fillStyle=Math.sin(t*3)>0?"#ff6b5e":"#7a2a25";R(bx-3,by-30,6,6)}
