@@ -348,7 +348,7 @@ function loose(L,ck){const tok=x=>x.split(" ").map(w=>w.length>3?w.replace(/s$/,
 
 const $=id=>document.getElementById(id);
 /* guest mode (#guest): the same daily dive for anyone, with no Club name and nothing saved to the Club board */
-const BUILD="1795675553";
+const BUILD="1795676145";
 /* phones can hold on to an old copy of this page; if a newer build is live, load it (only from the title screen, never mid-dive) */
 (async()=>{try{const v=(await (await fetch(new URL("version.txt",document.baseURI).href+"?"+Date.now(),{cache:"no-store"})).text()).trim();if(/^\d+$/.test(v)&&+v>+BUILD&&new URLSearchParams(location.search).get("v")!==v&&(typeof S==="undefined"||S.phase==="title"||S.res.length>=7)){const q=new URLSearchParams(location.search);q.set("v",v);location.replace(location.pathname+"?"+q.toString()+location.hash)}}catch(e){}})();
 /* Club devices only: the name list and the Club board are for the eight players. A device becomes a Club device by opening the Club link (?club=CODE) or typing the Club code once; everyone else is a guest. Devices that already finished Club dive #1 are let in. */
@@ -592,7 +592,8 @@ $("next").onclick=()=>{if(S.phase!=="result")return;audio();if(S.i<6)startRound(
 $("begin").onclick=()=>{if(S.res.length>=7||!DAY)return;if(!GUEST&&!$("who").value){showWho(true);$("sub").textContent="PICK YOUR NAME FIRST";$("who").focus();return}audio();show("title",false);show("hud",true);show("snd",true);if(!S.res.length)splash();startRound(S.res.length)};
 function finish(){droneStop();S.phase="end";S.gatesHold=null;show("res",false);show("next",false);S.surf={d0:S.depth,t0:performance.now(),T:RM?400:2100};pips();setTimeout(buildEnd,RM?300:2000);
   /* 500 CLUB: every time a named player finishes a dive on 500+, the mermaid cutscene plays over the results */
-  try{const w=$("who").value;if(!GUEST&&window.KS500&&KS500.eligible(w,S.score))setTimeout(()=>KS500.play(w,S.score,DIVE_N),RM?500:2300)}catch(e){}}
+  /* guests get it too, with Jay's face and no name shown */
+  try{const w=GUEST?"":$("who").value;if(window.KS500&&S.score>=500&&(GUEST||w))setTimeout(()=>KS500.play(w,S.score,DIVE_N,GUEST?"Jay":w),RM?500:2300)}catch(e){}}
 function shareText(){const w=GUEST?"":$("who").value;return(w?w+"\n":"")+"krillst0ne "+NUM.replace(/#0*/,"#")+" 🦐\n"+S.score+"\n\n"+S.res.map(r=>r.pts===100?"🌟":TIERS[r.pts].e).join("")}
 function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function buildEnd(){
@@ -602,7 +603,7 @@ function buildEnd(){
   $("bear").innerHTML=BEAR.map(x=>"<tr"+(x===b?" class=\"on\"":"")+"><td>"+x[0]+(x[1]===700?"+":"–"+x[1])+"</td><td>"+x[2]+"</td></tr>").join("");
   $("catch").innerHTML=S.res.map((r,i)=>{const d=DAY[r.round];let h="";for(const p of ORDER.slice().reverse()){const T=TIERS[p];if(!(d.t[p]||"").split(";").filter(Boolean).length)continue;h+="<h3 style=\"color:"+T.c+"\">"+T.e+" "+T.n+" · +"+p+" · "+(function(){const all=d.t[p].split(";").filter(Boolean).map(e=>e.split("|")[0]);let show=all.slice(0,150);if(r.pts===p&&!show.includes(r.name))show.unshift(r.name);return all.length+"</h3><p>"+show.map(n=>n===r.name&&r.pts===p?"<mark>"+esc(n)+" · YOU</mark>":esc(n)).join(", ")+(all.length>show.length?" <b>and "+(all.length-show.length).toLocaleString("en-US")+" more</b>":"")+"</p>"})();for(const n in d.notes){if(d.t[p].split(";").some(e=>e.split("|")[0]===n))h+="<i>"+esc(n)+": "+esc(d.notes[n])+"</i>"}}
     return"<details><summary><span>"+TIERS[r.pts].e+"</span><span><small>"+esc(r.q)+"</small><span>"+esc(r.name)+"</span></span><b>"+r.pts+"</b></summary><div class=\"al\">"+h+"</div></details>"}).join("");
-  $("shareOut").style.display="none";$("copy").textContent="COPY RESULT";{const w=$("who").value,b5=$("k5again");b5.style.display=!GUEST&&window.KS500&&KS500.eligible(w,S.score)?"block":"none";b5.onclick=()=>{if(!AC)audio();KS500.play(w,S.score,DIVE_N)}}if(S.posted&&!GUEST){$("saveMsg").textContent="Score saved to "+G.nm+" ✓";loadBoard()}else postScore();showCurve();$("end").scrollTop=0;show("end",true);show("hud",false);show("snd",false)}
+  $("shareOut").style.display="none";$("copy").textContent="COPY RESULT";{const w=GUEST?"":$("who").value,b5=$("k5again");b5.style.display=window.KS500&&S.score>=500&&(GUEST||w)?"block":"none";b5.onclick=()=>{if(!AC)audio();KS500.play(w,S.score,DIVE_N,GUEST?"Jay":w)}}if(S.posted&&!GUEST){$("saveMsg").textContent="Score saved to "+G.nm+" ✓";loadBoard()}else postScore();showCurve();$("end").scrollTop=0;show("end",true);show("hud",false);show("snd",false)}
 function copyText(txt,btn,done,box){const fall=()=>{if(box){box.value=txt;box.style.display="block";box.focus();box.select()}btn.textContent="SELECT AND COPY BELOW"};try{navigator.clipboard.writeText(txt).then(()=>{btn.textContent=done},fall)}catch(e){fall()}}
 $("guestLink").onclick=()=>copyText("Try today's krillst0ne dive: https://jaystone9.github.io/krillion-club/krillst0ne/guest/",$("guestLink"),"LINK COPIED ✓",$("shareOut"));
 if(GUEST)$("tag").textContent="THE DAILY DIVE · GUEST";else $("tag").textContent=G.tag;
@@ -705,7 +706,7 @@ requestAnimationFrame(frame);
 </script>
 <div id="k5" class="hide" aria-hidden="true"><canvas id="k5c" aria-label="500 Club: your shrimp turns into a mermaid with your face, dances, swims to the surface and high-fives the sun"></canvas><button id="k5skip" type="button">SKIP ›</button><button id="k5go" type="button">CONTINUE</button></div>
 <script>
-/* 500 CLUB: a logged-in player who finishes a dive on 500+ watches their shrimp turn into a mermaid with their face,
+/* 500 CLUB: any player who finishes a dive on 500+ (guests see Jay's face, no name) watches their shrimp turn into a mermaid with their face,
    dance, say "oh yea", swim to the surface and high-five the sun. Plays after every live finish on 500+;
    the end screen keeps a button to watch it again. Faces come from the two tracker sites. Sound goes through the game's
    mute (MG). Everything lives in this one function so none of its names touch the game's. */
@@ -876,7 +877,7 @@ function frame(now){
   cx.restore();
 
   const hudA=1-cl((T-7)/.5),big=Math.min(56,Math.max(30,W*.12)),NU=NAME.toUpperCase();
-  if(hudA>0){cx.globalAlpha=hudA;txt("KRILLST0NE #"+DIVE+" · "+NU,W/2,30,13,"#a9cdc7");
+  if(hudA>0){cx.globalAlpha=hudA;txt("KRILLST0NE #"+DIVE+(NU?" · "+NU:""),W/2,30,13,"#a9cdc7");
     const sc=scoreAt(T);txt(String(sc),W/2,74,44,sc>=500?"#ffcf3a":"#e9f5f2","center",1);
     txt((SCORE*10).toLocaleString("en-US")+" M · TRENCH",W/2,106,13,"#a9cdc7");
     if(T>=1.22){const k=cl((T-1.22)/.18),s=1+.35*(1-k);cx.save();cx.translate(W/2,148);cx.scale(s,s);txt("500 CLUB",0,0,big,"#ffcf3a","center",1);cx.restore();
@@ -892,7 +893,7 @@ function frame(now){
   if(T>=10.85&&T<12.2){const k=cl((T-10.85)/.15),fs=Math.min(34,Math.max(22,W*.07));cx.save();cx.globalAlpha=cl((12.2-T)/.3);cx.translate(Math.min(W-100,Math.max(100,contact.x)),Math.max(36,S.y-S.r-26));cx.scale(1.6-.6*k,1.6-.6*k);cx.rotate(-.06);txt("HIGH FIVE!",0,0,fs,"#ffffff","center",1);cx.restore()}
   if(T>12.3){const a=cl((T-12.3)/.4),pw=Math.min(320,W-32),ph=96,px=(W-pw)/2,py=Math.min(H-ph-100,H*.74+(H*.26-ph)/2-30);cx.globalAlpha=a;
     cx.fillStyle="#000";cx.fillRect(px+5,py+5,pw,ph);cx.fillStyle="rgba(3,12,18,.92)";cx.fillRect(px,py,pw,ph);cx.strokeStyle="#ffcf3a";cx.lineWidth=2;cx.strokeRect(px+1,py+1,pw-2,ph-2);
-    txt(NU,W/2,py+26,NU.length>9?24:30,"#ffcf3a");txt("500 CLUB MEMBER",W/2,py+56,15,"#e9f5f2");txt(SCORE+" · KRILLST0NE #"+DIVE,W/2,py+78,13,"#a9cdc7");cx.globalAlpha=1}
+    if(NU){txt(NU,W/2,py+26,NU.length>9?24:30,"#ffcf3a");txt("500 CLUB MEMBER",W/2,py+56,15,"#e9f5f2")}else{txt("500 CLUB",W/2,py+26,30,"#ffcf3a");txt("YOU'RE A MEMBER",W/2,py+56,15,"#e9f5f2")}txt(SCORE+" · KRILLST0NE #"+DIVE,W/2,py+78,13,"#a9cdc7");cx.globalAlpha=1}
   raf=requestAnimationFrame(frame)}
 
 function close(){if(!open)return;open=false;cancelAnimationFrame(raf);timers.forEach(clearTimeout);timers=[];try{speechSynthesis.cancel()}catch(e){}
@@ -902,12 +903,12 @@ skip.addEventListener("click",close);cont.addEventListener("click",close);
 cv.addEventListener("click",()=>{if(fired.end)close()});
 addEventListener("keydown",e=>{if(open&&e.key==="Escape")close()});
 
-function play(name,score,dive){
+function play(name,score,dive,face){
   if(open)return;NAME=name;SCORE=score;DIVE=dive;D0=Math.min(7000,score*10);open=true;
   fired={};sparks=[];rings=[];fishes=[];labels=[];notes=[];flash=0;shake=0;
   size();ov.classList.remove("hide");ov.setAttribute("aria-hidden","false");skip.style.display="block";cont.style.display="none";
   cx.fillStyle=col(D0);cx.fillRect(0,0,W,H);
-  loadFace(name,()=>{if(!open)return;
+  loadFace(face||name,()=>{if(!open)return;
     try{if(typeof AC!=="undefined"&&AC&&MG){if(AC.state==="suspended")AC.resume();if(!NZ){const n=AC.sampleRate;NZ=AC.createBuffer(1,n,n);const q=NZ.getChannelData(0);for(let i=0;i<n;i++)q[i]=Math.random()*2-1}OUT=AC.createGain();OUT.gain.value=.7;OUT.connect(MG);B=AC.currentTime+.06;music()}}catch(e){OUT=null}
     t0=performance.now()+60;last=t0;timers=[setTimeout(say,3960)];raf=requestAnimationFrame(frame)})}
 window.KS500={play,eligible:(name,score)=>!!name&&score>=500};
